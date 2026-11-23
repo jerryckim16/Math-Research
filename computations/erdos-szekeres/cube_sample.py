@@ -239,6 +239,8 @@ def main():
                     help="comma-separated depths: solve the prefixes of each probe path at these depths")
     ap.add_argument("--order", choices=["lookahead", "static"], default="lookahead")
     ap.add_argument("--cadical-opts", default="", help="extra CaDiCaL options for the leaf solves, space separated")
+    ap.add_argument("--paths", default=None,
+                    help="with --nested: only solve these probe indices (comma-separated); walks are still generated for all")
     ap.add_argument("--desc-first", action="store_true",
                     help="with --nested: submit deeper (easier) cubes first")
     ap.add_argument("--enumerate", action="store_true",
@@ -271,6 +273,9 @@ def main():
                     expanded.append({"refuted": True, "cube": p["cube"], "weight": p["weight"],
                                      "decisions": p["decisions"], "la_time": p["la_time"], "path": i, "depth": d})
         probes = expanded
+        if a.paths:
+            keep = {int(x) for x in a.paths.split(",")}
+            probes = [p for p in probes if p["path"] in keep]
     # results are written as each cube finishes, so an interrupted run keeps its data
     from concurrent.futures import as_completed
 
