@@ -46,45 +46,60 @@ from pysat.solvers import Solver
 
 _S = None
 _NOR = None
+_FIXED = set()
 
 
 def _init(cnf_path, n_orient):
-    global _S, _NOR
-    _S = Solver(name="glucose4", bootstrap_with=CNF(from_file=cnf_path).clauses)
+    global _S, _NOR, _FIXED
+    clauses = CNF(from_file=cnf_path).clauses
+    _S = Solver(name="glucose4", bootstrap_with=clauses)
     _NOR = n_orient
+    # top-level unit clauses (symmetry breaking); propagate() does not report them
+    _FIXED = {abs(c[0]) for c in clauses if len(c) == 1}
+
+
+def _state(assum):
+    ok, lits = _S.propagate(assumptions=assum)
+    if not ok:
+        return None, None
+    assigned = {abs(l) for l in lits} | _FIXED
+    return assigned, sum(1 for l in lits if abs(l) <= _NOR)
 
 
 def lookahead(assum):
-    """Return ('refuted', None) or ('ok', (assum', branch_var))."""
+    """Return ('refuted', None) or ('ok', (assum', branch_var)).
+
+    One pass over the unassigned orientation variables. A failed literal is
+    added to the node and the pass continues (scores already computed are
+    then slightly stale, which only affects the heuristic, not soundness of
+    the estimate).
+    """
     assum = list(assum)
-    while True:
-        ok, lits = _S.propagate(assumptions=assum)
-        if not ok:
-            return "refuted", None
-        assigned = {abs(l) for l in lits}
-        base = sum(1 for v in assigned if v <= _NOR)
-        best, bv, forced = -1, None, None
-        for v in range(1, _NOR + 1):
-            if v in assigned:
-                continue
-            okp, lp = _S.propagate(assumptions=assum + [v])
-            okn, ln = _S.propagate(assumptions=assum + [-v])
-            if not okp and not okn:
-                return "refuted", None
-            if not okp or not okn:
-                forced = -v if not okp else v
-                break
-            np_ = sum(1 for l in lp if abs(l) <= _NOR) - base
-            nn_ = sum(1 for l in ln if abs(l) <= _NOR) - base
-            sc = (1 + np_) * (1 + nn_)
-            if sc > best:
-                best, bv = sc, v
-        if forced is not None:
-            assum.append(forced)
+    assigned, base = _state(assum)
+    if assigned is None:
+        return "refuted", None
+    best, bv = -1, None
+    for v in range(1, _NOR + 1):
+        if v in assigned:
             continue
-        if bv is None:  # every orientation variable assigned
-            return "ok", (assum, None)
-        return "ok", (assum, bv)
+        okp, lp = _S.propagate(assumptions=assum + [v])
+        okn, ln = _S.propagate(assumptions=assum + [-v])
+        if not okp and not okn:
+            return "refuted", None
+        if not okp or not okn:
+            assum.append(-v if not okp else v)
+            assigned, base = _state(assum)
+            if assigned is None:
+                return "refuted", None
+            if bv is not None and bv in assigned:
+                best, bv = -1, None
+            continue
+        np_ = sum(1 for l in lp if abs(l) <= _NOR) - base
+        nn_ = sum(1 for l in ln if abs(l) <= _NOR) - base
+        sc = (1 + np_) * (1 + nn_)
+        if sc > best:
+            best, bv = sc, v
+    return "ok", (assum, bv)
 
 
 def probe(args):
@@ -113,6 +128,26 @@ def probe(args):
         decisions += 1
     return {"refuted": False, "cube": assum, "weight": weight, "decisions": decisions,
             "la_time": time.time() - t0}
+
+
+def enumerate_leaves(depth):
+    """All leaves of the cube tree to the given depth (small depths only)."""
+    leaves = []
+
+    def rec(assum, d):
+        st, res = lookahead(assum)
+        if st == "refuted":
+            leaves.append({"refuted": True, "cube": assum, "weight": 1, "decisions": d, "la_time": 0})
+            return
+        assum, v = res
+        if d == depth or v is None:
+            leaves.append({"refuted": False, "cube": assum, "weight": 1, "decisions": d, "la_time": 0})
+            return
+        for lit in (v, -v):
+            rec(assum + [lit], d + 1)
+
+    rec([], 0)
+    return leaves
 
 
 def solve_cube(args):
@@ -146,18 +181,24 @@ def main():
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--out", default=None)
     ap.add_argument("--workdir", default=None)
+    ap.add_argument("--enumerate", action="store_true",
+                    help="solve every leaf at the given depth instead of sampling (calibration)")
     a = ap.parse_args()
     n_or = comb(a.N, 3)
     workdir = a.workdir or os.path.dirname(os.path.abspath(a.out or a.cnf))
     seeds = [(a.depth, a.seed * 100003 + i) for i in range(a.samples)]
     out = open(a.out, "a") if a.out else sys.stdout
-    with ProcessPoolExecutor(a.workers, initializer=_init, initargs=(a.cnf, n_or)) as ex:
-        probes = list(ex.map(probe, seeds))
+    if a.enumerate:
+        _init(a.cnf, n_or)
+        probes = enumerate_leaves(a.depth)
+    else:
+        with ProcessPoolExecutor(a.workers, initializer=_init, initargs=(a.cnf, n_or)) as ex:
+            probes = list(ex.map(probe, seeds))
     with ProcessPoolExecutor(a.workers) as ex:
         jobs = [(a.cnf, p["cube"], a.cap, workdir) for p in probes]
         results = list(ex.map(solve_cube, jobs))
     for p, (st, dt) in zip(probes, results):
-        rec = {"depth": a.depth, "decisions": p["decisions"], "cube_len": len(p["cube"]),
+        rec = {"mode": "enum" if a.enumerate else "probe", "refuted": p["refuted"], "depth": a.depth, "decisions": p["decisions"], "cube_len": len(p["cube"]),
                "weight": p["weight"], "la_time": round(p["la_time"], 2), "status": st,
                "time": round(dt, 3), "cap": a.cap, "cube": p["cube"]}
         out.write(json.dumps(rec) + "\n")
