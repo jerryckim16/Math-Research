@@ -1,7 +1,7 @@
 # Erdős–Szekeres convex polygon conjecture
 
 **Area:** combinatorial geometry
-**Status:** in progress (ES(6) = 17 reproduced and certified; ES(7) not yet attempted)
+**Status:** in progress (ES(6) = 17 reproduced and certified twice; ES(7) cost-probed, not resolved)
 **Started:** 2026-11-23
 **ProofAtlas:** rank 256, "open with solved subcases"
 
@@ -39,6 +39,23 @@ re-verified below.
   encoding (triple orientations plus a 4-subset reduction) for 33 points,
   but does not resolve it, and reports heavy-tailed solver behaviour. Read
   this before investing in ES(7).
+
+- **Literature attempt, 2026-11-23 (second worker).**
+  - arXiv.org is blocked by this session's network policy. WebFetch failed
+    with ENOTFOUND, and curl got a CONNECT 403 from the proxy, so the full
+    text of arXiv:2512.24061 was **not read**.
+  - A web-search snippet of the abstract (not verified against the paper)
+    says it uses:
+    - triple-orientation variables;
+    - a 4-set convexity criterion for excluding convex 7-gons;
+    - "convex-layer anchoring" constraints.
+  - The same snippet says it reports UNSAT certificates for a collection of
+    *anchored subfamilies* only, with heavy-tailed runtimes dominating the
+    effort.
+  - Nothing more is assumed here about its encoding, sizes or timings.
+  - The same search also listed arXiv:2604.20120, "Combinatorial Geometry of
+    Erdős–Szekeres Type Problems: SAT/ASP Modeling and Linear Subreduction".
+    It was not read, and its relevance to ES(7) is unknown.
 
 The citations were checked against web search results only (2026-11-23), not
 the full papers. Run `mathbox:literature-check` before any write-up.
@@ -127,11 +144,105 @@ convex position iff all of its 4-subsets are.
 - **N = 17, k = 6 timings.** Both runs used CaDiCaL 1.7.3 on one core, on the
   same machine and at the same time as other jobs.
   - Compact encoding: UNSAT in 161 s, or 170 s with LRAT output.
-  - Old encoding: 201 s, which is about 20% slower. Only a modest gain.
+  - Old encoding: 201 s. The compact encoding is about 20% faster, a modest gain.
 - **Certificate.** The LRAT proof (471 MB, 1,319,776 lemmas) was checked by
   `lrat_check.py` in 55 s. It reports VERIFIED. The CNF sha256 is
   `682629f2…a252e81e3`. This gives a second, independent certificate for
   ES(6) ≤ 17, through a different encoding.
+
+## Approach 4: cost probe for ES(7) ≤ 33 (compact encoding, cube-and-conquer sampling)
+
+**Goal.** Estimate the cost of a SAT proof of ES(7) ≤ 33. This is an estimate
+only. Nothing here is a certificate, and ES(7) remains open.
+
+- **Formula.** `encode_compact.py 33 7`:
+  - 64,240 variables: 5,456 orientation and 58,784 auxiliary.
+  - 722,800 clauses, 13.4 MB.
+  - sha256 `2a98487f…6178e0e`.
+  - The naive encoding would need about 1.4·10⁸ clauses.
+- **Direct solve.** CaDiCaL 1.7.3 with `-t 1500` on one core got no answer
+  after 1,480 s of process time (1.78·10⁶ conflicts). Summary in
+  `es7_probe_data/direct_33_7_summary.txt`.
+- **Cube-and-conquer probe** (`cube_sample.py`, `cube_estimate.py`).
+  - **Splitting.** A march-style lookahead over the orientation variables
+    uses glucose unit propagation. It scores each variable by
+    (1 + new orientation literals under v)·(1 + new under ¬v), and adds
+    failed literals to the cube. In practice the first decisions are the
+    triples X(1,3,·), i.e. the local sequence of point 1.
+  - **Probes.** Random root-to-leaf walks, using Knuth's estimator
+    E[weight·time] = total conquer time.
+  - **Leaves.** Each leaf cube is solved by CaDiCaL (CLI, cube as unit
+    clauses) under a time cap. The measured time includes about 0.3 s of
+    process start-up and parsing at N = 33.
+  - **`--nested`.** Solves the prefixes of the same walk at several depths,
+    giving a hardness-versus-depth profile.
+- **Calibration on ES(6) (N = 17), where the truth is known.**
+  - Solving all 63 leaves at depth 6 takes 170 s in total (max 38.7 s, 23% of
+    the total), compared with 161 s for the monolithic solve.
+  - From 24 probes, the Knuth estimates at depths 2, 4 and 6 are 2.3, 2.0 and
+    1.7 min (bootstrap 5–95% ranges about 0.8–3.7 min). They are correct to
+    within the range.
+  - At depths 8–20 the estimates drift up, to 4 min and then 71 min. Two
+    causes: per-cube overhead times many leaves, and one heavy probe carrying
+    50–87% of the sum. **Fixed-depth estimates are only trustworthy near the
+    cost-optimal depth.**
+- **N = 33 results.** All raw records are in `es7_probe_data/`.
+
+  | depth | probes | outcome | Knuth total (CPU-years) |
+  | --- | --- | --- | --- |
+  | 10 | 2 | 2 timeouts at 300 s | ≥ 0.01 (lower bound) |
+  | 20 / 30 / 45 | 3 each | all timeouts at 120 s | ≥ 4 / ≥ 4·10³ / ≥ 1.3·10⁸ |
+  | 44 | 4 | 4 timeouts at 400 s | ≥ 2.2·10⁸ |
+  | 52 | 8 | 2 refuted by lookahead above depth 48; 4 timeouts; 2 solved (255 s, 326 s) | ≥ 3.5·10¹⁰ |
+  | 60 | 11 | 3 refuted; 7 solved in 0.26–95 s; 1 timeout at 400 s | ≈ 1.9·10¹² (bootstrap 3·10¹¹–4·10¹²), a lower bound because of the timeout |
+
+  No probe ever found a lookahead refutation above depth about 45. The cube
+  tree is a full binary tree down there, so the leaf count is 2^d.
+- **Hardness profile along a walk.** Let r be the factor by which cube time
+  drops per extra decision. Measured on the four walks that solved at two
+  depths:
+  - r = 1.66 (depths 58→60), 1.18 (56→60), 1.45 (52→60), and ≥ 2.3 (52→60;
+    the depth-60 time is at the overhead floor).
+  - Where r < 2, adding depth costs more in total than it saves.
+  - **Conclusion (empirical, this splitting rule):** fixed-depth
+    cube-and-conquer with this lookahead costs at least 10⁸ CPU-years at any
+    depth from 44 to 60. It is not a viable route.
+- **Extrapolated cost of an optimal-depth or monolithic solve.** This is
+  heuristic and low-confidence. The extrapolation is T(0) ≈ T(d)·r^d along
+  each walk.
+  - **Test at k = 6.** Six N = 17 walks, using r from depths 4→8, give
+    6 s to 946 s against the true 161 s, with a median of 137 s. That is
+    within a factor of about 30 per walk, and the median is right.
+  - **At k = 7.** The four walks give about 2 weeks (r = 1.18), about 2,500
+    years (r = 1.45), about 5·10⁷ years (r = 1.66), and an unbounded value
+    (r ≥ 2.3), all in CPU time.
+  - **Honest range.** From weeks to more than 10⁸ CPU-years, with a central
+    guess of 10³–10⁶ CPU-years. The extrapolation runs over 50–60 levels from
+    4 walks, so an error of ±0.2 in r moves the answer by about 10⁴. The
+    near-root profile is unmeasured: every cube shallower than depth 44 timed
+    out. At k = 6, r near the root was about 2, larger than deeper down. If
+    the same holds at k = 7, the central guess is too high.
+  - **Heavy tails.** These are visible in every table above:
+    - single probes carry 50–87% of the Knuth sums;
+    - cube times on one level span 0.3 s to more than 400 s;
+    - which walks get refuted varies from one seed to the next.
+    With 4–11 probes per depth, the bootstrap ranges understate the
+    uncertainty, and they cannot see tail mass that no probe hit.
+- **What failed, and why.**
+  - Plain unit-propagation lookahead on orientation variables gives
+    essentially no refutations before depth about 50. The cube tree is
+    therefore about 2^d at every useful depth, so the fixed-depth Knuth
+    totals are astronomical.
+  - The compact encoding helps formula size enormously, by a factor of about
+    200 versus naive at N = 33. It helps solve time only modestly, by about
+    20% at N = 17.
+  - Sampler bug, fixed mid-run: the first version dropped walks that ended
+    in refutation. Those records (`nested33.jsonl`) show two of four walks
+    missing at depths 48 and above. They are counted as zero-cost leaves in
+    the table above.
+  - One 30-minute batch was lost when it hit a background time limit, because
+    results were only written at the end. The sampler now writes each cube
+    as it finishes.
 
 ## Results
 
@@ -143,7 +254,13 @@ convex position iff all of its 4-subsets are.
 | ES(7) > 32: explicit 32-point set, no convex heptagon | exhaustive exact check of all 7-subsets | `construct.py 7` |
 | ES(6) ≤ 17 | LRAT proof (302 MB, 1,288,188 lemmas) checked by `lrat_check.py`; CaDiCaL 1.7.3, 191 s on 1 core; CNF sha256 `587ae401…0902ad2` | `reproduce.sh` |
 | **ES(6) = 17** | combination of the two rows above, plus the encoding soundness argument | |
-| Encoding faithful on real point sets | 300 random sets agree with brute force; symmetry-break transform preserves all orientations on 200 random sets | `test_encoding.py` |
+| Encoding faithful on real point sets | 300 random sets agree with brute force (all 300 contained a k-gon, so this check was one-sided; now complemented by the balanced check below); symmetry-break transform preserves all orientations on 200 random sets | `test_encoding.py` |
+| Compact cup/cap encoding equisatisfiable with `encode.py` on (k,N) ∈ {(4,4),(4,5),(5,8),(5,9),(6,16),(6,17)} | SAT/UNSAT agreement, CaDiCaL 1.7.3 | `encode_compact.py` |
+| Compact encoding faithful on real point sets | 400 random instances (160 with k-gon, 240 without, k = 4…7) agree with brute force, both by aux-truth assignment and by SAT with fixed orientations; ES sets n = 5, 6, 7 satisfy it; soundness argument in docstring | `test_encoding.py` |
+| ES(6) ≤ 17 (second, independent certificate) | compact encoding UNSAT in 161 s (old encoding 201 s, same machine); LRAT proof (471 MB, 1,319,776 lemmas) checked by `lrat_check.py`; CNF sha256 `682629f2…a252e81e3` | `COMPACT=1 reproduce.sh` |
+| ES(7) ≤ 33 | **open**. N = 33 compact formula (64,240 vars, 722,800 clauses) not solved: direct CaDiCaL 1,480 s gave no answer | `es7_probe_data/` |
+| Fixed-depth lookahead cube-and-conquer for ES(7) ≤ 33 costs ≥ 10⁸ CPU-years at depths 44–60 | empirical sample estimate (Knuth probes, 2–11 per depth, timeouts counted as lower bounds); heavy-tailed | `cube_sample.py`, `cube_estimate.py` |
+| Cost of an optimised SAT proof of ES(7) ≤ 33: weeks to > 10⁸ CPU-years, central guess 10³–10⁶ | **heuristic** extrapolation of per-level hardness ratio from 4 walks; method within ×30 per walk on ES(6) | Approach 4 |
 
 ## Trust base for ES(6) ≤ 17
 
@@ -153,11 +270,35 @@ convex position iff all of its 4-subsets are.
 
 ## Next steps
 
-- Scale estimate for ES(7) ≤ 33:
-  - The naive encoding has C(33,7)·32 ≈ 1.4·10⁸ clauses, so the forbidden
-    pattern needs auxiliary cup/cap variables (Scheucher-style).
-  - It also needs much stronger symmetry breaking and cube-and-conquer.
-  - Expect this to be orders of magnitude beyond ES(6), probably a
-    cluster-scale computation rather than a single-session one.
-- Literature check: confirm whether ES(7) has been attacked by SAT already,
-  and what the best published partial results are.
+- **ES(7) ≤ 33 needs a structural reduction before any big run.** The probe
+  in Approach 4 shows that generic lookahead cubing on orientation variables
+  is hopeless at fixed depth (≥ 10⁸ CPU-years). The heuristic cost of even an
+  optimised solve is uncertain over about 7 orders of magnitude. Candidate
+  bounded steps, cheapest first:
+  1. **Measure the near-root hardness profile.** Pick 3–4 walks and solve
+     the cubes at depths 8, 16, 24, 32 and 40 with a 2–4 h cap each, about
+     1 core-day. This pins r near the root, which dominates the uncertainty
+     in the extrapolation.
+  2. **Stronger symmetry breaking and redundant clauses.** Both must be
+     sound, with an argument written down.
+     - The remaining symmetries after fixing point 0 are the choice of hull
+       vertex and reflection; use lex-leader constraints over them, as in
+       Scheucher / Heule–Scheucher.
+     - Add explicit no-6-cup clauses among points 1…32. They are implied
+       already, since X(0,·,·) is true and point 0 extends every cup;
+       test whether stating them helps. There is no cap analogue.
+     - Add monotone "≥ l" auxiliaries.
+     - Re-measure on ES(6) first. The target is a large speed-up, not 20%.
+  3. **Domain splitting instead of literal splitting.** Split on structural
+     invariants, such as the size of the convex hull or of the first convex
+     layer, or the longest cup or cap through point 1. This is close in
+     spirit to Dumitru's anchoring. Each piece must be argued exhaustive.
+  4. **Read arXiv:2512.24061 in full** before step 3. This needs arxiv.org to
+     be allowed in the session's network settings. Also read
+     Heule–Scheucher's cubing for h(6) = 30 (arXiv:2403.00737) and
+     arXiv:2604.20120.
+- **ES(6) trust upgrades.**
+  - Check either LRAT proof with cake_lpr, a verified checker.
+  - Formalise one of the two encodings, as Marić 2019 did.
+  - The compact encoding's soundness argument is short (convex-under-chord
+    geometry), which makes it the better formalisation target.

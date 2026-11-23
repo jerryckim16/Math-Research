@@ -218,19 +218,26 @@ def main():
                     expanded.append({"refuted": True, "cube": p["cube"], "weight": p["weight"],
                                      "decisions": p["decisions"], "la_time": p["la_time"], "path": i, "depth": d})
         probes = expanded
-    todo = [p for p in probes if not p["refuted"]]
-    with ProcessPoolExecutor(a.workers) as ex:
-        solved = iter(list(ex.map(solve_cube, [(a.cnf, p["cube"], a.cap, workdir) for p in todo])))
-    # a node refuted by the lookahead's unit propagation costs nothing to conquer
-    results = [("REFUTED", 0.0) if p["refuted"] else next(solved) for p in probes]
-    for p, (st, dt) in zip(probes, results):
-        rec = {"mode": "enum" if a.enumerate else "probe", "refuted": p["refuted"], "depth": p.get("depth", a.depth),
-               "path": p.get("path"), "decisions": p["decisions"], "cube_len": len(p["cube"]),
-               "weight": p["weight"], "la_time": round(p["la_time"], 2), "status": st,
-               "time": round(dt, 3), "cap": a.cap, "cube": p["cube"]}
+    # results are written as each cube finishes, so an interrupted run keeps its data
+    from concurrent.futures import as_completed
+
+    def emit(p, st, dt):
+        rec = {"mode": "enum" if a.enumerate else "probe", "refuted": p["refuted"],
+               "depth": p.get("depth", a.depth), "path": p.get("path"), "decisions": p["decisions"],
+               "cube_len": len(p["cube"]), "weight": p["weight"], "la_time": round(p["la_time"], 2),
+               "status": st, "time": round(dt, 3), "cap": a.cap, "cube": p["cube"]}
         out.write(json.dumps(rec) + "\n")
         out.flush()
 
+    for p in probes:
+        if p["refuted"]:  # refuted by the lookahead's unit propagation: costs nothing to conquer
+            emit(p, "REFUTED", 0.0)
+    todo = [p for p in probes if not p["refuted"]]
+    with ProcessPoolExecutor(a.workers) as ex:
+        futs = {ex.submit(solve_cube, (a.cnf, p["cube"], a.cap, workdir)): p for p in todo}
+        for f in as_completed(futs):
+            st, dt = f.result()
+            emit(futs[f], st, dt)
 
 if __name__ == "__main__":
     main()

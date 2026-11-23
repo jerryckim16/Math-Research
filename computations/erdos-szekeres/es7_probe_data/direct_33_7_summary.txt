@@ -1,0 +1,5 @@
+c conflicts:               1784765      1206.13    per second
+c decisions:               7409643      5007.38    per second
+c total process time since initialization:      1479.94    seconds
+c total real time since initialization:         1500.03    seconds
+exit=0 wall=1500
