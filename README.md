@@ -26,4 +26,4 @@ Copy `problems/TEMPLATE.md` to `problems/<short-name>.md` and fill it in.
 
 | Problem | Status |
 | --- | --- |
-| _none yet_ | |
+| [Erdős–Szekeres (ES(7) = 33?)](problems/erdos-szekeres.md) | in progress — reproducing ES(6) = 17 |
