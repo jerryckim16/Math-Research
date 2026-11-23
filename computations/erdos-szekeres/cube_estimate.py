@@ -41,6 +41,7 @@ def main():
         to = sum(r["status"] == "TIMEOUT" for r in rs)
         sat = sum(r["status"] == "SAT" for r in rs)
         times = [min(r["time"], cap) if r["status"] == "TIMEOUT" else r["time"] for r in rs]
+        ref = sum(r["status"] == "REFUTED" for r in rs)
         if mode == "enum":
             tot = sum(times)
             print(f"[enum depth={depth} cap={cap}] leaves={n} SAT={sat} timeouts={to} "
@@ -58,7 +59,7 @@ def main():
         lo, hi = boots[int(0.05 * len(boots))], boots[int(0.95 * len(boots)) - 1]
         top = max(c) / sum(c) if sum(c) else 0
         lb = ">=" if to else ""
-        print(f"[probe depth={depth} cap={cap}] probes={n} SAT={sat} timeouts={to} "
+        print(f"[probe depth={depth} cap={cap}] probes={n} refuted-by-lookahead={ref} SAT={sat} timeouts={to} "
               f"leaves~{leaves:.3g} (min w {min(w)}, max w {max(w)}) "
               f"cube time median={fmt_t(statistics.median(times))} max={fmt_t(max(times))}; "
               f"total CPU {lb}{fmt_t(est)} [bootstrap 5-95%: {lb}{fmt_t(lo)} .. {lb}{fmt_t(hi)}]; "

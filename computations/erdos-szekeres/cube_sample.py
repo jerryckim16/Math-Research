@@ -18,13 +18,18 @@ Estimator (Knuth 1975, "Estimating the efficiency of backtrack programs")
   A probe walks from the root to a leaf choosing a child uniformly at random.
   The probability of reaching that leaf is p = prod 1/(#children), with
   refuted children never chosen (they cost nothing to the conquer phase).
-  The leaf cube is then solved by CaDiCaL (CLI, cube added as unit clauses)
+  A walk that reaches a node refuted by the lookahead stops there; that leaf
+  costs 0 (status REFUTED). The leaf cube is otherwise solved by CaDiCaL (CLI, cube added as unit clauses)
   with a time cap. For the cost function c(leaf) = solve time,
   E[c(leaf)/p] = sum over leaves of c(leaf), so the mean of c/p over probes
   is an unbiased estimate of the total conquer CPU time, and the mean of 1/p
   estimates the number of (non-refuted) leaves. Timed-out cubes are
   recorded with c = cap, which makes the time estimate a LOWER bound for
   those probes. Heavy tails in c and in 1/p are reported, not smoothed.
+
+--nested d1,d2,...: solve the prefixes of each probe path at several depths
+(one record per probe and depth), giving a hardness-versus-depth profile
+from the same random paths.
 
 This is an estimation tool, not a proof tool: nothing it outputs is a
 certificate.
@@ -107,13 +112,14 @@ def probe(args):
     depth, seed = args
     rng = random.Random(seed)
     assum, weight, decisions = [], 1, 0
+    prefixes = [(0, 1, [])]  # (depth, weight, cube) after each decision, for --nested
     t0 = time.time()
     while decisions < depth:
         st, res = lookahead(assum)
         if st == "refuted":
             # only reachable at the root, or if a child refuted after the parent chose it
             return {"refuted": True, "cube": assum, "weight": weight, "decisions": decisions,
-                    "la_time": time.time() - t0}
+                    "la_time": time.time() - t0, "prefixes": prefixes}
         assum, v = res
         if v is None:
             break
@@ -126,8 +132,9 @@ def probe(args):
         weight *= len(kids)
         assum = assum + [rng.choice(kids)]
         decisions += 1
+        prefixes.append((decisions, weight, list(assum)))
     return {"refuted": False, "cube": assum, "weight": weight, "decisions": decisions,
-            "la_time": time.time() - t0}
+            "la_time": time.time() - t0, "prefixes": prefixes}
 
 
 def enumerate_leaves(depth):
@@ -181,6 +188,8 @@ def main():
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--out", default=None)
     ap.add_argument("--workdir", default=None)
+    ap.add_argument("--nested", default=None,
+                    help="comma-separated depths: solve the prefixes of each probe path at these depths")
     ap.add_argument("--enumerate", action="store_true",
                     help="solve every leaf at the given depth instead of sampling (calibration)")
     a = ap.parse_args()
@@ -194,11 +203,29 @@ def main():
     else:
         with ProcessPoolExecutor(a.workers, initializer=_init, initargs=(a.cnf, n_or)) as ex:
             probes = list(ex.map(probe, seeds))
+    if a.nested:
+        ds = sorted(int(x) for x in a.nested.split(","))
+        expanded = []
+        for i, p in enumerate(probes):
+            pre = {d: (w, cube) for (d, w, cube) in p.get("prefixes", [])}
+            for d in ds:
+                if d in pre:
+                    w, cube = pre[d]
+                    expanded.append({"refuted": False, "cube": cube, "weight": w, "decisions": d,
+                                     "la_time": p["la_time"], "path": i, "depth": d})
+                elif p["refuted"] and p["decisions"] < d:
+                    # the walk hit a node refuted by lookahead above depth d: a zero-cost leaf
+                    expanded.append({"refuted": True, "cube": p["cube"], "weight": p["weight"],
+                                     "decisions": p["decisions"], "la_time": p["la_time"], "path": i, "depth": d})
+        probes = expanded
+    todo = [p for p in probes if not p["refuted"]]
     with ProcessPoolExecutor(a.workers) as ex:
-        jobs = [(a.cnf, p["cube"], a.cap, workdir) for p in probes]
-        results = list(ex.map(solve_cube, jobs))
+        solved = iter(list(ex.map(solve_cube, [(a.cnf, p["cube"], a.cap, workdir) for p in todo])))
+    # a node refuted by the lookahead's unit propagation costs nothing to conquer
+    results = [("REFUTED", 0.0) if p["refuted"] else next(solved) for p in probes]
     for p, (st, dt) in zip(probes, results):
-        rec = {"mode": "enum" if a.enumerate else "probe", "refuted": p["refuted"], "depth": a.depth, "decisions": p["decisions"], "cube_len": len(p["cube"]),
+        rec = {"mode": "enum" if a.enumerate else "probe", "refuted": p["refuted"], "depth": p.get("depth", a.depth),
+               "path": p.get("path"), "decisions": p["decisions"], "cube_len": len(p["cube"]),
                "weight": p["weight"], "la_time": round(p["la_time"], 2), "status": st,
                "time": round(dt, 3), "cap": a.cap, "cube": p["cube"]}
         out.write(json.dumps(rec) + "\n")
