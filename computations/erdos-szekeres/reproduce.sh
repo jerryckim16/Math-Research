@@ -10,3 +10,10 @@ python3 "$here/encode.py" 17 6 "$work/es_17_6.cnf"
 sha256sum "$work/es_17_6.cnf"   # expected 587ae401ca32f7817d55d1039e879f816f3c87cd67234d49017667b9a0902ad2
 cadical -q --lrat=true --binary=false "$work/es_17_6.cnf" "$work/es_17_6.lrat" || [ $? -eq 20 ]
 python3 "$here/lrat_check.py" "$work/es_17_6.cnf" "$work/es_17_6.lrat"
+# Optional second certificate through the compact cup/cap encoding (COMPACT=1 ./reproduce.sh).
+if [ "${COMPACT:-0}" = 1 ]; then
+  python3 "$here/encode_compact.py" 17 6 "$work/es_17_6_compact.cnf"
+  sha256sum "$work/es_17_6_compact.cnf"   # expected 682629f22be36068a4fd9c9da8ff05c4e72daf3424c0a764b39f5cea252e81e3
+  cadical -q --lrat=true --binary=false "$work/es_17_6_compact.cnf" "$work/es_17_6_compact.lrat" || [ $? -eq 20 ]
+  python3 "$here/lrat_check.py" "$work/es_17_6_compact.cnf" "$work/es_17_6_compact.lrat"
+fi

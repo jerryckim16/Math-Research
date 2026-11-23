@@ -1,0 +1,2 @@
+{"mode": "probe", "refuted": false, "depth": 10, "decisions": 10, "cube_len": 10, "weight": 1024, "la_time": 2.0, "status": "TIMEOUT", "time": 300.018, "cap": 300, "cube": [497, 527, -528, 529, -530, 531, 532, -533, 534, 535]}
+{"mode": "probe", "refuted": false, "depth": 10, "decisions": 10, "cube_len": 10, "weight": 1024, "la_time": 1.79, "status": "TIMEOUT", "time": 300.019, "cap": 300, "cube": [497, -527, 528, -529, 530, -531, 532, 533, -534, 535]}
