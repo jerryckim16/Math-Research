@@ -1,7 +1,7 @@
 # Erdős–Szekeres convex polygon conjecture
 
 **Area:** combinatorial geometry
-**Status:** in progress (pipeline validation: reproducing ES(6) = 17)
+**Status:** in progress (ES(6) = 17 reproduced and certified; ES(7) not yet attempted)
 **Started:** 2026-11-23
 **ProofAtlas:** rank 256, "open with solved subcases"
 
@@ -91,11 +91,18 @@ convex position iff all of its 4-subsets are.
 | ES(5) ≤ 9 | LRAT proof checked by `lrat_check.py` | `encode.py 9 5` |
 | ES(6) > 16: explicit 16-point set, no convex hexagon | exhaustive exact check of all 8008 6-subsets | `construct.py 6` |
 | ES(7) > 32: explicit 32-point set, no convex heptagon | exhaustive exact check of all 7-subsets | `construct.py 7` |
-| ES(6) ≤ 17 | _pending: UNSAT run in progress_ | `encode.py 17 6` |
+| ES(6) ≤ 17 | LRAT proof (302 MB, 1,288,188 lemmas) checked by `lrat_check.py`; CaDiCaL 1.7.3, 191 s on 1 core; CNF sha256 `587ae401…0902ad2` | `reproduce.sh` |
+| **ES(6) = 17** | combination of the two rows above, plus the encoding soundness argument | |
+| Encoding faithful on real point sets | 300 random sets agree with brute force; symmetry-break transform preserves all orientations on 200 random sets | `test_encoding.py` |
+
+## Trust base for ES(6) ≤ 17
+
+- `encode.py` is correct, meaning the soundness argument and symmetry lemma above hold. This part is not formally verified. It is supported by `test_encoding.py`.
+- `lrat_check.py` is correct. It is about 80 lines, and it was tested to reject a corrupted proof.
+- Upgrade path: check the same proof with cake_lpr (a verified checker), and formalise the encoding as Marić 2019 did.
 
 ## Next steps
 
-- Finish the ES(6) ≤ 17 run and check its LRAT proof.
 - Scale estimate for ES(7) ≤ 33:
   - The naive encoding has C(33,7)·32 ≈ 1.4·10⁸ clauses, so the forbidden
     pattern needs auxiliary cup/cap variables (Scheucher-style).
