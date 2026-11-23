@@ -83,6 +83,56 @@ Erdős–Szekeres sets with exact integer coordinates. It then checks every
 n-subset exhaustively, using the fact that a set in general position is in
 convex position iff all of its 4-subsets are.
 
+## Approach 3: compact cup/cap encoding (`encode_compact.py`)
+
+- **Encoding.** Same orientation variables (same numbering), the same
+  Felsner–Weil clauses and the same symmetry breaking X(0,b,c) as
+  `encode.py`. The forbidden pattern uses auxiliary variables instead of one
+  clause per k-subset and split:
+  - U[l](a,c,d) means "there is an l-cup with first point a and last two
+    points c,d" (3 ≤ l ≤ k). C[l](a,c,d) is the same for caps.
+  - EU[l](a,d) and EC[l](a,d) mean "there is an l-cup (l-cap) from a to d".
+  - Clauses: X(a,c,d) → U[3](a,c,d); U[l](a,b,c) ∧ X(b,c,d) → U[l+1](a,c,d);
+    U[l](a,c,d) → EU[l](a,d); the same for caps with ¬X.
+  - Prohibitions: ¬U[k], ¬C[k] (no k-cup or k-cap), and
+    ¬EU[l](a,d) ∨ ¬EC[k+2−l](a,d) for 3 ≤ l ≤ k−1.
+  - Size is O(N⁴k). For N = 17, k = 6 it is 6,936 variables and 40,648
+    clauses (old encoding: 680 variables, 217,176 clauses).
+- **Soundness** (full argument in the docstring). Set every auxiliary
+  variable to the truth value of its definition on a real point set. All
+  implications then hold. An l-cup and an m-cap from a to d with
+  l + m = k + 2 lie strictly below and above the chord ad, so they are
+  disjoint. Their union is the vertex set of the convex region between a
+  convex and a concave function, which is a convex k-gon. So a set with no
+  convex k-gon satisfies every prohibition, and UNSAT ⇒ ES(k) ≤ N. The two
+  encodings are equisatisfiable. This uses the signotope fact that all
+  triples of a cup are positive, which follows from the 4-point axiom by
+  induction.
+- **Validation.**
+  - SAT/UNSAT agrees with `encode.py` on (k,N) = (4,4) SAT, (4,5) UNSAT,
+    (5,8) SAT, (5,9) UNSAT, (6,16) SAT and (6,17) UNSAT.
+  - `test_encoding.py` now checks 400 random instances: 160 with a convex
+    k-gon and 240 without, for k = 4…7.
+    - With auxiliaries set to their definitions, every definitional clause
+      holds, and the prohibitions hold iff brute force finds no k-gon.
+    - With orientations fixed as assumptions, CaDiCaL finds the formula SAT
+      iff there is no k-gon. So the formula forbids every k-gon.
+  - The explicit ES sets for n = 5, 6, 7 (8, 16 and 32 points) satisfy the
+    full compact formula.
+  - **Gap found in the old test.** The original random check in
+    `test_encoding.py` (300 sets) was one-sided: all 300 random sets contained
+    a k-gon. The k-gon-free side was only exercised by the two ES sets. The
+    new balanced generator, which adds random subsets of the ES sets,
+    re-checks `encode.py` as well, and it passes.
+- **N = 17, k = 6 timings.** Both runs used CaDiCaL 1.7.3 on one core, on the
+  same machine and at the same time as other jobs.
+  - Compact encoding: UNSAT in 161 s, or 170 s with LRAT output.
+  - Old encoding: 201 s, which is about 20% slower. Only a modest gain.
+- **Certificate.** The LRAT proof (471 MB, 1,319,776 lemmas) was checked by
+  `lrat_check.py` in 55 s. It reports VERIFIED. The CNF sha256 is
+  `682629f2…a252e81e3`. This gives a second, independent certificate for
+  ES(6) ≤ 17, through a different encoding.
+
 ## Results
 
 | Claim | Evidence level | Where |
