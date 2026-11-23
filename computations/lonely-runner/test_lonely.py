@@ -178,5 +178,32 @@ class TestSieve(unittest.TestCase):
             self.assertTrue(B_bound_ok(k, used))
 
 
+class TestCoverGenAndLiftFree(unittest.TestCase):
+    def test_covergen_matches_naive(self):
+        for k, p in ((3, 13), (4, 23), (5, 37), (6, 43), (7, 61), (8, 47)):
+            self.assertEqual(sieve.level1_improper_covers(k, p)[0],
+                             sieve.level1_improper_c(k, p)[0], (k, p))
+
+    def test_liftfree_matches_python_lift(self):
+        import check_allikvere as ca
+        for k, p, c in ((4, 13, 5), (5, 23, 2), (5, 23, 3), (6, 19, 2)):
+            S, _ = level1_improper(k, p)
+            ours, _ = lift(S, k, p, 1, c)
+            wf = ca.witness_free_lifts(k, p, c, S)
+            Lc = Level(k, p, c)
+            theirs = sorted({Lc.canon(w) for ws in wf.values() for w in ws
+                             if not ca.gcd_clause(w, c)})
+            self.assertEqual(ours, theirs, (k, p, c))
+
+    def test_flag_constants_match_paper(self):
+        from flag_bound import flag_constants, log_bound
+        K14, r14 = flag_constants(14)
+        self.assertEqual(K14, Fraction(2289670297, 97243124257250844122250000000000000000))
+        self.assertEqual(r14, Fraction(847, 513))
+        self.assertEqual(flag_constants(13)[1], Fraction(1175, 688))
+        self.assertAlmostEqual(log_bound(14, 0.5), 414.7793645567, places=6)
+        self.assertTrue(flag_constants(15)[1] > Fraction(4, 3))
+
+
 if __name__ == "__main__":
     unittest.main()

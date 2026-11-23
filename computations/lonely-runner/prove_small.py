@@ -4,7 +4,8 @@ Usage: python3 prove_small.py K [START_PRIME] [CHAIN] [JOBS]
   CHAIN: comma list of lift factors and 'p' (projection), e.g. 2,2,p,5
   JOBS:  number of worker processes (gates are independent; results are
          consumed in increasing order of p, so the output is the same).
-  Set LRC_USE_C=1 to use the C level-1 engine (level1.c).
+  Set LRC_USE_C=1 to use the C level-1 engine (level1.c), or
+  LRC_LEVEL1=cover for the minimal-cover generator (covergen.c).
 
 Walks primes upward from START_PRIME, runs the sieve chain at each, keeps
 the primes where the chain ends empty (so J(k,p) is empty), and stops as
@@ -35,7 +36,7 @@ def primes_from(a):
 
 
 DEFAULT_CHAIN = {3: [2, 2], 4: [2, 2, "p", 5], 5: [2, 3], 6: [2, 2, "p", 7],
-                 7: [2, 2, 2], 8: [2, 2, 2, "p", 3, 3]}
+                 7: [2, 2, 2], 8: [2, 2, 2, "p", 3, 3], 9: [2, 2, 2, "p", 5, 2]}
 
 
 def _gate(args):
