@@ -1,0 +1,16 @@
+14 251 knuth_estimate_nodes 9.486451e+10 stderr 2.976e+09 probes 20000
+15 251 knuth_estimate_nodes 4.179706e+11 stderr 1.131e+10 probes 20000
+14 263 knuth_estimate_nodes 1.396172e+11 stderr 3.041e+09 probes 20000
+15 263 knuth_estimate_nodes 9.166227e+11 stderr 2.508e+10 probes 20000
+14 307 knuth_estimate_nodes 6.136209e+11 stderr 1.423e+10 probes 20000
+15 307 knuth_estimate_nodes 4.057731e+12 stderr 1.281e+11 probes 20000
+14 353 knuth_estimate_nodes 1.088475e+12 stderr 2.431e+10 probes 20000
+15 353 knuth_estimate_nodes 1.281732e+13 stderr 3.830e+11 probes 20000
+14 401 knuth_estimate_nodes 2.205228e+12 stderr 6.239e+10 probes 20000
+15 401 knuth_estimate_nodes 3.032932e+13 stderr 8.714e+11 probes 20000
+14 449 knuth_estimate_nodes 3.286604e+12 stderr 9.661e+10 probes 20000
+15 449 knuth_estimate_nodes 5.846118e+13 stderr 1.536e+12 probes 20000
+14 503 knuth_estimate_nodes 1.032977e+13 stderr 2.898e+11 probes 20000
+15 503 knuth_estimate_nodes 8.421224e+13 stderr 2.494e+12 probes 20000
+14 569 knuth_estimate_nodes 1.852299e+13 stderr 6.637e+11 probes 20000
+15 569 knuth_estimate_nodes 1.917140e+14 stderr 7.374e+12 probes 20000

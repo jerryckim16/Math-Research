@@ -155,7 +155,9 @@ def run_gate(k, p, chain, log=None):
     """Run the sieve chain at prime p.  chain: list of ints c (lift by c) or
     'p' (project to level 1).  Returns (J_empty, trace)."""
     t0 = time.time()
-    S, cnt = (level1_improper_c if USE_C else level1_improper)(k, p)
+    eng = {"py": "level1_improper", "c": "level1_improper_c",
+           "cover": "level1_improper_covers"}[LEVEL1_ENGINE]
+    S, cnt = globals()[eng](k, p)
     trace = [("I1", 1, len(S), cnt, round(time.time() - t0, 3))]
     l = 1
     for op in chain:
@@ -219,3 +221,52 @@ def level1_improper_c(k, p):
 
 
 USE_C = os.environ.get("LRC_USE_C") == "1"
+
+
+# ---------------------------------------------------------------------------
+# Cover-based level-one generator (covergen.c).  Produces orbit
+# representatives of I(k,p,1) from the minimal covers C containing class 1:
+# every improper k-multiset is C + (k-|C|) arbitrary classes.  Validated
+# against level1_improper / level1_improper_c in test_lonely.py.
+
+from itertools import combinations_with_replacement as _cwr
+
+_COVERGEN_BIN = None
+
+
+def _covergen_bin():
+    global _COVERGEN_BIN
+    if _COVERGEN_BIN is None:
+        src = os.path.join(os.path.dirname(os.path.abspath(__file__)), "covergen.c")
+        out = os.path.join(tempfile.mkdtemp(prefix="lrc_"), "covergen")
+        subprocess.run(["cc", "-O3", "-o", out, src, "-lm"], check=True)
+        _COVERGEN_BIN = out
+    return _COVERGEN_BIN
+
+
+def minimal_covers(k, p):
+    res = subprocess.run([_covergen_bin(), str(k), str(p)], check=True,
+                         capture_output=True, text=True)
+    covers = [tuple(int(x) for x in line.split())
+              for line in res.stdout.splitlines() if line.strip()]
+    nodes = int(res.stderr.split()[1])
+    return covers, nodes
+
+
+def level1_improper_covers(k, p, max_rows=5_000_000):
+    """Orbit representatives of I(k,p,1) via minimal covers."""
+    covers, nodes = minimal_covers(k, p)
+    h = (p - 1) // 2
+    L = Level(k, p, 1)
+    out = set()
+    rows = 0
+    for C in covers:
+        for extra in _cwr(range(1, h + 1), k - len(C)):
+            rows += 1
+            if rows > max_rows:
+                raise RuntimeError("too many level-one rows (small covers)")
+            out.add(L.canon(list(C) + list(extra)))
+    return sorted(out), nodes
+
+
+LEVEL1_ENGINE = os.environ.get("LRC_LEVEL1", "c" if USE_C else "py")
