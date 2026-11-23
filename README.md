@@ -2,6 +2,8 @@
 
 A workspace for attacking problems in mathematics — open conjectures, competition-style problems, and anything in between — with proofs checked as rigorously as possible.
 
+**Progress site:** https://jerryckim16.github.io/Math-Research/ (rebuilt on every merge to `main` by `.github/workflows/pages.yml` from `site/build.py`).
+
 ## Layout
 
 | Folder | What goes there |
@@ -10,6 +12,7 @@ A workspace for attacking problems in mathematics — open conjectures, competit
 | `lean/` | Lean 4 formalizations of verified results |
 | `computations/` | Scripts and data supporting numerical or exhaustive checks |
 | `notes/` | Literature notes, sketches, and failed routes worth remembering |
+| `site/` | Generator for the progress website |
 
 ## Working rules
 
