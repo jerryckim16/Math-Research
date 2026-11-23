@@ -16,6 +16,15 @@
 3. The symmetry-breaking transform from problems/erdos-szekeres.md, applied
    to a hull vertex p0, must preserve every triple orientation (after
    relabelling) and give X(0,b,c) = true.
+4. The extra symmetry breaking of symmetry_extra.py (reflection lex-leader,
+   hull-ear rule), on random sets and ES subsets, for EVERY hull vertex as
+   point 0 and both mirror images: the exact transform gives the angular
+   labelling; mirroring gives sigma(A); the ear counts read off the formula's
+   definitions equal the geometric ones; the SB clauses (with orientations
+   fixed) are satisfiable iff the semantic predicate holds; at least one
+   normalisation of every set satisfies the predicate; and the full compact
+   formula with the extra SB is satisfiable for some normalisation iff the
+   set has no convex k-gon.
 """
 import itertools
 import random
@@ -120,6 +129,101 @@ def compact_check(rng, trials=400):
     print("ES lower-bound sets satisfy the compact no-k-gon formula (n=5,6,7; N=8,16,32)")
 
 
+def hull_vertices(pts):
+    def inside(p, a, b, c):
+        s = [orient(a, b, p) > 0, orient(b, c, p) > 0, orient(c, a, p) > 0]
+        return all(s) or not any(s)
+    return [p for p in pts
+            if not any(inside(p, *t) for t in itertools.combinations([q for q in pts if q != p], 3))]
+
+
+def normalise(pts, v):
+    """Angular labelling around hull vertex v (point 0 = v), its orientation dict, and the label list."""
+    import functools
+    others = sorted([p for p in pts if p != v],
+                    key=functools.cmp_to_key(lambda p, q: -1 if orient(v, p, q) > 0 else 1))
+    P = [v] + others
+    return P, {t: orient(*(P[i] for i in t)) > 0 for t in itertools.combinations(range(len(P)), 3)}
+
+
+def via_transform(pts, v):
+    """x-order produced by the exact transform of the lemma with p0 = v (v made the unique lowest point first)."""
+    P, _ = normalise(pts, v)
+    d1 = (P[1][0] - v[0], P[1][1] - v[1])     # first and last point around v: its hull neighbours
+    d2 = (P[-1][0] - v[0], P[-1][1] - v[1])
+    n = (-d1[1] + d2[1], d1[0] - d2[0])        # sum of the two inward edge normals
+    assert all(n[0] * (p[0] - v[0]) + n[1] * (p[1] - v[1]) > 0 for p in pts if p != v)
+    # (x,y) -> (n_y x - n_x y, n_x x + n_y y): det = |n|^2 > 0, v becomes the unique lowest point
+    img = {p: (n[1] * p[0] - n[0] * p[1], n[0] * p[0] + n[1] * p[1]) for p in pts}
+    new = symmetry_transform(list(img.values()))
+    back = {img[p]: p for p in pts}
+    return [back[q] for q in sorted(new, key=lambda q: new[q][0])]
+
+
+def ear_geometric(P):
+    """ear(0), ear(1), ear(N-1) for the angular labelling P (P[1], P[-1] are the hull neighbours of P[0])."""
+    hv = set(hull_vertices(P))
+    def tri_count(a, v, b):
+        return sum(1 for p in P if p not in (a, v, b) and
+                   (orient(a, v, p) > 0) == (orient(v, b, p) > 0) == (orient(b, a, p) > 0))
+    def nbrs(i):
+        # hull neighbours of hull vertex P[i] in the cyclic hull order 0, (hull vertices by label)
+        order = [0] + [j for j in range(1, len(P)) if P[j] in hv]
+        k = order.index(i)
+        return P[order[k - 1]], P[order[(k + 1) % len(order)]]
+    return [tri_count(*(lambda ab: (ab[0], P[i], ab[1]))(nbrs(i))) for i in (0, 1, len(P) - 1)]
+
+
+def symmetry_extra_check(rng, trials=150):
+    import symmetry_extra as SE
+    from pysat.solvers import Solver
+    n_sets = n_norm = n_gonfree = 0
+    n_pruned = {"short": 0, "full": 0}
+    for trial in range(trials):
+        raw, k = mixed_instance(rng)
+        if len(raw) < 6:
+            continue
+        N = len(raw)
+        hv = hull_vertices(raw)
+        has_gon = check(sorted(raw), k) is not None and "convex" in check(sorted(raw), k)
+        var, aux, clauses, nv = encode_compact.build(N, k, sym=True, reflect="full", ear=True)
+        sb_var = {t: i + 1 for i, t in enumerate(itertools.combinations(range(N), 3))}
+        sb = {m: [] for m in ("short", "full")}
+        for m in sb:
+            cl = []
+            SE.add(N, sb_var, {}, cl, len(sb_var), reflect=m, ear=True)
+            sb[m] = cl
+        any_ok = {m: False for m in sb}
+        any_full_sat = False
+        for v in hv:
+            P, A = normalise(raw, v)
+            if trial % 5 == 0:   # the exact transform realises the angular labelling in x-order
+                assert via_transform(raw, v) == P
+            Pm, Am = normalise([(-p[0], p[1]) for p in raw], (-v[0], v[1]))
+            assert all(Am[(a, b, c)] == A[SE.sigma(N, (a, b, c))] for (a, b, c) in Am if a >= 1), "mirror != sigma"
+            for Q, B in ((P, A), (Pm, Am)):
+                e_geo = ear_geometric(Q)
+                e0, e1, eN, _ = SE.ear_semantic(N, B)
+                assert [e0, e1, eN] == e_geo, (e_geo, (e0, e1, eN))
+                ear_ok = e0 <= e1 and e0 <= eN
+                for m in sb:
+                    pred = SE.lex_ok(N, B, m) and ear_ok
+                    with Solver(name="cadical153", bootstrap_with=sb[m]) as s:
+                        assert s.solve(assumptions=[sb_var[t] if B[t] else -sb_var[t] for t in sb_var]) == pred
+                    any_ok[m] |= pred
+                    n_pruned[m] += not pred
+                with Solver(name="cadical153", bootstrap_with=clauses) as s:
+                    any_full_sat |= s.solve(assumptions=[var[t] if B[t] else -var[t] for t in var])
+            n_norm += 2
+        assert all(any_ok.values()), "no normalisation satisfies the extra symmetry breaking"
+        assert any_full_sat == (not has_gon)
+        n_sets += 1
+        n_gonfree += not has_gon
+    print(f"extra symmetry breaking (reflection lex-leader short/full, hull-ear): sound on {n_sets} point sets "
+          f"({n_gonfree} without a convex k-gon), {n_norm} normalisations (every hull vertex x both mirror images); "
+          f"excluded by the extra SB: {n_pruned['short']} (short) / {n_pruned['full']} (full)")
+
+
 def main():
     rng = random.Random(1)
     agree = 0
@@ -155,6 +259,8 @@ def main():
         assert order[0] == p0
         assert all(orient(new[order[0]], new[b], new[c]) > 0 for b, c in itertools.combinations(order[1:], 2))
     print("symmetry-breaking transform preserves all orientations and gives X(0,b,c)=true on 200 random sets")
+
+    symmetry_extra_check(random.Random(2))
 
 
 if __name__ == "__main__":

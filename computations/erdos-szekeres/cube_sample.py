@@ -27,6 +27,14 @@ Estimator (Knuth 1975, "Estimating the efficiency of backtrack programs")
   recorded with c = cap, which makes the time estimate a LOWER bound for
   those probes. Heavy tails in c and in 1/p are reported, not smoothed.
 
+--order static: instead of the lookahead, branch on a fixed variable order
+(Heule-Scheucher 2024 style): the consecutive triples X(a,a+1,a+2) from the
+middle outwards, then X(b,b+2,b+4) from the middle outwards, then the
+remaining orientation variables. A variable already fixed by unit
+propagation is skipped (not a decision). A child whose literal conflicts by
+unit propagation is dropped (weight factor 1); if both conflict the walk
+ends in a zero-cost REFUTED leaf.
+
 --nested d1,d2,...: solve the prefixes of each probe path at several depths
 (one record per probe and depth), giving a hardness-versus-depth profile
 from the same random paths.
@@ -52,10 +60,27 @@ from pysat.solvers import Solver
 _S = None
 _NOR = None
 _FIXED = set()
+_ORDER = None
 
 
-def _init(cnf_path, n_orient):
-    global _S, _NOR, _FIXED
+def static_order(N):
+    """Orientation variable numbers in the static split order (see module docstring)."""
+    tri = {t: i + 1 for i, t in enumerate(itertools.combinations(range(N), 3))}
+    mid = (N - 1) / 2.0
+    out, seen = [], set()
+    for step in (1, 2):
+        ts = [(a, a + step, a + 2 * step) for a in range(1, N - 2 * step)]
+        ts.sort(key=lambda t: (abs(t[1] - mid), t[0]))
+        for t in ts:
+            out.append(tri[t]); seen.add(tri[t])
+    out += [tri[t] for t in sorted(tri, key=lambda t: (t[2] - t[0], abs(t[1] - mid)))
+            if t[0] != 0 and tri[t] not in seen]
+    return out
+
+
+def _init(cnf_path, n_orient, order=None):
+    global _S, _NOR, _FIXED, _ORDER
+    _ORDER = order
     clauses = CNF(from_file=cnf_path).clauses
     _S = Solver(name="glucose4", bootstrap_with=clauses)
     _NOR = n_orient
@@ -107,6 +132,17 @@ def lookahead(assum):
     return "ok", (assum, bv)
 
 
+def static_branch(assum):
+    """Static-order analogue of lookahead(): next unassigned variable in _ORDER."""
+    assigned, _ = _state(assum)
+    if assigned is None:
+        return "refuted", None
+    for v in _ORDER:
+        if v not in assigned:
+            return "ok", (list(assum), v)
+    return "ok", (list(assum), None)
+
+
 def probe(args):
     """Random root-to-leaf walk; returns (cube literals, weight 1/p, path info)."""
     depth, seed = args
@@ -114,6 +150,7 @@ def probe(args):
     assum, weight, decisions = [], 1, 0
     prefixes = [(0, 1, [])]  # (depth, weight, cube) after each decision, for --nested
     t0 = time.time()
+    lookahead = static_branch if _ORDER else globals()["lookahead"]
     while decisions < depth:
         st, res = lookahead(assum)
         if st == "refuted":
@@ -128,7 +165,10 @@ def probe(args):
             ok, _ = _S.propagate(assumptions=assum + [lit])
             if ok:
                 kids.append(lit)
-        # lookahead guarantees both sides propagate without conflict
+        # the lookahead guarantees both sides propagate without conflict; the static order does not
+        if not kids:
+            return {"refuted": True, "cube": assum, "weight": weight, "decisions": decisions,
+                    "la_time": time.time() - t0, "prefixes": prefixes}
         weight *= len(kids)
         assum = assum + [rng.choice(kids)]
         decisions += 1
@@ -141,8 +181,10 @@ def enumerate_leaves(depth):
     """All leaves of the cube tree to the given depth (small depths only)."""
     leaves = []
 
+    branch = static_branch if _ORDER else lookahead
+
     def rec(assum, d):
-        st, res = lookahead(assum)
+        st, res = branch(assum)
         if st == "refuted":
             leaves.append({"refuted": True, "cube": assum, "weight": 1, "decisions": d, "la_time": 0})
             return
@@ -151,14 +193,19 @@ def enumerate_leaves(depth):
             leaves.append({"refuted": False, "cube": assum, "weight": 1, "decisions": d, "la_time": 0})
             return
         for lit in (v, -v):
-            rec(assum + [lit], d + 1)
+            if _S.propagate(assumptions=assum + [lit])[0]:
+                rec(assum + [lit], d + 1)
 
     rec([], 0)
     return leaves
 
 
+_CADICAL_OPTS = []
+
+
 def solve_cube(args):
-    cnf_path, cube, cap, workdir = args
+    cnf_path, cube, cap, workdir = args[:4]
+    opts = args[4] if len(args) > 4 else []
     with open(cnf_path) as f:
         header = f.readline().split()
         body = f.read()
@@ -170,7 +217,7 @@ def solve_cube(args):
         for l in cube:
             g.write(f"{l} 0\n")
     t0 = time.time()
-    r = subprocess.run(["cadical", "-q", "-t", str(cap), path], stdout=subprocess.DEVNULL)
+    r = subprocess.run(["cadical", "-q", "-t", str(cap)] + list(opts) + [path], stdout=subprocess.DEVNULL)
     dt = time.time() - t0
     os.unlink(path)
     status = {10: "SAT", 20: "UNSAT"}.get(r.returncode, "TIMEOUT")
@@ -190,18 +237,24 @@ def main():
     ap.add_argument("--workdir", default=None)
     ap.add_argument("--nested", default=None,
                     help="comma-separated depths: solve the prefixes of each probe path at these depths")
+    ap.add_argument("--order", choices=["lookahead", "static"], default="lookahead")
+    ap.add_argument("--cadical-opts", default="", help="extra CaDiCaL options for the leaf solves, space separated")
+    ap.add_argument("--desc-first", action="store_true",
+                    help="with --nested: submit deeper (easier) cubes first")
     ap.add_argument("--enumerate", action="store_true",
                     help="solve every leaf at the given depth instead of sampling (calibration)")
     a = ap.parse_args()
     n_or = comb(a.N, 3)
+    order = static_order(a.N) if a.order == "static" else None
+    copts = a.cadical_opts.split()
     workdir = a.workdir or os.path.dirname(os.path.abspath(a.out or a.cnf))
     seeds = [(a.depth, a.seed * 100003 + i) for i in range(a.samples)]
     out = open(a.out, "a") if a.out else sys.stdout
     if a.enumerate:
-        _init(a.cnf, n_or)
+        _init(a.cnf, n_or, order)
         probes = enumerate_leaves(a.depth)
     else:
-        with ProcessPoolExecutor(a.workers, initializer=_init, initargs=(a.cnf, n_or)) as ex:
+        with ProcessPoolExecutor(a.workers, initializer=_init, initargs=(a.cnf, n_or, order)) as ex:
             probes = list(ex.map(probe, seeds))
     if a.nested:
         ds = sorted(int(x) for x in a.nested.split(","))
@@ -225,7 +278,8 @@ def main():
         rec = {"mode": "enum" if a.enumerate else "probe", "refuted": p["refuted"],
                "depth": p.get("depth", a.depth), "path": p.get("path"), "decisions": p["decisions"],
                "cube_len": len(p["cube"]), "weight": p["weight"], "la_time": round(p["la_time"], 2),
-               "status": st, "time": round(dt, 3), "cap": a.cap, "cube": p["cube"]}
+               "status": st, "time": round(dt, 3), "cap": a.cap, "order": a.order,
+               "cadical_opts": a.cadical_opts, "cube": p["cube"]}
         out.write(json.dumps(rec) + "\n")
         out.flush()
 
@@ -233,8 +287,10 @@ def main():
         if p["refuted"]:  # refuted by the lookahead's unit propagation: costs nothing to conquer
             emit(p, "REFUTED", 0.0)
     todo = [p for p in probes if not p["refuted"]]
+    if a.desc_first:
+        todo.sort(key=lambda p: -p.get("depth", 0))
     with ProcessPoolExecutor(a.workers) as ex:
-        futs = {ex.submit(solve_cube, (a.cnf, p["cube"], a.cap, workdir)): p for p in todo}
+        futs = {ex.submit(solve_cube, (a.cnf, p["cube"], a.cap, workdir, copts)): p for p in todo}
         for f in as_completed(futs):
             st, dt = f.result()
             emit(futs[f], st, dt)
