@@ -1,0 +1,22 @@
+# Lean / Lake
+.lake/
+build/
+lake-packages/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+
+# OS
+.DS_Store
