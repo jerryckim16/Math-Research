@@ -195,7 +195,7 @@ The proofs are in the docstring.
   - **k = 6:** our failing primes (11, 17, 23, 29) are exactly the gaps in Rosenfeld's set {13, 19, 31, …}.
   - **k = 7:** our first passing prime (31) equals Rosenfeld's.
   - **k = 8:** our passing set from 47 is all 39 primes from 47 to 241, **identical to Trakulthongchai's S_8**.
-  - **k = 9:** every prime from 137 used so far passed. Trakulthongchai's S_9 is all primes from 137 to 401.
+  - **k = 9:** every prime from 137 to 401 passed, **identical to Trakulthongchai's S_9**.
 - **Failed gates (kept):**
   - k = 3: p = 5.
   - k = 6: p = 11, 17, 23, 29.
@@ -266,7 +266,7 @@ So, unlike 14 and 15 runners, the tight orbit needs no extra fibre search at the
 | Tight primitive tuples in those ranges: (1,2,3); (1,2,3,4), (1,3,4,7); (1,…,5), (1,3,4,5,9); (1,…,6); (1,…,7), (1,2,3,4,5,7,12), (1,4,5,6,7,11,13) | computed up to N | `results/exhaustive.txt` |
 | Sieve, naive level one, cover generator and `liftfree.c` agree with each other and with brute force from the definitions | tested (17 tests; 125 (k,p) pairs for the generator) | `test_lonely.py` |
 | LRC(3) … LRC(8) (4–9 runners); gate sets in `results/lrc_k*.jsonl`; the k = 8 set equals Trakulthongchai's S_8 | certificate-checked computation **+ cited B_k** | `results/lrc_k3..8.jsonl` |
-| LRC(9) (10 runners): gate primes from 137 with the cover generator, chain ×2×2×2, proj, ×5×2 | same (see PR description / log) | `results/lrc_k9.jsonl` |
+| LRC(9) (10 runners): all 47 primes 137…401 pass (identical to Trakulthongchai's S_9), Σ ln p = 259.94 > 254.30; cover generator, chain ×2×2×2, proj, ×5×2; 1,313 s wall on 4 processes | certificate-checked computation **+ cited B_k** | `results/lrc_k9.jsonl` |
 | Allikvere constants: K_13, K_14, ratio minima, ln bounds 341.031991 and 414.779365, target 401.984506 | exact rational re-derivation | `flag_bound.py` |
 | n = 15 flag constants: K_15, ratio min 3751/2349 > 4/3 | exact | `flag_bound.py` |
 | n = 15 shape factor ≈ 0.48796, hence target 483.24 | **heuristic** (no shape lemma) | `flag_bound.py` |
@@ -297,5 +297,6 @@ Our code is tested against brute force, but not formally verified. These reprodu
      - Small-τ gates may need the near-gcd treatment.
      - Better gate choices (including some p < 251) could change the total by small factors.
 4. **The tight orbit is not a bottleneck.** (1..15) dies by level 16 at every candidate prime (Approach 6). The remaining unknown per gate is the level-one family and whether any other orbit persists.
-5. **Independent replay of 15 runners.** With the faster generator from step 2, rerun a handful of small k = 14 gates in full, including level-one completeness. This would upgrade the spot check.
-6. **Do not** present any of this as a proof until every gate has stored, re-checkable output and the bound is proved.
+5. **LRC(10) (11 runners)** was not reproduced, to stay within the budget. Our chain would need an ×11 lift of the tight orbit (11¹⁰ lifts) or Sungkawichai–Trakulthongchai's Prop. 1.2. `liftfree.c` with branch and bound should make the ×11 lift cheap; try it first.
+6. **Independent replay of 15 runners.** With the faster generator from step 2, rerun a handful of small k = 14 gates in full, including level-one completeness. This would upgrade the spot check.
+7. **Do not** present any of this as a proof until every gate has stored, re-checkable output and the bound is proved.
