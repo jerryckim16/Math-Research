@@ -30,8 +30,18 @@ re-verified below.
 - ProofAtlas note: a SoCG 2025 paper refutes an ordered-hypergraph
   generalisation, but the planar conjecture stays open.
 
-The citations above are from memory and still need checking against the
-primary sources (`mathbox:literature-check`) before anything is written up.
+- Scheucher, "A SAT attack on higher dimensional Erdős–Szekeres numbers"
+  (arXiv:2105.08406). It uses chirotope/signotope encodings with DRAT
+  certificates. A 2026 survey says SAT brought ES(6) verification down to
+  about an hour (Marić; Scheucher).
+- **Closest prior work on ES(7):** B. Dumitru, "Notes on the 33-point
+  Erdős–Szekeres problem" (arXiv:2512.24061, Dec 2025). It proposes a SAT
+  encoding (triple orientations plus a 4-subset reduction) for 33 points,
+  but does not resolve it, and reports heavy-tailed solver behaviour. Read
+  this before investing in ES(7).
+
+The citations were checked against web search results only (2026-11-23), not
+the full papers. Run `mathbox:literature-check` before any write-up.
 
 ## Approach 1: signotope SAT encoding (reproduce ES(6) = 17)
 
