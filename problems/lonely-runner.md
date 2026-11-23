@@ -152,8 +152,8 @@ So w′ is improper. Consequently, start from S_1 = I(k,p,1) and repeatedly appl
 - **Failed gates (kept):**
   - p = 5 fails for k = 3.
   - p = 11, 17, 23, 29 fail for k = 6.
-  - p ≤ 29 fail for k = 7.
-  - p ∈ {11, 13, 17} fail for k = 8 with chain ×2×2×2, proj, ×3×3.
+  - p = 11, …, 29 fail for k = 7 (the run started at p = 11).
+  - p ∈ {11, 13, 17} fail for k = 8 with chain ×2×2×2, proj, ×3×3. That run was stopped and restarted from p = 47, because small gates are slow and fail anyway. Every prime from 47 to 241 passed.
 
   At small p the tuple space is too coarse. The surviving tuples are recorded in `results/*.jsonl`.
 
@@ -186,7 +186,7 @@ So w′ is improper. Consequently, start from S_1 = I(k,p,1) and repeatedly appl
 | LRC(5): 13 gate primes 23…73, Σ ln p = 49.79 > 46.11 | same | `results/lrc_k5.jsonl` |
 | LRC(6) (7 runners): 21 gate primes 13…109, Σ ln p = 85.26 > 80.59; 48 s pure Python | same | `results/lrc_k6.jsonl` |
 | LRC(7) (8 runners, Rosenfeld's case): 29 gate primes 31…173, Σ ln p = 130.78 > 126.33; 30 s with C level one | same | `results/lrc_k7.jsonl` |
-| LRC(8) (9 runners) | see `results/lrc_k8.jsonl` (status in the PR description) | |
+| LRC(8) (9 runners, Trakulthongchai's / Rosenfeld's case): 39 gate primes 47…241 (every prime in that range passed), Σ ln p = 189.48 > 184.04; 975 s wall on 4 processes, 5.7·10¹¹ level-one leaves | same | `results/lrc_k8.jsonl` (the first three lines are an aborted earlier run from p = 11, kept for its failed gates) |
 
 "Certificate-checked computation + cited B_k" means the following. The chain LRC(2) ⇒ LRC(3) ⇒ … ⇒ LRC(8) is a proof *if* three things hold:
 
