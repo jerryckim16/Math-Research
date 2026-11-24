@@ -1,0 +1,2 @@
+{"status": "timeout", "iters": 621, "seconds": 699.9999210834503, "n": 4, "m": 8, "branch": [0, 0, 0], "num_allocs": 620}
+{"status": "timeout", "iters": 732, "seconds": 699.9997117519379, "n": 4, "m": 8, "branch": [0, 0, 1], "num_allocs": 731}
