@@ -7,5 +7,5 @@ for spec in $1; do
   p=${spec%%:*}; s=""; [ "$spec" != "$p" ] && s=${spec#*:}
   out=results/lrc14_gates/gate_$p.json
   [ -s "$out" ] && continue
-  python3 check_gate_full.py "$D/SHA256SUMS.txt" "$D/evidence_${p}_s0.tgz" 4 $s > "$out.tmp" 2> "results/lrc14_gates/gate_$p.err" && mv "$out.tmp" "$out"
+  python3 check_gate_full.py "$D/SHA256SUMS.txt" "$D/evidence_${p}_s0.tgz" ${JOBS:-4} ${s:-0} > "$out.tmp" 2> "results/lrc14_gates/gate_$p.err" && mv "$out.tmp" "$out"
 done
