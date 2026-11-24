@@ -136,10 +136,8 @@ def pred(state, cap):
         Ms = set(rots(p)) | set(rots(inv(p)))
         Vs = set(rots(v)) | set(rots(inv(v)))
 
-        def add(u):
-            if (u and cyc_reduced(u) and reduced(u) and is_canonical_orientation(u)
-                    and len(u) + nv < cap and len(u) <= 29):
-                out.add(key(u, v))
+        cand = set()
+        add = cand.add
 
         # (I): f M f^-1 Z, |u| = 2|f| + |p| + |v|
         fmax = (cap - 1 - len(p) - 2 * nv) // 2
@@ -173,6 +171,11 @@ def pred(state, cap):
                     if V[gl:gl + m] != M or V[gl + m:2 * gl + m] != inv(V[:gl]):
                         continue
                     add(inv(V[2 * gl + m:]))
+        cv = canon(v)
+        for u in cand:
+            if (u and len(u) + nv < cap and len(u) <= 29 and cyc_reduced(u) and reduced(u)
+                    and is_canonical_orientation(u)):
+                out.add(tuple(sorted((canon(u), cv))))
     return out
 
 
