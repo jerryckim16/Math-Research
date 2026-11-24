@@ -10,10 +10,10 @@
 | 179 | near-gcd | OK | full | sampled (1000) | sampled (1000) | not checked | PASS |
 | 181 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
 | 191 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
-| 193 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
-| 197 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
+| 193 | near-gcd | not downloaded | full (15203915 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 973342) | not checked | PASS |
+| 197 | near-gcd | not downloaded | full (46411987 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 312041) | not checked | PASS |
 | 199 | near-gcd | not downloaded | full (25180487 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 196288) | not checked | PASS |
-| 211 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
+| 211 | near-gcd | not downloaded | full (45883385 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 165061) | not checked | PASS |
 | 223 | near-gcd | OK | full | sampled (3000) | sampled (3000) | not checked | PASS |
 | 227 | near-gcd | not downloaded | full (28242035 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 44974) | not checked | PASS |
 | 229 | near-gcd | not downloaded | full (19201544 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 62072) | not checked | PASS |
@@ -72,4 +72,4 @@
 | 563 | J empty | OK | full | full | full | not checked | PASS |
 | 569 | J empty | OK | full | full | full | not checked | PASS |
 
-**Verdict:** independent re-check of 63/71 LRC(14) gates (52 in full, 11 sampled); level-one completeness at p = 89, 239; no discrepancy found.
+**Verdict:** independent re-check of 66/71 LRC(14) gates (52 in full, 14 sampled); level-one completeness at p = 89, 239; no discrepancy found.
