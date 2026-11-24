@@ -44,7 +44,7 @@ def main():
                "- %d of the 19 near-gcd gates were checked: every stored row tested, with the cascade and kill on seeded samples (3,000, or 500 for the large archives)." % (n - 52), s)
     s = re.sub(r"- Still in progress: [^\n]*", "- Still in progress: " + prog + ".", s)
     s = re.sub(r"\| LRC\(14\) certificates: independent re-check of \d+/71 gates\.[^\n]*",
-               "| LRC(14) certificates: independent re-check of %d/71 gates. All 52 \"J empty\" gates in full. Near-gcd gates 89, 163, 173, 179, 223, 233 (sample 3,000 or 1,000) and %s (sample 500): all rows, plus seeded samples of the cascade and kill. Level-one completeness at p = 89 and p = 239. No discrepancy found. | independent re-computation of the certificates' claims; in progress: %s; completeness at 2 gates only | `results/lrc14_gates/COVERAGE.md`, Approach 7 |"
+               "| LRC(14) certificates: independent re-check of %d/71 gates. All 52 \"J empty\" gates in full. Near-gcd gates 89, 163, 173, 179, 223, 233 (sample 3,000 or 1,000) and %s (sample 500): all rows, plus seeded samples of the cascade and kill. Level-one completeness at p = 89, 239 and 251. No discrepancy found. | independent re-computation of the certificates' claims; in progress: %s; completeness at 3 gates only | `results/lrc14_gates/COVERAGE.md`, Approach 7 |"
                % (n, ", ".join(map(str, big)), prog), s)
     open(PF, "w").write(s)
     print(n, "checked; in progress:", prog)
