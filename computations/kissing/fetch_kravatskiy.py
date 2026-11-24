@@ -1,7 +1,8 @@
-"""Download A. Kravatskiy's 25-31D kissing configurations (the values in the
+"""Download A. Kravatskiy's 25-33D kissing configurations (the values in the
 17 Nov 2026 snapshot of Cohn's table kept in the same repository, or newer),
 and pin them by sha256: complete coordinate files for 26, 27, 28, 30, 31;
-the exact witness for 25 and the parent file plus trade for 29.
+the exact witness for 25, the parent file plus trade for 29, and the
+compact witnesses for 32 and 33.
 
 Source: https://github.com/alexlegeartis/KissingNumbers at commit
 907f9b1f4c5f8bb4196ea03775f60cc260189789 (2026-11-23), fetched 2026-11-24
@@ -42,6 +43,12 @@ EXTRA = [
      "5daac8c4449cfaff1e9b73d8d7de9baced5a54f92e84f45a28cc8764a5b5cbd4"),
     ("krav29_trade.npz", "dim29-even-grid-exchange/trade.npz",
      "d85b5cdf65eb128ad55104711cfc57621554de1d31005ad181757b46b2f3f9cd"),
+    # 32D and 33D compact witnesses (build_kravatskiy32.py, build_kravatskiy33.py)
+    ("krav32_certificate.json",
+     "dim32-35-signed-layers/nonantipodal32/certificate32_352992_explicit.json",
+     "a21b8ee4086cdbbc90651bcab378b888d0c3f10643aa0d63b5d208cafe471d1a"),
+    ("krav33_witness.npz", "dim33-joint-signed-refill/witness.npz",
+     "90d130ba1bb96172fae7b7ae10d1169747b76f2e720946bc2350c99a08d427c9"),
 ]
 
 
