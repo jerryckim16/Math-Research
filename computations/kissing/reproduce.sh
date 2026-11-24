@@ -4,14 +4,15 @@
 # Q. Lin, arXiv:2611.03682v1). See problems/kissing-numbers.md.
 #
 # Needs: gcc with OpenMP, python3 with numpy, network access to github.com
-# release assets and zenodo.org. About 25 min wall on 4 cores; peak RAM < 1 GB.
+# release assets, raw.githubusercontent.com and zenodo.org. About 40 min wall
+# on 4 cores; peak RAM < 1 GB (25D/27D field checks: < 2 GB).
 # Usage: reproduce.sh [WORKDIR] [--with-43]   (downloads and logs go to WORKDIR)
 # --with-43 adds the Qiushi 43D export (2,553,792 points; about 75 min more).
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 work=${1:-$(mktemp -d)}
 with43=${2:-}
-mkdir -p "$work"/bin "$work"/known "$work"/qiushi "$work"/lin "$work"/linbuild "$work"/neg
+mkdir -p "$work"/bin "$work"/known "$work"/qiushi "$work"/lin "$work"/linbuild "$work"/neg "$work"/q2527
 gcc -O3 -march=native -fopenmp -Wall "$here/kiss_check.c" -o "$work/bin/kiss_check"
 CHK="$work/bin/kiss_check"
 
@@ -26,7 +27,7 @@ done
 python3 "$here/kiss_check_np.py" "$work/known/Leech.i8" 24 | grep -E "contacts|RESULT"
 
 # 3. Qiushi Engine exports, dims 32-39 (sha256-pinned)
-python3 -I "$here/fetch_qiushi.py" "$work/qiushi" $with43
+python3 -I "$here/fetch_qiushi.py" "$work/qiushi" $with43 --with-25-27
 for d in 32 33 34 35 36 37 39; do
   "$CHK" "$work/qiushi/qiushi$d.i8" "$d" | tee "$work/qiushi/check$d.txt" | grep -E "^rows|class_pair|contacts|RESULT"
 done
@@ -56,6 +57,28 @@ for m in dup merge; do
     echo "NEGATIVE CONTROL $m WAS ACCEPTED"; exit 1
   else
     grep -E "violations|RESULT" "$work/neg/q32_$m.txt"
+  fi
+done
+# 6. Qiushi 25D and 27D, rebuilt from the repository data (coordinates in
+#    Q(sqrt2, sqrt3)): integer bulk rows by kiss_check.c and kiss_check_np.py,
+#    all pairs involving the other rows by kiss_check_field.py in both modes
+python3 -I "$here/build_qiushi2527.py" "$work/qiushi/src2527" "$work/q2527"
+for d in 25 27; do
+  "$CHK" "$work/q2527/qiushi${d}_bulk.i8" "$d" | tee "$work/q2527/bulk$d.txt" | grep -E "^rows|contacts|RESULT"
+  python3 "$here/kiss_check_np.py" "$work/q2527/qiushi${d}_bulk.i8" "$d" | grep -E "contacts|RESULT"
+  for m in float interval; do
+    python3 "$here/kiss_check_field.py" "$work/q2527/qiushi${d}_bulk.i8" "$work/q2527/qiushi${d}_field.json" \
+      --mode $m | tee "$work/q2527/field${d}_$m.txt" | grep -E "pairs_checked|contacts|RESULT"
+  done
+done
+# negative controls: each must FAIL
+for v in q25_extra q25_norepair q27_owner q27_label; do
+  python3 -I "$here/build_qiushi2527.py" "$work/qiushi/src2527" "$work/neg" --variant $v
+  if python3 "$here/kiss_check_field.py" "$work/neg/${v}_bulk.i8" "$work/neg/${v}_field.json" --mode float \
+      > "$work/neg/$v.txt"; then
+    echo "NEGATIVE CONTROL $v WAS ACCEPTED"; exit 1
+  else
+    grep -E "violations|RESULT" "$work/neg/$v.txt"
   fi
 done
 echo "ALL DONE"
