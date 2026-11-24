@@ -401,7 +401,7 @@ Per-gate JSON files are in `results/lrc14_gates/`.
   - Forbidding: an allowed class c with priv(1) − |P₁ ∩ cov(c)| < max_v |locked(v)| is removed from the allowed set. Here P₁ is class 1's current private set. Adding c would leave class 1 below some class's locked count forever, and forbidding classes only enlarges locked sets. The gain bound is then re-applied.
 - These rules only remove search nodes with no admissible leaf below them, and leaves that are not the normalised representative. The orbit set is unchanged.
 
-**Validation** (`test_lonely.py`, `test_covergen_pruning_preserves_orbits`). For (k,p) = (5,41), (7,61), (8,101), (9,137), (14,89), levels 0, 1 and 2 give identical orbit sets, and at (14,89) that set has the certificate's 687,016 orbits. (14,113) was compared outside the test suite.
+**Validation** (`test_lonely.py`, `test_covergen_pruning_preserves_orbits`). For (k,p) = (5,41), (7,61), (8,101), (9,137), (14,89), levels 0, 1 and 2 give identical orbit sets, and at (14,89) that set has the certificate's 687,016 orbits. At (14,113) only the node counts were measured: the orbit-set comparison (expanding 43.8M unpruned covers) did not finish within its time limit, so it is not claimed.
 
 **Measured speed-up** (single core):
 
