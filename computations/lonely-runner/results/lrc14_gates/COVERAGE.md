@@ -20,7 +20,7 @@
 | 233 | near-gcd | OK | full | sampled (3000) | sampled (3000) | not checked | PASS |
 | 239 | J empty | OK | full | full | full | full (1441284 orbits, equal) | PASS |
 | 241 | near-gcd | not downloaded | full (22356624 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 14401) | not checked | PASS |
-| 251 | J empty | OK | full | full | full | not checked | PASS |
+| 251 | J empty | OK | full | full | full | full (2404346 orbits, equal) | PASS |
 | 257 | J empty | OK | full | full | full | not checked | PASS |
 | 263 | J empty | OK | full | full | full | not checked | PASS |
 | 269 | J empty | OK | full | full | full | not checked | PASS |
@@ -72,4 +72,4 @@
 | 563 | J empty | OK | full | full | full | not checked | PASS |
 | 569 | J empty | OK | full | full | full | not checked | PASS |
 
-**Verdict:** independent re-check of 71/71 LRC(14) gates (52 in full, 19 sampled); level-one completeness at p = 89, 239; no discrepancy found.
+**Verdict:** independent re-check of 71/71 LRC(14) gates (52 in full, 19 sampled); level-one completeness at p = 89, 239, 251; no discrepancy found.
