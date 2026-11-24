@@ -288,7 +288,12 @@ So, unlike 14 and 15 runners, the tight orbit needs no extra fibre search at the
     - Every sampled persistent row lies in a certificate orbit.
     - Kills: all 3,000 match the records. Totals: 2,249,044 CRT candidates, 1,211,876 witness-free at level 15, 354,688 left by the gcd clause, **0 after the near-gcd lemma**.
     - Time: 2,535 s.
-  - **p = 179:** NEAR179_TEXT
+  - **p = 179:** sampled: 1,000 random rows and 1,000 random persistent orbits out of 8,011, seeded, 2 processes, 815 s.
+
+    - All 2,133,835 stored irredundant rows are improper; this test covers every row, not a sample.
+    - Cascade: 1,000 orbits compared, 25 survivor orbits on both sides, 0 count mismatches.
+    - Kills: all 1,000 match. Totals: 356,114 CRT candidates, 281,826 witness-free, 81,280 left by the gcd clause, **0 after the near-gcd lemma**.
+    - A first run with 3,000/3,000 was lost to a container restart.
   - **p = 233:** a full run was started but stopped by a container restart (memory). It was not redone.
 - **No discrepancy with any certificate was found.** Two apparent issues turned out to be artefacts of our own scripts:
   - p = 263: 1021 against 1023 level-2 lifts. The certificate counts with multiplicity over rows; per-row counts agree exactly.
@@ -358,6 +363,10 @@ Our code is tested against brute force, but not formally verified. These reprodu
      - Small-τ gates may need the near-gcd treatment.
      - Better gate choices (including some p < 251) could change the total by small factors.
 4. **The tight orbit is not a bottleneck.** (1..15) dies by level 16 at every candidate prime (Approach 6). The remaining unknown per gate is the level-one family and whether any other orbit persists.
-5. **LRC(10) (11 runners)** was not reproduced, to stay within the budget. Our chain would need an ×11 lift of the tight orbit (11¹⁰ lifts) or Sungkawichai–Trakulthongchai's Prop. 1.2. `liftfree.c` with branch and bound should make the ×11 lift cheap; try it first.
-6. **Independent replay of 15 runners.** With the faster generator from step 2, rerun a handful of small k = 14 gates in full, including level-one completeness. This would upgrade the spot check.
-7. **Do not** present any of this as a proof until every gate has stored, re-checkable output and the bound is proved.
+5. **Finish the LRC(14) replay.**
+   - Run the five large decomposition gates (239, 251, 257, 271, 277) and the remaining near-gcd gates. Thirteen of the near-gcd archives are 0.1–1.6 GB, so their kills need about 0.5 s per orbit (p = 181 has 8.2M orbits).
+   - Run a completeness check at one decomposition gate (p = 239 needs about 4 core-hours unpruned, or less with the private-time pruning).
+   - This would turn the spot check into a full independent replay.
+6. **LRC(10) (11 runners)** was not reproduced, to stay within the budget. Our chain would need an ×11 lift of the tight orbit (11¹⁰ lifts) or Sungkawichai–Trakulthongchai's Prop. 1.2. `liftfree.c` with branch and bound should make the ×11 lift cheap; try it first.
+7. **Independent replay of 15 runners.** With the faster generator from step 2, rerun a handful of small k = 14 gates in full, including level-one completeness. This would upgrade the spot check.
+8. **Do not** present any of this as a proof until every gate has stored, re-checkable output and the bound is proved.

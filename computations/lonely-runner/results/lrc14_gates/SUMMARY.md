@@ -1,6 +1,7 @@
 | p | type | mode | stored rows (ir + ext) | survivor orbits ours / cert | persistent orbits | kills checked | pass | s |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 89 | near-gcd | sample 3000 | 110720 + 855976 | 2671 / 2671 | sampled: ours subset of cert = True | 3000 | PASS | 2535 |
+| 179 | near-gcd | sample 1000 | 2133835 + 570935 | 25 / 25 | sampled: ours subset of cert = True | 1000 | PASS | 815 |
 | 263 | J empty | full | 812780 + 36549 | 942 / 942 | True | 1 | PASS | 442 |
 | 269 | J empty | full | 192883 + 5092 | 113 / 113 | True | 1 | PASS | 96 |
 | 281 | J empty | full | 486338 + 9800 | 116 / 116 | True | 1 | PASS | 251 |
@@ -49,5 +50,5 @@
 | 563 | J empty | full | 7 + 0 | 1 / 1 | True | 1 | PASS | 18 |
 | 569 | J empty | full | 3 + 0 | 1 / 1 | True | 1 | PASS | 18 |
 
-LRC(14) gates checked: 48  full: 47  all pass: True
+LRC(14) gates checked: 49  full: 47  all pass: True
 LRC(13) kill gates: [83, 139, 167, 181, 191, 211, 223, 239, 263, 307, 401, 449, 503, 563, 601, 701, 797, 853, 877]  all pass: True
