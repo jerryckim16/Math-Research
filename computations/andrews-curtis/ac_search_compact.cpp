@@ -10,7 +10,10 @@
 // Output format is the same as ac_search (PATH ... END of "u|v" lines), so
 // ac_path.py can expand and ac_check.py can check any path it prints.
 //
-// Usage: ac_search_compact CAP [--maxstates N] SRC ... [+ SRC ...]
+// Usage: ac_search_compact CAP [--maxstates N] SRC ... [+ SRC ...] [--passive SRC ...]
+//   A passive source is put in the table (reaching it from another group is a
+//   MEET) but is never expanded.  "P1 --passive AK3 P2" thus explores only the
+//   forward sublevel set of P1 and reports whether it contains AK3 or P2.
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -86,9 +89,10 @@ static int64_t find(uint64_t a, uint64_t b, uint64_t& slot) {
 int main(int argc, char** argv) {
     int cap = atoi(argv[1]);
     long maxstates = 100000000;
-    vector<pair<W, W>> srcs; vector<int> group; int g = 0; bool grouped = false;
+    vector<pair<W, W>> srcs; vector<int> group; vector<bool> passive; int g = 0; bool grouped = false, pas = false;
     for (int i = 2; i < argc; i++) {
         if (!strcmp(argv[i], "+")) { g++; grouped = true; continue; }
+        if (!strcmp(argv[i], "--passive")) { pas = true; continue; }
         if (!strcmp(argv[i], "--maxstates")) { maxstates = atol(argv[++i]); continue; }
         if (!strcmp(argv[i], "--junction")) continue;  // always on
         string s = argv[i]; size_t p = s.find('/');
@@ -96,9 +100,10 @@ int main(int argc, char** argv) {
         for (char c : s.substr(0, p)) u.a[u.n++] = code(c);
         for (char c : s.substr(p + 1)) v.a[v.n++] = code(c);
         cycred(u); cycred(v);
-        srcs.push_back({u, v}); group.push_back(g);
+        srcs.push_back({u, v}); group.push_back(g); passive.push_back(pas);
     }
     if (!grouped) for (size_t i = 0; i < group.size(); i++) group[i] = i;
+    for (size_t i = 0; i < group.size(); i++) if (passive[i]) group[i] = 1000 + i;  // own group each
     uint64_t tsz = 1; while (tsz < (uint64_t)(maxstates * 1.4)) tsz <<= 1;
     table.assign(tsz, 0); mask = tsz - 1;
     ent.reserve(maxstates + 1024);
@@ -110,7 +115,7 @@ int main(int argc, char** argv) {
         if (find(a, b, slot) >= 0) { printf("sources %zu coincide with an earlier one\n", i); return 0; }
         ent.push_back(E{a, b, 0xFFFFFFFFu, (uint8_t)i});
         table[slot] = ent.size();
-        bucket[srcs[i].first.n + srcs[i].second.n].push_back(ent.size() - 1);
+        if (!passive[i]) bucket[srcs[i].first.n + srcs[i].second.n].push_back(ent.size() - 1);
     }
     long settled = 0;
     vector<long> per(srcs.size(), 0);
