@@ -11,7 +11,8 @@ for f in glob.glob(os.path.join(HERE, "results/lrc14_gates/gate_*.json")):
         d = json.load(open(f))
     except Exception:
         continue
-    rows.append(d)
+    if d.get("mode") != "stream":
+        rows.append(d)
 rows.sort(key=lambda d: d["p"])
 print("| p | type | mode | stored rows (ir + ext) | survivor orbits ours / cert | persistent orbits | kills checked | pass | s |")
 print("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
