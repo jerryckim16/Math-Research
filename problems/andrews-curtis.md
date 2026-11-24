@@ -13,7 +13,7 @@
   - **Caveat found here: the GS graph is directed** (§3, "Directedness"). "No meeting" therefore gives the bound only for *directed* paths (and for paths S → X ← T). It does not give the bound for paths that may use edges backwards. The paper's d_GS does not say which reading it means. So we no longer write "d_GS ≥ c" without the word "directed".
   - All of this is graph-relative and not an AC-distance bound.
 - **New: the undirected reading (§5).** We enumerate predecessors in the GS graph exactly. The derivation is in `ac_graph.py`, and the edge sets are checked exhaustively in both directions. We then searched the graph with edges usable both ways.
-  - There is **no undirected GS path below energy 30** between any two of AK(3), P1, P2, and none below 31 from P1. This is computed, exhaustive and relative to the graph. The undirected reading now goes as far as the directed one, and a little further for P1.
+  - There is **no undirected GS path below energy 31** between any two of AK(3), P1, P2. This is computed, exhaustive and relative to the graph. The undirected reading now goes one level beyond the directed cap-30 result.
   - So **Theorem 6's lower bounds (d_GS ≥ 27) hold in the undirected reading too**, and the possible gap is closed at the paper's own level.
   - The bottleneck 19 for P3, P4 vs AK(3) also holds undirected.
 - AK(3) and the conjecture itself remain open.
@@ -98,7 +98,7 @@ This is the classical (unstabilized) version. The *stable* version also allows a
 - It does **not** exclude zig-zag paths such as S → X ← Y → Z ← T, which use edges backwards. Every edge is still a valid AC-equivalence, so such a path would still give a certificate.
 - So Theorem 6's lower bounds hold if d_GS uses directed paths ("γ : S⇝T"). If d_GS allows edges to be used backwards, the cited search does not prove them. The paper does not settle which reading is meant.
 - For the upper bound d_GS(P3, AK(3)) ≤ 19, both readings are fine here: our passive-source runs find directed paths P3 ⇝ AK(3) and AK(3) ⇝ P3, each with bottleneck 19, and likewise for P4.
-- **Gap closed at the paper's level (§5).** An undirected search enumerates predecessors exactly. It finds no GS path between two of AK(3), P1, P2, using edges in either direction, with all energies below 30. So the paper's lower bounds d_GS ≥ 27 hold in the undirected reading as well, and in fact d_GS ≥ 30 in that reading.
+- **Gap closed at the paper's level (§5).** An undirected search enumerates predecessors exactly. It finds no GS path between two of AK(3), P1, P2, using edges in either direction, with all energies below 31. So the paper's lower bounds d_GS ≥ 27 hold in the undirected reading as well, and in fact d_GS ≥ 31 in that reading.
 
   The exact value 19 for P3/P4 vs AK(3) also holds undirected.
 
@@ -216,7 +216,7 @@ Not checked: the §6 analysis of the Two-Hump classification table, the 214-pair
   - Inside the cap-30 run, the cumulative counts after levels 26, 27 and 28 are exactly the cap-27, cap-28 and cap-29 totals and per-source counts above. The "seen" counts after levels 25 and 26 (107,663,712 and 189,133,772) are identical to those of the compact engine's cap-30 attempt.
   - **Result: 351,388,696 states settled, no meeting.** It took 3,210 s wall (4 threads) at 4.73 GB peak RSS, with a 600M-slot table.
   - Per source: 284,176,652 (AK(3)), 17,796,820 (P1), 49,415,224 (P2). The P1 count equals the P1-only passive run exactly, as it must.
-  - So **no state of energy < 30 is forward-reachable from two of AK(3), P1, P2.** Hence directed d_GS ≥ 30 for each pair, in both directions. The same bound, d_GS ≥ 30, holds in the undirected reading (§5).
+  - So **no state of energy < 30 is forward-reachable from two of AK(3), P1, P2.** Hence directed d_GS ≥ 30 for each pair, in both directions. In the undirected reading, d_GS ≥ 31 holds (§5).
   - Before this, a cap-30 attempt with `ac_search_compact` hit its 190M-state budget at level 27 (peak 5.6 GB). That engine stores every state seen below the cap, and the planning estimate of 165M states was far too low.
 - Caveat for caps 28–30.
   - Caps 28 and 29 now have two implementations that agree exactly: `ac_search_compact`, and `ac_search_par` (inside its cap-30 run).
@@ -336,13 +336,13 @@ The files are in `computations/andrews-curtis/lean/`. They use plain Lean 4 core
   | 28 | 2,376,948 (2,323,596), 48 s | 8,780,944 (8,520,288), 178 s | no |
   | 29 | 5,493,468 (5,374,816), 154 s | 15,211,400 (14,772,800), 321 s | no |
   | 30 | 18,141,004 (17,796,820), 409 s, 0.4 GB | 50,655,984 (49,415,224), 1,180 s, 0.8 GB | no |
-  | 31 | 42,794,280 (not run directed), 916 s, 1.0 GB | in progress | P1: no |
+  | 31 | 42,794,280 (not run directed), 916 s, 1.0 GB | 95,118,656 (not run directed), 2,096 s, 2.0 GB | no |
 
   Times are wall-clock on 4 threads. Each "directed count" is the per-source count of the forward search at the same cap (§3).
 
-- Hence there is **no undirected GS path below energy 30** joining two of AK(3), P1, P2. Also, there is **none below 31 from P1** to AK(3) or to P2. The cap-31 run uses the corrected key (see "Pitfall" below); inside it, the count after level 29 is again exactly 18,141,004. This is computed, exhaustive, one implementation (two engines sharing the predecessor code) and relative to the graph.
+- Hence there is **no undirected GS path below energy 31** joining two of AK(3), P1, P2. The cap-31 runs use the corrected key (see "Pitfall" below). Inside them, the counts after level 29 are again exactly 18,141,004 (P1) and 50,655,984 (P2). This is computed, exhaustive, one implementation (two engines sharing the predecessor code) and relative to the graph.
 - Each undirected sublevel set is only 3–4% larger than the directed one, but a state costs about 3× more to expand. A multi-source cap-30 run would need about 360M states and over 2 h on 4 threads; the single-source runs avoid this.
-- **Scope.** This is a statement about the GS graph, not about AC distance. A zig-zag path in the graph would still have given an AC certificate. No such path exists below 30.
+- **Scope.** This is a statement about the GS graph, not about AC distance. A zig-zag path in the graph would still have given an AC certificate. No such path exists below 31.
 - **Pitfall (found and fixed here; no reported result affected).** `ac_search_par` stored a state as a 56-bit key: (letters in mixed radix) × 512 + a code for the two lengths.
   - At total length 30 that overflows: 16·3²⁸·512 ≈ 2^57.4. So the engine was exact only for caps ≤ 30. At total length ≤ 29 the largest key is 6.2·10¹⁶ < 2⁵⁶.
   - Every run reported above, directed and undirected, used cap ≤ 30. A first undirected cap-31 attempt was stopped and discarded.
@@ -376,7 +376,7 @@ The files are in `computations/andrews-curtis/lean/`. They use plain Lean 4 core
 | d_GS(P3, AK(3)) = d_GS(P4, AK(3)) = 19 (Thm 6, first part), in the directed reading (both directions) and in the undirected reading | computed (exhaustive below cap 19, directed and undirected; paths of bottleneck 19 found and certificate-checked; relative to the graph) | `reproduce.sh`; `test_ac.py` |
 | Exact predecessor enumeration in the GS graph (shapes I–III, §5) | checked exhaustively: equals the inverted forward map on all states of energy ≤ 12; forward and predecessor edge sets identical (80,172 edges) on the undirected closure below 20 | `ac_graph.py`; `test_ac.py` |
 | **New:** no undirected GS path below energy 27 between two of AK(3), P1, P2 (cap 27: 13,873,120 states, 10,340,996 / 877,892 / 2,654,232; cap 26: 6,373,628). Theorem 6's lower bounds d_GS ≥ 27 therefore hold in the undirected reading too, which closes the possible gap | computed (exhaustive; one implementation; relative to the graph) | `ac_search_par.cpp --undirected`; `AC_HEAVY=1 reproduce.sh` |
-| **New:** no undirected GS path below energy 30 between two of AK(3), P1, P2. The undirected components below 30 of P1 (18,141,004 states) and P2 (50,655,984 states) contain no other source. So d_GS ≥ 30 in the undirected reading too, the same level as the directed cap-30 run | computed (exhaustive; single-source components, validated against the multi-source run at cap 27; one implementation; relative to the graph) | `ac_search_par.cpp --undirected ... --passive`; `AC_HEAVY=1 reproduce.sh` |
+| **New:** no undirected GS path below energy 31 between two of AK(3), P1, P2. The undirected components below 31 of P1 (42,794,280 states) and P2 (95,118,656 states) contain no other source; below 30 they have 18,141,004 and 50,655,984 states. So d_GS ≥ 31 in the undirected reading, one level beyond the directed cap-30 run | computed (exhaustive; single-source components, validated against the multi-source run at cap 27; one implementation; relative to the graph) | `ac_search_par.cpp --undirected ... --passive`; `AC_HEAVY=1 reproduce.sh` |
 | Sublevel counts at exclusive cap 25: 1,532,732 / 135,892 / 168,304, no meeting | computed; reproduces the paper's numbers exactly | `reproduce.sh` |
 | Sublevel count at exclusive cap 26: 6,212,968 (5,431,780 / 356,836 / 424,352), no meeting: no state of energy < 26 forward-reachable from two sources (the paper's criterion; implies directed d_GS ≥ 26 for each pair) | computed; reproduces the paper's numbers exactly | `AC_HEAVY=1 reproduce.sh` |
 | Sublevel count at exclusive cap 27: 13,504,944 (10,118,636 / 851,836 / 2,534,472), no meeting: no state of energy < 27 forward-reachable from two sources (Thm 6's criterion; implies directed d_GS ≥ 27; the undirected reading of Thm 6 is not established, a possible gap in the paper) | computed (exhaustive, our implementation; relative to the graph); reproduces the paper's numbers exactly | same |
@@ -387,11 +387,11 @@ The files are in `computations/andrews-curtis/lean/`. They use plain Lean 4 core
 
 ## Next steps
 
-- **Undirected cap 31**: P1 is done (42.8M states, no other source). P2 is in progress, at about 120M states projected. Cap 32 would need roughly 2–3× more per component; the key now allows it (CAP ≤ 32). A meeting would come with a path from `ac_search_compact --undirected` (parents kept), which `ac_path.py` expands and `gen_lean.py --extra` Lean-verifies.
+- **Undirected cap 32**: possible next step, via the single-source runs. Cap 31 took 43M (P1) and 95M (P2) states. At the cap-30 → 31 growth of ×2.2–2.4, cap 32 needs about 100M and 230M states, about 2 GB of table for P2, and roughly 1.5 h for P2 on 4 threads. The key allows CAP ≤ 32. A meeting would come with a path from `ac_search_compact --undirected` (parents kept), which `ac_path.py` expands and `gen_lean.py --extra` Lean-verifies.
 - **Next concrete step:** a bounded attack on the open edges, P1 or P2 → AK(3), the two remaining uncertified claims of Shehper et al.
   - Cap 30 is done (no meeting, §3).
   - Cap 31 with `ac_search_par`: growth from cap 29 to cap 30 was ×3.96 in states, so cap 31 might need about 1.4 billion states, about 12 GB of table at 8 B per slot and 90% load, and several hours. It is out of reach on this machine. (It also needed the key fix of §5. The single-source runs of §5 avoid the AK(3) component, and they work for the directed search too, with `--passive`.)
   - A meeting would need parent recovery: rerun `ac_search_compact --passive` from each side toward the meeting state. Then `ac_path.py` expands the path, and `gen_lean.py --extra` Lean-verifies it.
   - Alternatively, try the non-junction edges, which our search supports and the paper's graph excludes.
 - Done: the Lean port (§4).
-- Done (§5): the undirected-graph version of the Theorem 6 bounds, at ≥ 30.
+- Done (§5): the undirected-graph version of the Theorem 6 bounds, at ≥ 31.

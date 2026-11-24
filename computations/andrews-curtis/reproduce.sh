@@ -44,6 +44,7 @@ if [ "${AC_HEAVY:-0}" = 1 ]; then
   "$W/ac_par" 30 --slots 50000000 --undirected $P1 --passive $AK3 $P2 | tail -1   # 18,141,004 states; 7 min, 0.4 GB
   "$W/ac_par" 30 --slots 100000000 --undirected $P2 --passive $AK3 $P1 | tail -1  # 50,655,984 states; 20 min, 0.8 GB
   "$W/ac_par" 31 --slots 130000000 --undirected $P1 --passive $AK3 $P2 | tail -1  # 42,794,280 states; 15 min, 1.0 GB
+  "$W/ac_par" 31 --slots 250000000 --undirected $P2 --passive $AK3 $P1 | tail -1  # 95,118,656 states; 35 min, 2.0 GB
   "$W/ac_par" 27 --slots 40000000 $AK3 + $P1 + $P2 | tail -1        # 13,504,944 states (10118636 851836 2534472), no meeting; 93 s
   "$W/ac_par" 30 --slots 600000000 $AK3 + $P1 + $P2 | tail -4       # levels 26-28 give the cap-27/28/29 totals; then
   # 351,388,696 states (284176652 17796820 49415224), no meeting; 54 min wall on 4 threads, 4.7 GB
