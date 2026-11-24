@@ -27,3 +27,14 @@
 {"mode": "random", "progress": true, "seed": 131, "n": 4, "B": 3, "elapsed": 810, "tested": 6655697, "stats": {"uniform/m10": [6655697, 0]}}
 {"mode": "random", "progress": true, "seed": 131, "n": 4, "B": 3, "elapsed": 840, "tested": 6967631, "stats": {"uniform/m10": [6967631, 0]}}
 {"mode": "random", "progress": true, "seed": 131, "n": 4, "B": 3, "elapsed": 870, "tested": 7307229, "stats": {"uniform/m10": [7307229, 0]}}
+{"mode": "random", "progress": true, "seed": 131, "n": 4, "B": 3, "elapsed": 900, "tested": 7617631, "stats": {"uniform/m10": [7617631, 0]}}
+{"mode": "random", "progress": true, "seed": 131, "n": 4, "B": 3, "elapsed": 930, "tested": 7939602, "stats": {"uniform/m10": [7939602, 0]}}
+{"mode": "random", "progress": true, "seed": 131, "n": 4, "B": 3, "elapsed": 960, "tested": 8274485, "stats": {"uniform/m10": [8274485, 0]}}
+{"mode": "random", "progress": true, "seed": 131, "n": 4, "B": 3, "elapsed": 990, "tested": 8598357, "stats": {"uniform/m10": [8598357, 0]}}
+{"mode": "random", "progress": true, "seed": 131, "n": 4, "B": 3, "elapsed": 1020, "tested": 8903402, "stats": {"uniform/m10": [8903402, 0]}}
+{"mode": "random", "progress": true, "seed": 131, "n": 4, "B": 3, "elapsed": 1050, "tested": 9237366, "stats": {"uniform/m10": [9237366, 0]}}
+{"mode": "random", "progress": true, "seed": 131, "n": 4, "B": 3, "elapsed": 1080, "tested": 9571613, "stats": {"uniform/m10": [9571613, 0]}}
+{"mode": "random", "progress": true, "seed": 131, "n": 4, "B": 3, "elapsed": 1110, "tested": 9910970, "stats": {"uniform/m10": [9910970, 0]}}
+{"mode": "random", "progress": true, "seed": 131, "n": 4, "B": 3, "elapsed": 1140, "tested": 10225382, "stats": {"uniform/m10": [10225382, 0]}}
+{"mode": "random", "progress": true, "seed": 131, "n": 4, "B": 3, "elapsed": 1170, "tested": 10554788, "stats": {"uniform/m10": [10554788, 0]}}
+{"mode": "random", "final": true, "seed": 131, "n": 4, "B": 3, "elapsed": 1200, "tested": 10889628, "stats": {"uniform/m10": [10889628, 0]}}

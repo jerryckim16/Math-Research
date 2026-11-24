@@ -31,9 +31,23 @@ def cubes_of(br, m):
     return out
 
 
+def refine(chains, m):
+    """Children of a region given by per-agent chains: append each agent's next
+    favourite (a good not yet in its chain).  Agents with identical chains are
+    interchangeable, so their new goods are taken non-decreasing.  The children
+    cover the parent (every agent has some next favourite)."""
+    chains = [list(c) for c in chains]
+    opts = [[x for x in range(m) if x not in c] for c in chains]
+    out = []
+    for ss in itertools.product(*opts):
+        if all(not (chains[k] == chains[k + 1] and ss[k] > ss[k + 1]) for k in range(len(chains) - 1)):
+            out.append(tuple(tuple(c + [x]) for c, x in zip(chains, ss)))
+    return out
+
+
 def one(args):
     n, m, br, timeout = args
-    br = [list(b) if isinstance(b, tuple) else b for b in br]
+    br = [list(b) if isinstance(b, (tuple, list)) else b for b in br]
     res = cegar.cegar(n, m, list(br), timeout)
     out = {k: res[k] for k in res if k != "allocs"}
     out.update({"n": n, "m": m, "branch": list(br), "num_allocs": len(res.get("allocs", []))})
@@ -51,6 +65,8 @@ if __name__ == "__main__":
     p.add_argument("--workers", type=int, default=1)
     p.add_argument("--only", nargs="*", default=None)
     p.add_argument("--cubes", action="store_true")
+    p.add_argument("--refine", default=None,
+                   help='JSON chains of a parent region, e.g. "[[0,1],[0,1],[0,1]]": run its children')
     p.add_argument("--out", required=True)
     a = p.parse_args()
     done = set()
@@ -65,7 +81,9 @@ if __name__ == "__main__":
         brs = list(itertools.combinations_with_replacement(range(a.m), a.n - 1))
     if a.cubes:
         brs = [c for br in brs for c in cubes_of(br, a.m)]
-    norm = lambda br: json.dumps([list(b) if isinstance(b, tuple) else b for b in br])
+    if a.refine:
+        brs = refine(json.loads(a.refine), a.m)
+    norm = lambda br: json.dumps([list(b) if isinstance(b, (tuple, list)) else b for b in br])
     todo = [(a.n, a.m, br, a.timeout) for br in brs if norm(br) not in done]
     print(len(todo), "regions to do", flush=True)
     with mp.Pool(a.workers) as pool, open(a.out, "a") as f:
