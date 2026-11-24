@@ -499,6 +499,31 @@ logs for the `COUNTEREXAMPLE_CANDIDATE` flag; count 0).
   the run log). Every Z3 model had an EFX allocation, confirmed by the exact
   C checker and `efx.verify`.
 
+### m = 9 cost sample (fourth session; in progress, checkpoint 1)
+
+Random cubes (fixed seeds) at m = 9, arith 2 + Lemma M, 1,200 s limit,
+`probe_regions.py` (records in `data/m9_probe_n4.jsonl`, cvc5 timings in
+`data/m9_cvc5_times.jsonl`). Up to 6 processes on 4 cores at times, so times
+can be up to ≈ 1.5× pessimistic. Preliminary, from the first 22 regions
+(the data file may already hold later ones):
+
+- **One-shared-pair cubes (branches (2,2,6), (0,1,6), (4,4,5), (1,1,6)):
+  19/19 closed** at cube level, CEGAR 1–327 s (median ≈ 10 s), 53–669
+  allocations; Z3 full-clause re-solve 5–373 s (≈ 1–2.5× the CEGAR time).
+- **Diagonal (7,7,7): 2 of 3 cubes closed** (207 s and 217 s, ≈ 455
+  allocations); cube (7,0),(7,5),(7,5) **timed out at 1,200 s** (1,359
+  allocations found). Its first sampled tri-sub (of 196) closed in 402 s
+  with 665 allocations (Z3 re-solve 554 s).
+- **cvc5 at m = 9 is 5–8× the m = 8 rule:** 23–26 s at a = 90, 80–100 s at
+  a = 138–154, 431 s at a = 251, 1,351 s at a = 455; a = 492 and 546 did
+  not finish in 1,240 s and 956 s. All finished verdicts unsat.
+- No counterexample candidate; every Z3 re-solve unsat.
+
+Preliminary reading: the one-shared-pair stratum alone (30,464 of the 36,152
+cubes) projects to ≈ 2·10³–5·10³ CPU-h including both re-checks, and the
+diagonal strata are larger by an order of magnitude or more. A two-solver
+m = 9 run is far beyond 30 CPU-h. Final numbers below once the sample ends.
+
 ### m = 8 cost probe (first session; naive pipeline, Z3 5.4.1, single thread)
 
 - **Argmax branches.** A random sample of 12 of the 120 branches:
@@ -539,7 +564,8 @@ logs for the `COUNTEREXAMPLE_CANDIDATE` flag; count 0).
    subsection). Possible extras, not needed for the label: a third
    solver, or proof objects (e.g. cvc5 proofs checked by an external
    checker).
-2. **(Recommended next bounded step) m = 9 reproduction (AFM's main claim).** At m = 8 the whole run took
+2. **(Fourth session: cost sample in progress; see "m = 9 cost sample".
+   Preliminary: not feasible in ~30 CPU-h.) m = 9 reproduction (AFM's main claim).** At m = 8 the whole run took
    2.6 CPU-h of CEGAR plus a Z3 re-solve (5.2 CPU-h wall-clock on 4 cores).
    From m = 7 to m = 8 the CEGAR cost grew by ≈ 90–120× (77 s → 6,800 s of
    successful regions).

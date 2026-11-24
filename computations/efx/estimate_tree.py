@@ -76,7 +76,7 @@ def main():
     ct = next((x.split("=", 1)[1] for x in sys.argv if x.startswith("--cvc5-times=")), None)
     fit = None
     if ct:
-        ts = [json.loads(l) for l in open(ct)]
+        ts = [t for t in map(json.loads, open(ct)) if "cvc5_seconds" in t]   # skip lower bounds
         fit = sum(t["cvc5_seconds"] * t["num_allocs"] ** 2 for t in ts) / sum(t["num_allocs"] ** 4 for t in ts)
         print(f"cvc5 fit on {len(ts)} measured records (a = {min(t['num_allocs'] for t in ts)}-"
               f"{max(t['num_allocs'] for t in ts)}): t = {fit:.2e} a^2 (m = 8 rule: {CVC5_COEF:.1e});"
