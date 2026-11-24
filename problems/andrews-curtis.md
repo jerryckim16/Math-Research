@@ -7,9 +7,10 @@
 - **Theorem 6** (computer-assisted) is re-derived with our own implementation:
   - the exact bottleneck 19;
   - all exhaustive state counts at energy caps 25, 26 and 27, matching the paper exactly, including the 13,504,944 states behind the "≥ 27" lower bounds.
-- **New, beyond the paper:** the cap-28 and cap-29 exhaustions finish, with 47,544,780 and 88,628,824 states and no meeting.
-  - So no state below energy 29 is forward-reachable from two of AK(3), P1, P2. This is the paper's criterion, pushed from cap 27 to cap 29.
-  - **Caveat found here: the GS graph is directed** (§3, "Directedness"). "No meeting" therefore gives the bound only for *directed* paths (and for paths S → X ← T). It does not give the bound for paths that may use edges backwards. The paper's d_GS does not say which reading it means. So we no longer write "d_GS ≥ 29" without the word "directed".
+- **New, beyond the paper:** the cap-28, cap-29 and cap-30 exhaustions finish, with 47,544,780, 88,628,824 and **351,388,696** states and no meeting.
+  - So no state below energy 30 is forward-reachable from two of AK(3), P1, P2. This is the paper's criterion, pushed from cap 27 to cap 30. In the directed reading it gives d_GS ≥ 30 for each pair, in both directions.
+  - Caps 28–29 were run by two implementations, which agree exactly. Cap 30 was run by one (`ac_search_par.cpp`).
+  - **Caveat found here: the GS graph is directed** (§3, "Directedness"). "No meeting" therefore gives the bound only for *directed* paths (and for paths S → X ← T). It does not give the bound for paths that may use edges backwards. The paper's d_GS does not say which reading it means. So we no longer write "d_GS ≥ c" without the word "directed".
   - All of this is graph-relative and not an AC-distance bound.
 - AK(3) and the conjecture itself remain open.
 
@@ -201,14 +202,26 @@ Not checked: the §6 analysis of the Two-Hump classification table, the 214-pair
   - Validation: at exclusive caps 25 and 29, P1 alone settles 135,892 and 5,374,816 states, and P2 alone settles 168,304 and 14,772,800. These are exactly the per-source counts of the multi-source runs, as they must be when there is no meeting.
   - **Cap 30, P1 alone:** 17,796,820 states settled, and the set contains neither AK(3) nor P2. This took 496 s on one core at 0.96 GB peak RSS.
   - So there is no directed path P1 ⇝ AK(3) and no directed path P1 ⇝ P2 with all energies < 30. On its own this says nothing about paths *into* P1, or about V-shaped or zig-zag paths. The multi-source run below covers the V-shaped paths.
-- Caveat for caps 28 and 29: the result comes from one implementation. Our second engine (`ac_search.cpp`) needs about 10 GB at cap 28, so it was not run. The engine does match the paper exactly at caps 25–27. The graph-relative scope noted below applies in full.
+- **Cap 30 (beyond the paper).** Same sources and exclusive cap 30, run with `ac_search_par.cpp`.
+  - That engine explores the same graph with different data structures. Each state is one 64-bit hash-table entry: a 56-bit mixed-radix key plus level, group and settled bits. There are no parent pointers and no queue. The levels are processed in order by 4 threads.
+  - Its move generation and canonicalisation code is copied from `ac_search_compact.cpp`, so it is a *second implementation* (different data structures and parallelism), not an independent one.
+  - Validation: at cap 25 it gives 1,532,732 / 135,892 / 168,304. At cap 27 it gives 13,504,944 (10,118,636 / 851,836 / 2,534,472), in 93 s.
+  - Inside the cap-30 run, the cumulative counts after levels 26, 27 and 28 are exactly the cap-27, cap-28 and cap-29 totals and per-source counts above. The "seen" counts after levels 25 and 26 (107,663,712 and 189,133,772) are identical to those of the compact engine's cap-30 attempt.
+  - **Result: 351,388,696 states settled, no meeting.** It took 3,210 s wall (4 threads) at 4.73 GB peak RSS, with a 600M-slot table.
+  - Per source: 284,176,652 (AK(3)), 17,796,820 (P1), 49,415,224 (P2). The P1 count equals the P1-only passive run exactly, as it must.
+  - So **no state of energy < 30 is forward-reachable from two of AK(3), P1, P2.** Hence directed d_GS ≥ 30 for each pair, in both directions. The undirected reading remains open (see "Directedness").
+  - Before this, a cap-30 attempt with `ac_search_compact` hit its 190M-state budget at level 27 (peak 5.6 GB). That engine stores every state seen below the cap, and the planning estimate of 165M states was far too low.
+- Caveat for caps 28–30.
+  - Caps 28 and 29 now have two implementations that agree exactly: `ac_search_compact`, and `ac_search_par` (inside its cap-30 run).
+  - Cap 30 has one. `ac_search.cpp`, which was written separately, needs about 10 GB at cap 28 and was not run there.
+  - All engines match the paper exactly at caps 25–27. The graph-relative scope noted below applies in full.
 - **The full graph** (all rotations, not only cancelling junctions) is barely larger but about 20× slower in our implementation.
   - Cap 21: 41,306 states against 40,078 with `--junction`. Cap 23: 285,760 against 274,430. No meeting in either.
   - It was not pushed further.
 - **Directedness (found here).** The junction GS graph is not symmetric.
   - Example: from S = (x⁻³y⁴xyxy⁻¹x⁻¹y⁻¹, x⁻¹y⁻¹x⁻¹yxy) (canonical words `XXXyyyyxyxYXY` | `XYXyxy`, energy 19), multiplying the first relator by the inverse of the second cancels all of it and gives AK(3) = (`XXXyyyy` | `XYXyxy`).
   - The reverse product, AK(3)'s x⁻³y⁴ times a rotation of xyxy⁻¹x⁻¹y⁻¹ (or of its inverse), only gives back S through a product with a non-cancelling junction. That edge is not in the graph.
-  - A brute-force check over the cap-20 region (our script, run in scratch) found such one-way edges. At cap 18 there were none among 3,446 edges.
+  - A brute-force check (a scratch script, not kept in the repo) took every state of energy < 20 forward-reachable from AK(3), P1 or P2: 20,236 states, the same count as the engines. It found that **168 of the 79,752 edges among them have no reverse edge**. Below energy 18 there were none among 3,446 edges.
   - Consequences:
     - (a) Every search here and in the paper is forward-only. "No meeting below cap c" means *no state of energy < c is forward-reachable from two different sources*.
     - (b) That excludes all directed paths between the sources, in both directions, and all paths of the form S → X ← T.
@@ -290,17 +303,17 @@ The files are in `computations/andrews-curtis/lean/`. They use plain Lean 4 core
 | Sublevel counts at exclusive cap 25: 1,532,732 / 135,892 / 168,304, no meeting | computed; reproduces the paper's numbers exactly | `reproduce.sh` |
 | Sublevel count at exclusive cap 26: 6,212,968 (5,431,780 / 356,836 / 424,352), no meeting: no state of energy < 26 forward-reachable from two sources (the paper's criterion; implies directed d_GS ≥ 26 for each pair) | computed; reproduces the paper's numbers exactly | `AC_HEAVY=1 reproduce.sh` |
 | Sublevel count at exclusive cap 27: 13,504,944 (10,118,636 / 851,836 / 2,534,472), no meeting: no state of energy < 27 forward-reachable from two sources (Thm 6's criterion; implies directed d_GS ≥ 27; the undirected reading of Thm 6 is not established, a possible gap in the paper) | computed (exhaustive, our implementation; relative to the graph); reproduces the paper's numbers exactly | same |
-| **New:** sublevel count at exclusive cap 28: 47,544,780 (36,700,896 / 2,323,596 / 8,520,288), no meeting: no state of energy < 28 forward-reachable from two sources (implies directed d_GS ≥ 28) | computed (exhaustive; one implementation, which matches the paper exactly at caps 25–27; relative to the graph) | `ac_search_compact.cpp` |
-| **New:** sublevel count at exclusive cap 29: 88,628,824 (68,481,208 / 5,374,816 / 14,772,800), no meeting: no state of energy < 29 forward-reachable from two sources (implies directed d_GS ≥ 29) | computed (exhaustive; one implementation; relative to the graph) | `ac_search_compact.cpp` |
+| **New:** sublevel count at exclusive cap 28: 47,544,780 (36,700,896 / 2,323,596 / 8,520,288), no meeting: no state of energy < 28 forward-reachable from two sources (implies directed d_GS ≥ 28) | computed (exhaustive; two implementations agree exactly; relative to the graph) | `ac_search_compact.cpp`, `ac_search_par.cpp` |
+| **New:** sublevel count at exclusive cap 29: 88,628,824 (68,481,208 / 5,374,816 / 14,772,800), no meeting: no state of energy < 29 forward-reachable from two sources (implies directed d_GS ≥ 29) | computed (exhaustive; two implementations agree exactly; relative to the graph) | same |
+| **New:** sublevel count at exclusive cap 30: 351,388,696 (284,176,652 / 17,796,820 / 49,415,224), no meeting: no state of energy < 30 forward-reachable from two of AK(3), P1, P2 (implies directed d_GS ≥ 30 for each pair, both directions; undirected reading not established) | computed (exhaustive; one implementation, a second implementation of the compact engine's graph with different data structures, matching it exactly at caps 25–29; relative to the graph) | `ac_search_par.cpp`; `AC_HEAVY=1 reproduce.sh` |
 | AK(3) AC-trivial? Andrews–Curtis conjecture | open | — |
 
 ## Next steps
 
 - **Next concrete step:** a bounded attack on the open edges, P1 or P2 → AK(3), the two remaining uncertified claims of Shehper et al.
-  - Cap 30 with the compact engine (2026-11-24): **budget hit, inconclusive.** It stopped at 190M stored states while processing level 27, after the levels ≤ 26 had again settled exactly 13,504,944. Peak RSS was 5.6 GB.
-    - The old estimate of 165M states was wrong. The engine stores every state seen below the cap, and AK(3)'s side dominates.
-    - A key-only, multi-threaded engine (`ac_search_par.cpp`, about 8 B per state) is being tried; see the cap-30 entry once it is recorded.
-  - A meeting at bottleneck 29 would expand, through `ac_path.py`, to a new certificate for one of the two uncertified claims of Shehper et al.
+  - Cap 30 is done (no meeting, §3).
+  - Cap 31 with `ac_search_par`: growth from cap 29 to cap 30 was ×3.96 in states, so cap 31 might need about 1.4 billion states, about 12 GB of table at 8 B per slot and 90% load, and several hours. It is out of reach on this machine.
+  - A meeting would need parent recovery: rerun `ac_search_compact --passive` from each side toward the meeting state. Then `ac_path.py` expands the path, and `gen_lean.py --extra` Lean-verifies it.
   - Alternatively, try the non-junction edges, which our search supports and the paper's graph excludes.
 - Done: the Lean port (§4).
 - Open: decide the undirected-graph version of the Theorem 6 bounds. This needs predecessor enumeration in the junction graph.
