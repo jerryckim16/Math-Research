@@ -169,7 +169,8 @@ def run_gate(k, p, chain, log=None):
             l = 1
             trace.append(("proj", l, len(S), len(S), round(time.time() - t1, 3)))
         else:
-            S, checked = lift(S, k, p, l, op)
+            use_c = LIFT_ENGINE == "c" or (LIFT_ENGINE == "auto" and op ** k > LIFT_C_THRESHOLD)
+            S, checked = (lift_c if use_c else lift)(S, k, p, l, op)
             l *= op
             trace.append(("x%d" % op, l, len(S), checked, round(time.time() - t1, 3)))
         if log:
@@ -270,3 +271,47 @@ def level1_improper_covers(k, p, max_rows=5_000_000):
 
 
 LEVEL1_ENGINE = os.environ.get("LRC_LEVEL1", "c" if USE_C else "py")
+
+
+# ---------------------------------------------------------------------------
+# C engine for large lifts (liftfree.c, branch and bound over lift digits).
+# lift_c returns exactly what lift returns: liftfree.c outputs every
+# witness-free lift in the full fibre w_i = v_i + j_i*N (its cut only removes
+# branches with no witness-free completion; proof in its header), then the
+# gcd clause (a) and the orbit canonicalisation are applied here as in lift.
+# Cross-checked against lift in test_lonely.py.
+
+_LIFTFREE_BIN = None
+
+
+def _liftfree_bin():
+    global _LIFTFREE_BIN
+    if _LIFTFREE_BIN is None:
+        src = os.path.join(os.path.dirname(os.path.abspath(__file__)), "liftfree.c")
+        out = os.path.join(tempfile.mkdtemp(prefix="lrc_"), "liftfree")
+        subprocess.run(["cc", "-O3", "-o", out, src], check=True)
+        _LIFTFREE_BIN = out
+    return _LIFTFREE_BIN
+
+
+def lift_c(S, k, p, l, c):
+    """Same result as lift(S, k, p, l, c); second value is the C node count."""
+    if not S:
+        return [], 0
+    hi = Level(k, p, c * l)
+    inp = "".join(" ".join(str(x) for x in v) + "\n" for v in S)
+    res = subprocess.run([_liftfree_bin(), str(k), str(l * p), str(c)], input=inp,
+                         check=True, capture_output=True, text=True)
+    out = set()
+    for line in res.stdout.splitlines():
+        w = [int(x) for x in line.split()[1:]]
+        if not hi.gcd_condition(w):
+            out.add(hi.canon(w))
+    nodes = int(res.stderr.split()[1])
+    return sorted(out), nodes
+
+
+# Lifts with c**k above this many candidates go to liftfree.c unless
+# LRC_LIFT=py.  The result is the same set either way (tested).
+LIFT_C_THRESHOLD = 1 << 16
+LIFT_ENGINE = os.environ.get("LRC_LIFT", "auto")

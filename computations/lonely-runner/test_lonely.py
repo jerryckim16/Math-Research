@@ -225,6 +225,16 @@ class TestCoverGenAndLiftFree(unittest.TestCase):
                              if not ca.gcd_clause(w, c)})
             self.assertEqual(ours, theirs, (k, p, c))
 
+    def test_lift_c_matches_python_lift(self):
+        from sieve import lift_c
+        for k, p, c in ((6, 19, 2), (6, 19, 3), (6, 23, 7)):
+            S, _ = level1_improper(k, p)
+            S2, _ = lift(S, k, p, 1, 2)
+            ours, _ = lift_c(S2, k, p, 2, c)
+            self.assertEqual(ours, lift(S2, k, p, 2, c)[0], (k, p, c))
+        S, _ = level1_improper(6, 29)
+        self.assertEqual(lift_c(S, 6, 29, 1, 7)[0], lift(S, 6, 29, 1, 7)[0])
+
     def test_flag_constants_match_paper(self):
         from flag_bound import flag_constants, log_bound
         K14, r14 = flag_constants(14)
