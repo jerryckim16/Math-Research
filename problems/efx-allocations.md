@@ -419,7 +419,7 @@ CEGAR timings were taken with 5–6 processes on 4 cores, so they are up to
 | CEGAR speed-ups on the full m = 7 corpus: Z3 `smt.arith.solver=2` + AFM Lemma M items 2–3 give 347 → 77 CPU-s (4.5×); C0′, seeding and extra points do not help (Approach 4a) | measured; every run 84/84 unsat with full-clause re-solve | `data/speedups_n4.jsonl` |
 | Lemma C0′ (agent 0 has the largest top-two sum) is a sound extra normalisation | proved (Approach 4a) + brute-force test of the canonicalisation map | `test_efx.py::test_c0_canonicalisation` |
 | m = 10 distinct-favourites sample (arith 2 + Lemma M, 300 s): branches (1,2,3) and (2,5,8) time out (263 / 299 Z3 calls); cube (1,0),(2,0),(3,0) times out; cube (1,4),(2,4),(3,4) unsat in 136 s, but its full-clause Z3 re-solve hit the 300 s limit (`unknown`), so it is **not** counted as closed | measured; nothing closed | `data/cegar_m10_distinct_sample.jsonl` |
-| **n = 4, m = 8**: every instance has an EFX₀ allocation (independent reproduction of the m = 8 case of AFM 2026, the first case beyond Mahara's m ≤ n+3) | **certificate-checked in Z3; second-solver (cvc5) re-check partial**. Coverage 120/120 argmax branches: 111 closed at branch level, the 9 diagonal branches (0,0,0), (0,0,1), (k,k,k) for k = 1…7 closed through **all** their cubes (868 cubes, none needed a deeper layer). 979 unsat certificates, 167,112 allocations (max 1,364 per region). Each was re-solved from scratch in Z3 with full clauses: 979/979 unsat. Tree coverage re-derived by the independent code in `recheck_cvc5.py --tree`: complete. cvc5 (independent encoding, full clauses, QF_LRA logic): **825/979 records unsat, 0 not unsat, 154 pending** (all records with ≤ 307 allocations are done; the pending ones are 36 branch-level records and 118 cubes with 309–1,364 allocations). With only the cvc5-verified records the tree covers 75/120 branches (third session, in progress). So m = 8 is **reproduced modulo Z3**; the second-solver check is incomplete | `data/m8_tree_certs.jsonl.gz`, `data/m8_cvc5_verdicts.txt`, `data/m8_run_summary.txt` |
+| **n = 4, m = 8**: every instance has an EFX₀ allocation (independent reproduction of the m = 8 case of AFM 2026, the first case beyond Mahara's m ≤ n+3) | **certificate-checked in Z3; second-solver (cvc5) re-check partial**. Coverage 120/120 argmax branches: 111 closed at branch level, the 9 diagonal branches (0,0,0), (0,0,1), (k,k,k) for k = 1…7 closed through **all** their cubes (868 cubes, none needed a deeper layer). 979 unsat certificates, 167,112 allocations (max 1,364 per region). Each was re-solved from scratch in Z3 with full clauses: 979/979 unsat. Tree coverage re-derived by the independent code in `recheck_cvc5.py --tree`: complete. cvc5 (independent encoding, full clauses, QF_LRA logic): **954/979 records unsat, 0 not unsat, 25 pending** (the pending ones are the largest: 13 branch-level records and 12 cubes with 666–1,364 allocations). With only the cvc5-verified records the tree covers 98/120 branches (third session, in progress). So m = 8 is **reproduced modulo Z3**; the second-solver check is incomplete | `data/m8_tree_certs.jsonl.gz`, `data/m8_cvc5_verdicts.txt`, `data/m8_run_summary.txt` |
 
 **No counterexample candidate arose in any run** (`summarize.py` scans all
 logs for the `COUNTEREXAMPLE_CANDIDATE` flag; count 0).
@@ -514,8 +514,9 @@ logs for the `COUNTEREXAMPLE_CANDIDATE` flag; count 0).
 1. **(In progress, third session) Finish the second-solver check of
    m = 8.** The run itself is complete: 979 regions closed, a full-clause
    Z3 re-solve for each, and a complete coverage tree. cvc5 has verified
-   825 of the 979 regions; 154 are pending (309–1,364 allocations each,
-   ≈ 8.8 CPU-h by the quadratic fit above).
+   954 of the 979 regions; 25 are pending (666–1,364 allocations each,
+   ≈ 4 CPU-h by the quadratic fit above, which has overestimated the
+   finished chunks by ≈ 1.3×).
    - The route planned here (re-close the large branch-level regions at
      cube level, so that cvc5 sees small certificates) **does not work**:
      cubes keep most of the allocations (m = 8 run subsection, failed
@@ -536,6 +537,20 @@ logs for the `COUNTEREXAMPLE_CANDIDATE` flag; count 0).
      chunks, but it is a multi-session job.
    - Send shared-top branches straight to cubes. At m = 8, the 9
      branch-level timeouts were 28 % of the CEGAR time.
+   - **m = 9 measurements (third session; arith 2 + Lemma M, 1 worker,
+     `data/m9_probe_n4.jsonl`).** Branch (2,2,6): **timeout at 600 s**
+     (909 Z3 calls, 908 allocations found; at m = 8 the same branch
+     closed in 20 s with 274). Its first cube (2,0),(2,0),(6,0):
+     **timeout at 300 s** (769 calls; at m = 8: 4.6 s, 184 allocations).
+     So per region m = 9 costs **at least 30–65×** m = 8, and regions of
+     the common "two agents share a top good" type no longer close at
+     branch or cube level within 300–600 s. They will need a deeper
+     layer, which multiplies the region count (cubes per branch 7³ → 8³).
+     The 200–300 CPU-h extrapolation above is therefore a **lower-end
+     guess**, likely too low; AFM spent ≈ 4·10⁴ vCPU-h. A real projection
+     needs a sample of tri-sub costs at m = 9 (next measurement). Also,
+     cvc5 re-checking is quadratic in the allocation count, so m = 9
+     certificates of ≳ 800 allocations would cost ≳ 8 min each in cvc5.
 3. **m = 10, distinct-favourites subclass** (84 branches; AFM's hand lemma
    L1 fails here, Approach 6). The sample is above: two branches and one cube
    timed out at 300 s; one cube closed in 136 s.
