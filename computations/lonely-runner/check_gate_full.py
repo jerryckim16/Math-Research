@@ -65,8 +65,17 @@ def run_parallel(args, lines, jobs):
         f = tempfile.TemporaryFile("w+")
         f.write("\n".join(ch) + "\n")
         f.seek(0)
-        procs.append(subprocess.Popen(args, stdin=f, stdout=subprocess.PIPE, text=True))
-    outs = [pr.communicate()[0] for pr in procs]
+        o = tempfile.TemporaryFile("w+")
+        # stdout goes to a file, not a pipe: with pipes read one after
+        # another, workers 2..JOBS blocked on a full pipe until worker 1
+        # finished, so a run used one core instead of JOBS.
+        procs.append((subprocess.Popen(args, stdin=f, stdout=o, text=True), o))
+    outs = []
+    for pr, o in procs:
+        if pr.wait() != 0:
+            raise RuntimeError(f"{args} exited with {pr.returncode}")
+        o.seek(0)
+        outs.append(o.read())
     res = [None] * len(lines)
     for j, out in enumerate(outs):
         for line in out.splitlines():
