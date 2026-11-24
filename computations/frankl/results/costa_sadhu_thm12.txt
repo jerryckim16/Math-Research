@@ -1,0 +1,22 @@
+# costa_sadhu_thm12.py, run 2026-11-24 (Python 3.13, pure-Python intervals). Exact/1D/contact: --no-regions; cover: --region i (i=0..5, 3 in parallel)
+# Cover values are lower bounds for m0*F0 (m0 = 0.61711...); divide by m0 for F0.
+exact: tau0, m0, alpha0, beta0, identity W r_xy - r_x r_y/(xy) = tau xy, g', g(45/64)-1/2 = 42978321721/2684354560000, W0-monotonicity algebra, Bernstein A.4 (16 coefficients > 0, min = published 0.5546544585977606): OK
+1D tails: small-v brackets 0.3376, 38.11 (>0 at v=2^-12); large-v 2.104 (>0 at v=8)
+1D W0 >= 8/5 G on [2^-12, 8]: 451 cells, min lower bound 7.8876e-06
+1D G(16v) >= 178/25 G(v) on [2^-12, 8]: 373 cells, min lower bound 0.000204581
+A.5 scalars: I[2.8908190776721905e-06, 2.8908190785603698e-06], I[0.40536157056644345, 0.40536157056649785], I[0.24213007305235365, 0.24213007305235493]  (2.0s)
+A.6 (own Q1=[5/16,7/16]x[-1/16,1/16]): Hessian PD on 1036 boxes; min Ftt 0.06247, Fdd 0.4137, det 0.0001398
+     m0 F0(t_c,t_c) in I[7.026712767199682e-09, 7.026749959671009e-09]; |d/dt| <= 4.42e-14; so m0 F0 >= 7.02671e-09 on Q1, i.e. F0 >= 1.13864e-08  (4.8s)
+DONE
+region t in [0.00048828125,0.125]: 1215 boxes positive (min lb of m0 F0 5.316e-07 at (0.00048828125, 0.0009746551513671875, 0.515625, 0.53125)), 0 boxes in Q1
+REGION 0 (0.00048828125, 0.125) OK (1215, 0, 5.315648019720767e-07, (0.00048828125, 0.0009746551513671875, 0.515625, 0.53125)) 9.0s
+region t in [0.125,0.3125]: 1014 boxes positive (min lb of m0 F0 4.625e-05 at (0.3095703125, 0.3125, 0.125, 0.1875)), 0 boxes in Q1
+REGION 1 (0.125, 0.3125) OK (1014, 0, 4.6250371753439074e-05, (0.3095703125, 0.3125, 0.125, 0.1875)) 7.5s
+region t in [0.3125,0.4375]: 908 boxes positive (min lb of m0 F0 2.195e-05 at (0.43359375, 0.435546875, 0.125, 0.1875)), 208 boxes in Q1
+REGION 2 (0.3125, 0.4375) OK (908, 208, 2.1951029565396874e-05, (0.43359375, 0.435546875, 0.125, 0.1875)) 9.0s
+region t in [0.4375,1.5]: 1050 boxes positive (min lb of m0 F0 7.782e-05 at (0.4541015625, 0.46240234375, 0.0, 0.03125)), 0 boxes in Q1
+REGION 3 (0.4375, 1.5) OK (1050, 0, 7.782250027854271e-05, (0.4541015625, 0.46240234375, 0.0, 0.03125)) 8.1s
+region t in [1.5,4.0]: 960 boxes positive (min lb of m0 F0 0.1083 at (1.5, 1.5390625, 0.8125, 0.875)), 0 boxes in Q1
+REGION 4 (1.5, 4.0) OK (960, 0, 0.10833006655740111, (1.5, 1.5390625, 0.8125, 0.875)) 5.6s
+region t in [4.0,17.0]: 10176 boxes positive (min lb of m0 F0 0.001195 at (7.7578125, 7.859375, 0.84375, 0.875)), 0 boxes in Q1
+REGION 5 (4.0, 17.0) OK (10176, 0, 0.0011947939203109657, (7.7578125, 7.859375, 0.84375, 0.875)) 64.1s

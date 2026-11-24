@@ -10,6 +10,8 @@
 4. The rigorous verification of phi*H(x^2) >= x*H(x) succeeds, and the same
    prover FAILS on a false variant (negative control).
 5. Costa-Sadhu Lemma R pieces (exact rational checks) and constants.
+6. Costa-Sadhu Thm 1.2 (costa_sadhu_thm12.py): exact pieces, 1D and contact
+   certificates, mpmath.iv cross-check of the 1e-8 contact margin, negative controls.
 """
 from __future__ import annotations
 
@@ -227,6 +229,82 @@ def test_costa_sadhu_derivatives():
     print("  Costa-Sadhu derivative formulas agree with finite differences; F(t*,0)=0")
 
 
+def test_costa_sadhu_thm12():
+    """Thm 1.2 (l0 = 1409/2000): exact pieces, 1D certificate, contact certificate,
+    derivative formulas vs finite differences, an independent mpmath.iv evaluation
+    of the 1e-8 contact margin, and negative controls."""
+    import costa_sadhu_thm12 as t12
+    t12.exact_checks(verbose=False)
+    t12.one_dimensional_checks(verbose=False)
+    nb, worst, Fc, Ft, lb = t12.contact_checks(verbose=False)
+    assert lb.lo > 0
+    # negative control 1: lowering alpha0 by 1e-8 makes F0(t_c, t_c) < 0, and our
+    # enclosure resolves the sign (so the 1.1e-8 margin is genuinely resolved)
+    dA = t12.IF(Fraction(1, 10**8)) * t12.M0_I
+    G2 = t12.G_val(I(2 * t12.TC))
+    assert (Fc - dA * G2).hi < 0
+    # negative control 2: the 1D prover rejects the false W0 >= 1.62 G (true min ratio 1.6121)
+    c = t12.IF(Fraction(162, 100))
+    try:
+        t12.cover_1d(lambda lo, hi: (t12.W0_point(lo) - c * t12.G_all(I(hi))[0]).lo, 0.125, 0.5,
+                     n0=8, min_w=1e-6)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("1D prover certified a false inequality")
+    try:
+        import mpmath as mp
+    except ImportError:
+        print("  Thm 1.2 exact/1D/contact OK (mpmath missing: cross-checks skipped)")
+        return
+    # independent evaluation with mpmath.iv (MPFR-style intervals, 200 bits)
+    iv = mp.iv
+    iv.prec = 200
+    tau = iv.mpf(1985281) / 4000000
+    m0 = iv.mpf(3085573725166011) / 5000000000000000
+    a0 = 1 / (2 * m0) + iv.mpf(1) / 800000000
+    b0 = 1 - a0
+    Hi = lambda x: -x * iv.log(x) - (1 - x) * iv.log(1 - x)
+    tc = iv.mpf(t12.TC)
+    x = iv.exp(-tc)
+    Gv = Hi(x) / x
+    W0 = Hi(x * x * (1 + tau * (1 - x) ** 2)) / (x * x)
+    F0 = a0 * Hi(x * x) / (x * x) - Gv / m0 + b0 * W0
+    assert F0.a > 0 and abs(float(F0.a) - float((Fc / t12.M0_I).mid())) < 1e-13
+    # derivative formulas vs finite differences (mpmath, 40 digits)
+    mp.mp.dps = 40
+    tau, m0 = mp.mpf(1985281) / 4000000, mp.mpf(3085573725166011) / 5000000000000000
+    a0 = 1 / (2 * m0) + mp.mpf(1) / 800000000
+    b0 = 1 - a0
+    Hm = lambda x: -x * mp.log(x) - (1 - x) * mp.log(1 - x)
+    gm = lambda x: x**2 * (1 + tau * (1 - x) ** 2)
+    Gm = lambda u: mp.e**u * Hm(mp.e**-u)
+    Gam = lambda u: mp.sqrt(Hm(gm(mp.e**-u))) * mp.e**u
+    F = lambda t, d: m0 * (a0 * Gm(2 * t) + b0 * Gam(t + d) * Gam(t - d)) - (Gm(t + d) + Gm(t - d)) / 2
+    Fx = lambda t, xi: F(t, t * xi)
+    rnd = random.Random(7)
+    for _ in range(6):
+        u = rnd.choice([rnd.uniform(0.01, 3.0), rnd.uniform(3.0, 40.0)])
+        g = t12.G_all(I(u))
+        m = t12.Gam_all(I(u), True)
+        for enc, ref in [(g[0], Gm(u)), (g[1], mp.diff(Gm, u)), (g[2], mp.diff(Gm, u, 2)),
+                         (m[0], Gam(u)), (m[1], mp.diff(Gam, u)), (m[2], mp.diff(Gam, u, 2))]:
+            assert enc.lo - 1e-9 <= ref <= enc.hi + 1e-9, (u, enc, ref)
+        t, xi = rnd.uniform(0.01, 10.0), rnd.uniform(0.0, 15 / 17)
+        a, b = t12.Fderivs_box(I(t), I(xi))
+        ra = mp.diff(lambda s: Fx(s, xi), t)
+        rb = mp.diff(lambda s: Fx(t, s), xi)
+        assert a.lo - 1e-8 <= ra <= a.hi + 1e-8 and b.lo - 1e-8 <= rb <= b.hi + 1e-8
+        assert t12.F_point(t, xi).lo - 1e-12 <= Fx(t, xi) <= t12.F_point(t, xi).hi + 1e-12
+        d = xi * t * 0.5
+        tt, dd, td = t12.hessian_box(I(t), I(d))
+        assert abs(tt.mid() - mp.diff(F, (t, d), (2, 0))) < 1e-7
+        assert abs(dd.mid() - mp.diff(F, (t, d), (0, 2))) < 1e-7
+        assert abs(td.mid() - mp.diff(F, (t, d), (1, 1))) < 1e-7
+    print("  Costa-Sadhu Thm 1.2: exact pieces, 1D + contact certificates, mpmath.iv contact value,"
+          " derivative formulas, negative controls OK")
+
+
 if __name__ == "__main__":
     tests = [test_bruteforce, test_c_enumerator, test_interval, test_boppana]
     if os.path.exists(os.path.join(HERE, "costa_sadhu_checks.py")):
@@ -236,6 +314,8 @@ if __name__ == "__main__":
             tests.append(test_costa_sadhu_derivatives)
         except ImportError:
             print("(mpmath missing: derivative cross-check skipped)")
+    if os.path.exists(os.path.join(HERE, "costa_sadhu_thm12.py")):
+        tests.append(test_costa_sadhu_thm12)
     for t in tests:
         print(t.__name__)
         t()
