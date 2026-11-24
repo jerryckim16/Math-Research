@@ -194,14 +194,38 @@ class TestCoverGenAndLiftFree(unittest.TestCase):
         cb = binary("canon")
         for k, p in ((5, 41), (7, 61), (8, 101), (9, 137), (14, 89)):
             sets = []
-            for pr in ("0", "1", "2"):
-                env = dict(os.environ, LRC_PRUNE=pr)
+            for pr in ("0", "1", "2", "2+irr"):
+                env = dict(os.environ, LRC_PRUNE=pr[0])
+                if pr.endswith("irr"):
+                    env["LRC_IRR"] = "2"
                 cov = subprocess.run([b, str(k), str(p)], capture_output=True, text=True, env=env).stdout
                 out = subprocess.run([cb, str(k), str(p), "expand"], input=cov, capture_output=True, text=True).stdout
                 sets.append(sorted(out.splitlines()))
             self.assertEqual(sets[0], sets[1], (k, p))
             self.assertEqual(sets[0], sets[2], (k, p))
+            self.assertEqual(sets[0], sets[3], (k, p))
         self.assertEqual(len(sets[0]), 687016)   # k = 14, p = 89: certificate orbit count
+
+    def test_covergen_irr_same_minimal_covers(self):
+        """LRC_IRR=1, 2, 3 (irredundance cuts / sharper gain bound / both) print exactly the
+        same set of minimal covers as the plain search (classes sorted per line),
+        and composes with sharding."""
+        import os, subprocess
+        b = sieve._covergen_bin()
+        norm = lambda txt: sorted(" ".join(map(str, sorted(map(int, l.split()))))
+                                  for l in txt.splitlines() if l.strip())
+        for k, p in ((5, 41), (7, 61), (8, 101), (9, 137), (10, 127), (14, 89)):
+            plain = norm(subprocess.run([b, str(k), str(p)], capture_output=True, text=True).stdout)
+            for mode in ("1", "2", "3"):
+                env = dict(os.environ, LRC_IRR=mode)
+                irr = norm(subprocess.run([b, str(k), str(p)], capture_output=True, text=True, env=env).stdout)
+                self.assertEqual(plain, irr, (k, p, mode))
+            if k == 9:
+                parts = []
+                for r in range(3):
+                    e = dict(os.environ, LRC_IRR="2", LRC_NSHARDS="3", LRC_SHARD=str(r))
+                    parts += norm(subprocess.run([b, str(k), str(p)], capture_output=True, text=True, env=e).stdout)
+                self.assertEqual(sorted(parts), plain)
 
     def test_covergen_sharding(self):
         import os, subprocess
@@ -224,6 +248,16 @@ class TestCoverGenAndLiftFree(unittest.TestCase):
             theirs = sorted({Lc.canon(w) for ws in wf.values() for w in ws
                              if not ca.gcd_clause(w, c)})
             self.assertEqual(ours, theirs, (k, p, c))
+
+    def test_lift_c_matches_python_lift(self):
+        from sieve import lift_c
+        for k, p, c in ((6, 19, 2), (6, 19, 3), (6, 23, 7)):
+            S, _ = level1_improper(k, p)
+            S2, _ = lift(S, k, p, 1, 2)
+            ours, _ = lift_c(S2, k, p, 2, c)
+            self.assertEqual(ours, lift(S2, k, p, 2, c)[0], (k, p, c))
+        S, _ = level1_improper(6, 29)
+        self.assertEqual(lift_c(S, 6, 29, 1, 7)[0], lift(S, 6, 29, 1, 7)[0])
 
     def test_flag_constants_match_paper(self):
         from flag_bound import flag_constants, log_bound

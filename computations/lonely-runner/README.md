@@ -8,8 +8,8 @@ Everything is exact integer or `Fraction` arithmetic. There is no floating point
 | `lonely.py` | Single-tuple checker. `find_witness(v, delta)` decides whether some real t has all `‖v_i t‖ ≥ delta`. It returns either a rational witness or a checkable certificate that none exists, using a complete search over the left endpoints of the good intervals; the proof is in the module docstring. `max_loneliness(v)` computes `ML(v) = max_t min_i ‖v_i t‖` exactly. The maximum is attained at some `t = a/(v_i+v_j)`; the proof is also in the docstring. |
 | `sieve.py` | The prime-gate sieve: the sets I(k,p,l), lifting, projection, orbit canonicalisation and the exact test `prod P ≥ B_k`. The definitions follow arXiv:2604.23906, §2–3. |
 | `level1.c` | Optional C engine for the level-1 step. It does the same enumeration and the same test as `sieve.level1_improper`, but about 100× faster. It is cross-checked in the tests. |
-| `covergen.c` | Step 2: level-one generator by minimal covers. The completeness proof is in its header. Also has a cost-estimation mode: Knuth random probes plus a capped timed DFS. |
-| `liftfree.c` | Step 2: all witness-free lifts of given tuples from level M to level cM, by branch and bound over the lift digits. Tuples are read from stdin. |
+| `covergen.c` | Step 2: level-one generator by minimal covers. The completeness proof is in its header. Also has a cost-estimation mode: Knuth random probes plus a capped timed DFS. Step 6: `LRC_PRUNE` (private-time pruning). Step 7: `LRC_IRR` (sharper gain bound = 2, redundancy cuts = 1; same output). |
+| `liftfree.c` | Step 2: all witness-free lifts of given tuples from level M to level cM, by branch and bound over the lift digits. Tuples are read from stdin. Step 7: `sieve.lift_c` uses it for every lift with c^k > 65,536 (unless `LRC_LIFT=py`), e.g. the ×11 lift for LRC(10). |
 | `check_allikvere.py` | Step 2: independent spot check of Allikvere's LRC(14) gate certificates. The Zenodo archives are read as data and never executed. |
 | `flag_bound.py` | Step 2: exact re-derivation of Allikvere's flag-bound constants for n = 13 and 14, extended to n = 15. The n = 15 shape factor is heuristic. |
 | `tight_orbit_k15.py` | Step 2: binary cascade of (1..15) at the candidate gate primes for 16 runners. |
@@ -24,7 +24,7 @@ Everything is exact integer or `Fraction` arithmetic. There is no floating point
 | `check_gate_stream.py`, `run_big_gates.sh` | Step 5: streaming re-check for large archives (up to 1.6 GB). Every stored row is tested in C (`gatecheck hexrows`); cascade and kill run on seeded reservoir samples. Archives are downloaded, checked and deleted one at a time. |
 | `prove_small.py` | End-to-end reproduction of LRC(k) for small k. It walks primes upwards, runs the sieve chain at each one, and stops once the product of the successful gate primes reaches B_k. |
 | `exhaustive.py` | Direct bounded check over all primitive tuples with max speed ≤ N. It also lists the tight tuples, i.e. those with ML = 1/(n+1). |
-| `test_lonely.py` | Tests (19). See the list below. |
+| `test_lonely.py` | Tests (21). See the list below. |
 | `results/` | Raw logs of the runs reported in the problem file. Every gate is listed, including the failed ones. |
 
 ## Reproduce
@@ -38,6 +38,7 @@ python3 prove_small.py 6                  # ~50 s, pure Python
 LRC_USE_C=1 python3 prove_small.py 7      # ~30 s
 LRC_USE_C=1 python3 prove_small.py 8 47 2,2,2,p,3,3 4   # 4 processes, see results/lrc_k8.jsonl
 LRC_LEVEL1=cover python3 prove_small.py 9 137 2,2,2,p,5,2 4   # LRC(9), cover generator
+LRC_LEVEL1=cover python3 prove_small.py 10 127 2,2,2,p,11 4  # LRC(10), x11 lift via liftfree.c
 python3 flag_bound.py
 python3 tight_orbit_k15.py              # ~1 min
 # Allikvere spot check (download from Zenodo 10.5281/zenodo.22667683 first):
@@ -61,6 +62,7 @@ python3 exhaustive.py 4 60
   - The B_k arithmetic matches the value `log B_13 < 670.3498` quoted in the abstract of arXiv:2609.02604.
 
 - Step 6: `covergen.c` with `LRC_PRUNE=1` (Lemma 4.1) and `=2` (max-private normalisation) gives the same orbit sets as unpruned on 5 (k,p) pairs, including (14,89).
+- Step 7: `covergen.c` with `LRC_IRR` = 1, 2, 3 prints exactly the same minimal covers as plain on 6 (k,p) pairs (also sharded), and `LRC_PRUNE=2` + `LRC_IRR=2` keeps the (14,89) orbit set. `sieve.lift_c` (liftfree.c) equals `sieve.lift` at levels 1 and 2.
 - Step 4: `covergen.c` sharding (`LRC_NSHARDS`/`LRC_SHARD`) gives exactly the unsharded output.
 - Step 2:
   - The cover generator equals the naive enumerator on a sample of (k, p). 125 pairs were checked during development.
