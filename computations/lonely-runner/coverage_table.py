@@ -22,7 +22,7 @@ for f in glob.glob(os.path.join(R, "lrc14_gates", "gate_*.json")):
     except Exception:
         continue
     old = chk.get(d["p"])
-    if old is None or (old.get("sample") and not d.get("sample")):
+    if old is None or (old.get("sample") and not d.get("sample") and d.get("mode") != "stream"):
         chk[d["p"]] = d
 comp = {}
 for f in glob.glob(os.path.join(R, "lrc14_gates", "completeness_*.json")):
@@ -39,7 +39,18 @@ for p in sorted(int(x) for x in gates):
     h = sha.get("evidence_%d_s0.tgz" % p)
     hs = "OK" if h == "OK" else ("FAIL" if h else "not downloaded")
     d = chk.get(p)
-    if d:
+    if d and d.get("mode") == "stream":
+        n_any += 1
+        S = d["sample"]
+        full_cas = d["C1_ir_rows_sampled"] >= d["rows_ir"] and d["C2_ext_lines_sampled"] >= d["C2_ext_survivor_lines_total"]
+        full_kill = d["D_kills_sampled"] >= d["kill_files"]
+        rws = "full (%d rows)" % d["rows_ir"]
+        cas = "full" if full_cas else "sampled (%d ir rows + %d ext survivor lines)" % (d["C1_ir_rows_sampled"], d["C2_ext_lines_sampled"])
+        kil = "full (%d)" % d["kill_files"] if full_kill else "sampled (%d of %d)" % (d["D_kills_sampled"], d["kill_files"])
+        if full_cas and full_kill:
+            n_full += 1
+        verdict = "PASS" if d["pass"] else "**FAIL**"
+    elif d:
         n_any += 1
         mode = "sampled (%d)" % d["sample"] if d.get("sample") else "full"
         if not d.get("sample"):

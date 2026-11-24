@@ -4,9 +4,9 @@
 | 131 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
 | 149 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
 | 157 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
-| 163 | near-gcd | OK | not checked | not checked | not checked | not checked | — |
+| 163 | near-gcd | OK | full (7383739 rows) | sampled (3000 ir rows + 3000 ext survivor lines) | sampled (3000 of 107244) | not checked | PASS |
 | 167 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
-| 173 | near-gcd | OK | not checked | not checked | not checked | not checked | — |
+| 173 | near-gcd | OK | full (7777371 rows) | sampled (3000 ir rows + 3000 ext survivor lines) | sampled (3000 of 96840) | not checked | PASS |
 | 179 | near-gcd | OK | full | sampled (1000) | sampled (1000) | not checked | PASS |
 | 181 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
 | 191 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
@@ -72,4 +72,4 @@
 | 563 | J empty | OK | full | full | full | not checked | PASS |
 | 569 | J empty | OK | full | full | full | not checked | PASS |
 
-**Verdict:** independent re-check of 56/71 LRC(14) gates (52 in full, 4 sampled); level-one completeness at p = 89, 239; no discrepancy found.
+**Verdict:** independent re-check of 58/71 LRC(14) gates (52 in full, 6 sampled); level-one completeness at p = 89, 239; no discrepancy found.
