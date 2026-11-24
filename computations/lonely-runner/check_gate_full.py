@@ -2,10 +2,15 @@
 Zenodo 10.5281/zenodo.22667683), apart from level-one completeness (see
 completeness_check.py for that).
 
-Usage: python3 check_gate_full.py SHA256SUMS.txt evidence_<p>_s0.tgz [JOBS [SAMPLE]]
+Usage: python3 check_gate_full.py SHA256SUMS.txt evidence_<p>_s0.tgz [JOBS [SAMPLE [KILL_SAMPLE]]]
   SAMPLE (optional): re-check the cascade only on SAMPLE random rows and the
   kill only on SAMPLE random orbits (seeded); the persistent-orbit set
-  comparison is then skipped.  Without SAMPLE every row/orbit is checked.
+  comparison is then skipped.  Without SAMPLE (or SAMPLE = 0) every row/orbit
+  is checked.
+  KILL_SAMPLE (optional, step 8): sample size for the kill alone, so that the
+  cascade (and the persistent-orbit set equality) can run in full while the
+  kill is sampled.  KILL_SAMPLE = 0 skips the kill in this record
+  ("kill_skipped": true); the kill is then covered by another record.
 Archives are read as data only (never executed).
 
 Checks, with our own code (gatecheck.c, canon.c, sieve.Level):
@@ -96,7 +101,7 @@ def canon_set(k, p, rows):
     return {tuple(map(int, l.split())) for l in res.stdout.splitlines()}
 
 
-def check(tgz, sums, jobs=4, sample=None):
+def check(tgz, sums, jobs=4, sample=None, kill_sample=None):
     import random
     rng = random.Random(20261123)
     t0 = time.time()
@@ -138,7 +143,11 @@ def check(tgz, sums, jobs=4, sample=None):
         rep["mismatches"].append({"what": "ir row with a level-1 witness", "rows": bad[:20]})
     # C. cascade, per row
     allrows = rows + ext_imp
+    sample = sample or None
+    if kill_sample is None:
+        kill_sample = sample
     rep["sample"] = sample
+    rep["kill_sample"] = kill_sample
     if sample:
         allrows = rng.sample(allrows, min(sample, len(allrows)))
     lines = [" ".join(map(str, r)) for r in allrows]
@@ -205,7 +214,6 @@ def check(tgz, sums, jobs=4, sample=None):
         if not pers.issubset(kill_orbits):
             rep["mismatches"].append({"what": "sampled persistent row not among cert orbits",
                                       "rows": sorted(pers - kill_orbits)[:20]})
-        kills = rng.sample(kills, min(sample, len(kills)))
     else:
         rep["persistent_orbits_equal"] = pers == kill_orbits
     if not sample and pers != kill_orbits:
@@ -213,8 +221,14 @@ def check(tgz, sums, jobs=4, sample=None):
                                   "only_ours": sorted(pers - kill_orbits)[:20],
                                   "only_cert": sorted(kill_orbits - pers)[:20]})
     # D. kills
+    rep["kill_files"] = len(kills)
+    if kill_sample == 0:
+        kills = []
+        rep["kill_skipped"] = True
+    elif kill_sample:
+        kills = rng.sample(kills, min(kill_sample, len(kills)))
     kl = run_parallel([binary("gatecheck"), "kill", str(k), str(p)],
-                      [" ".join(map(str, b)) for b, _ in kills], jobs)
+                      [" ".join(map(str, b)) for b, _ in kills], jobs) if kills else []
     keys = ["witness_free_level_3", "witness_free_level_5", "crt_candidates",
             "witness_free_level_15", "improper_after_gcd", "improper_after_neargcd"]
     kmis = []
@@ -247,7 +261,8 @@ def main():
             sums[os.path.basename(a[1])] = a[0]
     jobs = int(sys.argv[3]) if len(sys.argv) > 3 else 4
     sample = int(sys.argv[4]) if len(sys.argv) > 4 else None
-    print(json.dumps(check(sys.argv[2], sums, jobs, sample)), flush=True)
+    kill_sample = int(sys.argv[5]) if len(sys.argv) > 5 else None
+    print(json.dumps(check(sys.argv[2], sums, jobs, sample, kill_sample)), flush=True)
 
 
 if __name__ == "__main__":
