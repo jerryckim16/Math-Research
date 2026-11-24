@@ -771,6 +771,55 @@ def check_liu_example5():
     assert L0 <= 1
 
 
+def statement_stress(n=3000, seed=7, dps=40):
+    """Sanity test of the two STATEMENTS (not a proof): Lemma 6.1 and Lemma 6.2 at n random points
+    each, in 40-digit mpmath, with log-uniform s, sigma in [1e-12, 60] (all three Case regions and
+    the residual region are hit).  Returns the minima of
+        (H(r)^2 - H(g(x))H(g(y))) / (x-y)^2   and   F0(s, sigma) / G(s+sigma)."""
+    import random
+    import mpmath as mp
+    mp.mp.dps = dps
+    rnd = random.Random(seed)
+    tau = mp.mpf(TAU.numerator) / TAU.denominator
+    m0 = mp.mpf(M0.numerator) / M0.denominator
+    a0 = 1 / (2 * m0) + mp.mpf(1) / 800000000
+    b0 = 1 - a0
+    Hm = lambda p_: -p_ * mp.log(p_) - (1 - p_) * mp.log1p(-p_)
+    gm = lambda X_: X_**2 * (1 + tau * (1 - X_) ** 2)
+    Gm = lambda U_: mp.exp(U_) * Hm(mp.exp(-U_))
+    W0m = lambda U_: mp.exp(2 * U_) * Hm(gm(mp.exp(-U_)))
+    m61 = mp.inf
+    for _ in range(n):
+        X_, Y_ = mp.mpf(rnd.random()), mp.mpf(rnd.random())
+        if rnd.random() < 0.3:
+            Y_ = X_ + (Y_ - mp.mpf(0.5)) * mp.mpf(10) ** rnd.randint(-6, -1)
+        if not (0 < X_ < 1 and 0 < Y_ < 1) or X_ == Y_:
+            continue
+        rr = X_ * Y_ * (1 + tau * (1 - X_) * (1 - Y_))
+        m61 = min(m61, (Hm(rr) ** 2 - Hm(gm(X_)) * Hm(gm(Y_))) / (X_ - Y_) ** 2)
+    m62 = mp.inf
+    for _ in range(n):
+        s1 = mp.exp(mp.mpf(rnd.uniform(math.log(1e-12), math.log(60))))
+        s2 = mp.exp(mp.mpf(rnd.uniform(math.log(1e-12), math.log(60))))
+        if rnd.random() < 0.3:
+            s2 = s1 * (1 + mp.mpf(rnd.uniform(-0.05, 0.05)))      # near the diagonal
+        if rnd.random() < 0.1:
+            s1, s2 = mp.mpf(-mp.log(mp.mpf("0.690908"))) * (1 + mp.mpf(rnd.uniform(-1e-3, 1e-3))), \
+                mp.mpf(-mp.log(mp.mpf("0.690908"))) * (1 + mp.mpf(rnd.uniform(-1e-3, 1e-3)))
+        s1, s2 = min(s1, s2), max(s1, s2)
+        F0 = a0 * Gm(s1 + s2) - (Gm(s1) + Gm(s2)) / (2 * m0) + b0 * mp.sqrt(W0m(s1) * W0m(s2))
+        m62 = min(m62, F0 / Gm(s1 + s2))
+    return float(m61), float(m62)
+
+
+@claim("6.x", "sanity test (not a proof) of the STATEMENTS of Lemmas 6.1 and 6.2 at 3000 random points "
+       "each (40-digit mpmath; log-uniform s, sigma in [1e-12, 60], near-diagonal and near-contact points)",
+       "numerical (mpmath)")
+def check_statements_stress():
+    m61, m62 = statement_stress()
+    assert m61 > 0 and m62 > 0, (m61, m62)
+
+
 # ============================================================ driver
 ALL = [check_G_derivs, check_G_signs,
        check_41_identity, check_41_positivity, check_41_interval,
@@ -778,7 +827,8 @@ ALL = [check_G_derivs, check_G_signs,
        check_61_identities, check_61_monotone, check_61_bernstein, check_61_reduction, check_61_logic,
        check_W0_identities, check_W0_sign,
        check_62_reduction, check_62_D, check_62_case1, check_62_case2, check_62_case3, check_62_hsqrt, check_62_residual,
-       check_63_constants, check_63_instances, check_liu_example5]
+       check_63_constants, check_63_instances, check_liu_example5,
+       check_statements_stress]
 
 
 def run_all(verbose=True, only=None):
