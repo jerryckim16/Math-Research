@@ -488,12 +488,18 @@ def test_analytic_glue_jiang():
         assert aj.arb_scalars(T=Fr(1, 10))["2 m w4 (1 - ln 4T) - 1"] < 0
         assert aj.arb_scalars(large_t=8)["16 m w4 C^2 - 1/2"] < 0
         assert aj.arb_scalars(sigma=aj.jc.SIG * Fr(101, 100))["s(A) - phi(A)"] < 0
+    # reduction instance: {emptyset, {1}} satisfies the chain at m, and violates it at m = 0.55
+    import mpmath as mp
+    lhs, rhs = aj.reduction_instance([0, 1], 1)[:2]
+    assert lhs > rhs
+    lhs, rhs = aj.reduction_instance([0, 1], 1, m_override=mp.mpf("0.55"))[:2]
+    assert lhs < rhs
     # interval: the small-t bracket at T = 1/10 is certified negative by interval.py too
     jc = aj.jc
     br = 2.0 * jc.MW4 * (1.0 - jc.ilog(4.0 * jc.IF(Fr(1, 10)))) - 1.0
     assert br.hi < 0
     print(f"  Jiang analytic glue: {len(res)} claims OK; negative controls (2 false identities, unlisted log, "
-          "z3 x7 + vacuity guard, Arb x3, interval) behave")
+          "z3 x7 + vacuity guard, Arb x3, interval, reduction instance at m = 0.55) behave")
 
 
 if __name__ == "__main__":
