@@ -14,6 +14,12 @@ Everything is exact integer or `Fraction` arithmetic. There is no floating point
 | `flag_bound.py` | Step 2: exact re-derivation of Allikvere's flag-bound constants for n = 13 and 14, extended to n = 15. The n = 15 shape factor is heuristic. |
 | `tight_orbit_k15.py` | Step 2: binary cascade of (1..15) at the candidate gate primes for 16 runners. |
 | `cost_estimate.py` | Step 2: measured-basis cost estimate for LRC(15). |
+| `gatecheck.c` | Step 3: per-row binary cascade (levels 2–32) and per-orbit level-15 kill for LRC(14) gates. The kill does level-3/5 witness-free lifts, CRT, the level-15 grid, the gcd clause and the near-gcd Lemma 3.12. |
+| `canon.c` | Step 3: unit-orbit canonical forms of level-one multisets, with dedup (`rows`, `expand`) or per line (`each`). |
+| `check_gate_full.py` | Step 3: full re-check of one LRC(14) gate archive (or a seeded random sample): SHA-256, stored rows improper, cascade per orbit, persistent orbits, every kill record. |
+| `run_lrc14_batch.sh` | Step 3: batch driver writing `results/lrc14_gates/gate_<p>.json`. |
+| `completeness_check.py` | Step 3: level-one completeness. It regenerates I(14,p,1) with `covergen.c` (no private-time pruning) and compares orbit sets with the certificate's stored rows. |
+| `check_lrc13_kills.py` | Step 3: LRC(13) archive. It checks the kill files' SHA-256 against the gate manifests and recomputes the level-14 kill of the two persistent orbits. |
 | `prove_small.py` | End-to-end reproduction of LRC(k) for small k. It walks primes upwards, runs the sieve chain at each one, and stops once the product of the successful gate primes reaches B_k. |
 | `exhaustive.py` | Direct bounded check over all primitive tuples with max speed ≤ N. It also lists the tight tuples, i.e. those with ML = 1/(n+1). |
 | `test_lonely.py` | Tests (17). See the list below. |
