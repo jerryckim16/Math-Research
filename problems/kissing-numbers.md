@@ -2,8 +2,8 @@
 
 **Area:** discrete geometry / spherical codes
 **Status:** in progress. We are checking two recent, unrefereed, computer-assisted lower-bound claims independently, by an exact pairwise check of every point pair:
-- S. Yang et al. ("Qiushi Engine", an autonomous multi-agent AI system), arXiv:2609.35051v1 (28 Sep 2026): new bounds in 19 dimensions. Scope here: dims 32–39 (32–37 done, 38–39 in progress), from the authors' complete integer exports. Their own release notes say the exports were **not** checked pair by pair.
-- Q. Lin, arXiv:2611.03682v1 (22 Oct 2026): larger bounds in dims 32–35 and 37–39. Scope here: all seven configurations, rebuilt from his certificate files with our own builder and checked pair by pair (in progress).
+- S. Yang et al. ("Qiushi Engine", an autonomous multi-agent AI system), arXiv:2609.35051v1 (28 Sep 2026): new bounds in 19 dimensions. Scope here: dims 32–39 (all done), plus 43D (running), from the authors' complete integer exports. Their own release notes say the exports were **not** checked pair by pair.
+- Q. Lin, arXiv:2611.03682v1 (22 Oct 2026): larger bounds in dims 32–35 and 37–39. Scope here: all seven configurations, rebuilt from his certificate files with our own builder and checked pair by pair (32–35 and 37 done; 38 and 39 in progress).
 
 Results so far: see §Results. The exact kissing numbers in these dimensions remain open; these are lower bounds only.
 
@@ -48,7 +48,7 @@ Claims checked (`research/results.md` of the repository; abstract of the paper):
 
 Full hashes are pinned in `computations/kissing/fetch_qiushi.py`. They equal the sha256 values in the authors' release JSON (the 38D JSON lists none). The 38D export embeds ℝ³⁸ = ℝ²⁴ ⊕ ℝ¹⁴ isometrically into ℝ⁵² as (x, y/√2, y/√2), which keeps the 1932 "rotated axis" rows integral at the cost of entries up to 3.7·10¹⁷.
 
-Not checked here: dims 25, 27 (no complete export; the vectors must be built by the authors' code), 43, 45 (exports exist but are 2.5M and 7.4M points; see Next steps) and 49–55 (≈5.2·10⁷ points each; brute force is out of reach).
+Not checked here: dims 25, 27 (no complete export; the vectors must be built by the authors' code), 45 (a 7.4M-point export exists; see Next steps). The 43D export (release `section-vectors-2026-10-11`, 2,553,792 × 48 int8, raw sha256 101491f3…bf4bd, which equals the authors' `section43-verification.json`, also marked `pairwise_inner_products_checked: false`) is being checked and 49–55 (≈5.2·10⁷ points each; brute force is out of reach).
 
 **Source 2: Lin.** Q. Lin, *New lower bounds for kissing numbers in dimensions 32–35 and 37–39*, arXiv:2611.03682v1 (22 Oct 2026), unrefereed. Data: Zenodo 10.5281/zenodo.23552484 (dim 32, v1.1.0, archive sha256 683fc500…ab659) and 10.5281/zenodo.23554809 (dims 33–39, v1.0.0, archive sha256 1a1368fe…f21f5). The per-file sha256s are pinned in `computations/kissing/fetch_lin.py`. Construction: Edel–Rains–Sloane three layers (dense code layer, ±2 on weight-8 supports, ±4e_i ± 4e_j) with new constant-weight codes A(n,8,8). In dim 38 it is Kravatskiy's 591,612-point configuration plus 6,855 antipodal pairs of norm-48 Leech vectors on the empty equator.
 
@@ -99,14 +99,27 @@ Lin also lists Qiushi's 32, 35, 37, 38, 39 values as the previous records. For 3
 | **Qiushi 35D: 409,676**: 0 violations, max 16/16, 315,579,800 contacts | certificate-checked | same |
 | **Qiushi 36D: 484,760**: 0 violations, max 16/16, 404,388,832 contacts | certificate-checked | same |
 | **Qiushi 37D: 498,024**: 0 violations, max 16/16, 392,397,168 contacts | certificate-checked | same |
-| Qiushi 38D huge-row pairs: 1,865,346 axis × axis pairs (0 violations, 159,264 contacts) and 1,139,818,176 axis × other pairs (0 violations, max cosine 0.49184); rows lie in a 38-dim subspace (tail copy exact, rank 38 mod 2⁶¹−1) | certificate-checked | `check_mixed.py` |
-| Qiushi 38D small-row pairs (589,968 rows), Qiushi 39D, all of Lin's configurations | running at this checkpoint | — |
+| **Qiushi 38D: 591,900 points, τ₃₈ ≥ 591,900**. All 175,172,509,050 pairs pass: 174,030,825,528 pairs among the 589,968 norm-48 rows (max inner product 24 = threshold, 379,694,006 contacts), 1,139,818,176 axis × other pairs (max cosine 0.49184, no contacts) and 1,865,346 axis × axis pairs (159,264 contacts). The rows lie in a 38-dim subspace: the tail copy is exact (columns 38–51 = 24–37), and the rank mod 2⁶¹−1 of a 3,205-row sample is 38 | certificate-checked | `check_mixed.py` + `kiss_check.c` |
+| **Qiushi 39D: 763,668 points, τ₃₉ ≥ 763,668**. All 291,594,025,278 pairs pass. Two norm classes (39: 327,680 rows; 32: 435,988 rows); max inner products 19/19 (39·39), 16/17 (39·32), 16/16 (32·32); 325,490,632 contacts | certificate-checked | `kiss_check.c` |
+| **Lin 32D: 352,320 points, τ₃₂ ≥ 352,320** (rebuilt by `build_lin.py`). All 62,064,515,040 pairs pass, max 16/16, 366,910,976 contacts | certificate-checked | `kiss_check.c` |
+| **Lin 33D: 370,240**. 68,538,643,680 pairs, 0 violations, max 16/16, 374,626,176 contacts | certificate-checked | same |
+| **Lin 34D: 390,980**. 76,432,484,710 pairs, 0 violations, max 16/16, 383,763,968 contacts | certificate-checked | same |
+| **Lin 35D: 415,308**. 86,240,159,778 pairs, 0 violations, max 16/16, 395,664,280 contacts | certificate-checked | same |
+| **Lin 37D: 499,816**. 124,907,767,020 pairs, 0 violations, max 16/16, 398,495,856 contacts | certificate-checked | same |
+| Lin 38D (605,322 points = the first 591,612 rows of the Qiushi 38D export + ±6,855 equatorial vectors). Huge-row pairs: 1,865,346 axis × axis (159,264 contacts) and 1,165,749,480 axis × other (max cosine 0.49184), 0 violations; rank 38 as above. Lin's 6,855 vectors are in the export's Leech frame: their inner products with all 196,560 cap heads lie in 8ℤ with absolute value ≤ 24 | certificate-checked (huge-row pairs only) | `check_mixed.py` |
+| Lin 38D small-row pairs (603,390 rows), Lin 39D | running at this checkpoint | — |
 
-Costs: 32D 64 s, 33D 89 s, 34D 99 s, 35D 91 s, 36D 145 s, 37D 132 s wall on 4 cores (C); 38D huge-row pairs 186 s (one core). Peak RAM < 1 GB.
+Our pair counts for Lin's 33, 34, 35 and 37D match the counts in his README (6.85·10¹⁰, 7.64·10¹⁰, 8.62·10¹⁰, 1.25·10¹¹).
+
+Costs (wall time on 4 cores, `kiss_check.c`):
+- Qiushi: 32D 64 s, 33D 89 s, 34D 99 s, 35D 91 s, 36D 145 s, 37D 132 s, 38D norm-48 rows 402 s, 39D 353 s.
+- Lin: 32D 125 s, 33D 139 s, 34D 154 s, 35D 174 s, 37D 246 s. Lin's dense layer has no zero coordinates, so our zero-skipping does not help.
+- 38D huge-row pairs: 186 s and 191 s on one core (`check_mixed.py`).
+- Peak RAM < 1 GB.
 
 ## Next steps
 
-- Finish the running checks (Qiushi 38D small rows and 39D; Lin 32–35, 37–39), then run `kiss_check_np.py` as a second implementation on at least one full real configuration.
-- Qiushi 43D (2,553,792 points, 3.3·10¹² pairs): about 1.5–2 h with `kiss_check.c` on 4 cores. Its 45D (7.4M points) needs ≈ 10× more and would need symmetry (antipodality, the group orbits) to be practical.
+- Finish the running checks: Lin 38D small rows, Lin 39D, and Qiushi 43D (2,553,792 points in 48 columns; we proved with `span_check.py` that the rank over ℚ is 43; 3.3·10¹² pairs, about 75 min). Then run `kiss_check_np.py` as a second implementation on Qiushi 32D and Lin 32D, and the real-data negative controls (`perturb.py`).
+- Qiushi 45D (7.4M points) needs ≈ 10× more and would need symmetry (antipodality, the group orbits) to be practical.
 - Qiushi 25D and 27D (+1 point each over the previous record): no complete export. Rebuild the vectors from their data files with our own code, or ask for exports.
 - Kamenetsky's dims 49–61 (arXiv:2611.01906v1) and Qiushi's 49–55: ≈5.2·10⁷ points each. An exact check needs the structure (the P₄₈p shell is a lattice shell, so only the lifted layers need pairwise work).
