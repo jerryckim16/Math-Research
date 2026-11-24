@@ -189,10 +189,53 @@ def test_lemma_R_pieces():
     print("  Costa-Sadhu exact rational pieces (Bernstein certificate, identities) OK")
 
 
+def test_costa_sadhu_derivatives():
+    """The mean-value / Hessian bounds are only sound if the derivative
+    formulas are right: compare with central finite differences (mpmath)."""
+    import mpmath as mp
+    import costa_sadhu_checks as cs
+    mp.mp.dps = 40
+    cs.setup()
+    ms, al, be = (mp.mpf(cs.K[k].mid()) for k in ("ms", "alpha", "beta"))
+    Hm = lambda x: -x * mp.log(x) - (1 - x) * mp.log(1 - x)
+    gm = lambda x: x**2 * (1 + (1 - x) ** 2)
+    Gm = lambda u: mp.e**u * Hm(mp.e**-u)
+    Gam = lambda u: mp.sqrt(Hm(gm(mp.e**-u))) * mp.e**u
+    F = lambda t, d: ms * (al * Gm(2 * t) + be * Gam(t + d) * Gam(t - d)) - (Gm(t + d) + Gm(t - d)) / 2
+    Ft = lambda t, xi: F(t, t * xi)
+    rnd = random.Random(5)
+    for _ in range(6):
+        u = rnd.uniform(0.05, 3.0)
+        U = I(u)
+        g0, g1, g2 = cs.G_all(U)
+        m0, m1, m2 = cs.Gam_all(U, True)
+        for enc, ref in [(g0, Gm(u)), (g1, mp.diff(Gm, u)), (g2, mp.diff(Gm, u, 2)),
+                         (m0, Gam(u)), (m1, mp.diff(Gam, u)), (m2, mp.diff(Gam, u, 2))]:
+            assert enc.lo - 1e-9 <= ref <= enc.hi + 1e-9, (u, enc, ref)
+        t, xi = rnd.uniform(0.1, 2.0), rnd.uniform(0.0, 0.9)
+        a, b = cs.Fderivs_box(I(t), I(xi))
+        ra = mp.diff(lambda s: Ft(s, xi), t)
+        rb = mp.diff(lambda s: Ft(t, s), xi)
+        assert a.lo - 1e-8 <= ra <= a.hi + 1e-8 and b.lo - 1e-8 <= rb <= b.hi + 1e-8
+        d = xi * t * 0.5
+        tt, dd, td = cs.hessian_box(I(t), I(d))
+        assert abs(tt.mid() - mp.diff(F, (t, d), (2, 0))) < 1e-7
+        assert abs(dd.mid() - mp.diff(F, (t, d), (0, 2))) < 1e-7
+        assert abs(td.mid() - mp.diff(F, (t, d), (1, 1))) < 1e-7
+    # F vanishes at the tangency (t*, 0)
+    assert abs(cs.F_point(cs.K["ts"].mid(), 0.0).mid()) < 1e-12
+    print("  Costa-Sadhu derivative formulas agree with finite differences; F(t*,0)=0")
+
+
 if __name__ == "__main__":
     tests = [test_bruteforce, test_c_enumerator, test_interval, test_boppana]
     if os.path.exists(os.path.join(HERE, "costa_sadhu_checks.py")):
         tests.append(test_lemma_R_pieces)
+        try:
+            import mpmath  # noqa: F401
+            tests.append(test_costa_sadhu_derivatives)
+        except ImportError:
+            print("(mpmath missing: derivative cross-check skipped)")
     for t in tests:
         print(t.__name__)
         t()
