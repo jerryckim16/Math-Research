@@ -104,6 +104,18 @@ def test_theorems_1_to_4():
         A.prove_named(Pa, Pb, certs[f])
 
 
+def test_our_certificates():
+    """Certificates found by our own search (ac_search + ac_path)."""
+    ours = os.path.join(HERE, "certs_ours")
+    cases = {"ms3_yx2y_to_ak3.json": (A.MS(3, "y x^2 y"), A.AK(3)),
+             "ms3_yinvx2yinv_to_ak3.json": (A.MS(3, "y^-1 x^2 y^-1"), A.AK(3)),
+             "ak2_trivial.json": (A.AK(2), ((1,), (2,)))}
+    for f, (Pa, Pb) in cases.items():
+        d = A.load(os.path.join(ours, f))
+        assert A.check_cert(d)[0], f
+        A.prove_named(Pa, Pb, d)
+
+
 def test_tampered_certificates_rejected():
     rng = random.Random(3)
     certs = _certs()
