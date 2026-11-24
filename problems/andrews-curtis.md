@@ -169,7 +169,15 @@ Not checked: the §6 analysis of the Two-Hump classification table, the 214-pair
   - Per source: 10,118,636 (AK(3)), **851,836** (P1), **2,534,472** (P2).
   - The total and the P1/P2 counts all equal the paper's numbers.
   - So d_GS(P1, AK(3)), d_GS(P2, AK(3)) and d_GS(P1, P2) are all **≥ 27**, which is the lower-bound half of Theorem 6, re-derived here.
-  - The paper's cap-28 run was inconclusive (budget). We did not attempt cap 28.
+  - The paper's cap-28 run hit its 40M-state budget and was inconclusive.
+- **Cap 28 (beyond the paper; running).**
+  - `ac_search_compact.cpp` explores the same graph using about 30 B per state instead of about 220 B: packed 2-bit words, an append-only state array, and an open-addressing index.
+  - Its per-level and per-source counts equal those of `ac_search.cpp`: cap 25 in full, cap 21 in `test_ac.py`.
+  - Run: exclusive cap 28 from {AK(3)}, {P1}, {P2}, budget 95M states (about 2.9 GB).
+  - Possible outcomes:
+    - a meeting at bottleneck 27, which would give a new explicit certificate for one of Shehper et al.'s uncertified claims;
+    - exhaustion with no meeting, which would give d_GS ≥ 28;
+    - budget exhausted, which would be inconclusive, as in the paper.
 - **The full graph** (all rotations, not only cancelling junctions) is barely larger but about 20× slower in our implementation.
   - Cap 21: 41,306 states against 40,078 with `--junction`. Cap 23: 285,760 against 274,430. No meeting in either.
   - It was not pushed further.

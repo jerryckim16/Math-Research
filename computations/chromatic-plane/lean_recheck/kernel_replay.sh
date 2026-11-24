@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Independent kernel replay (leanchecker, shipped with the Lean 4.34.1 toolchain) of the
-# OAI .olean files built by lean_recheck.sh.  Usage: kernel_replay.sh WORKDIR  (same WORKDIR)
-# Measured here (4 cores, 15 GB): step 2 569 s; step 4 see problems/chromatic-number-plane.md.
+# Kernel replay (leanchecker, shipped with the Lean 4.34.1 toolchain) of the
+# .olean files built by lean_recheck.sh (same kernel code as compilation, but independent of the
+# elaborator and the .olean writer; not an independent kernel).  Usage: kernel_replay.sh WORKDIR  (same WORKDIR)
+# Measured here (4 cores, 15 GB): step 2 70/70 OK, 569 s wall; step 3 Hack rejected, Good+Sorry pass;
+# step 4 exit 0, 2469 s wall, 8.2 GB peak RSS (mostly mmapped .olean files).
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 W=$(cd "${1:?workdir}" && pwd); cd "$W"
