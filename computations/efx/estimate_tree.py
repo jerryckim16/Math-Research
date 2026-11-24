@@ -26,7 +26,9 @@ the rule t = c a^2 is also fitted to the measured m-specific cvc5 times
 (least squares through 0) and the cvc5 total is printed for both rules.
 
 Usage: python3 estimate_tree.py PROBE.jsonl [...] [--map=S2=226,016,445,116 --map=S3=777 ...]
-                               [--cvc5-times=FILE]
+                               [--cvc5-times=FILE] [--no-knuth]
+--no-knuth ignores the sampled children: a timed-out cube then costs only its
+time limit (the strict lower bound).
 """
 import itertools
 import json
@@ -101,7 +103,7 @@ def main():
             print("!!! status", r["status"], r["branch"])
             continue
         n_to[g] += 1
-        kids = children.get(key(r["branch"]), [])
+        kids = [] if "--no-knuth" in sys.argv else children.get(key(r["branch"]), [])
         own = (r["seconds"], 0.0, 0.0)
         if not kids:
             groups[g].append((own, "timeout, no children sampled", r["num_allocs"]))
