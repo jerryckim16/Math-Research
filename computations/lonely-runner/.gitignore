@@ -2,3 +2,4 @@
 __pycache__/
 results/lrc14_gates/*.err
 results/*.log
+results/*.err
