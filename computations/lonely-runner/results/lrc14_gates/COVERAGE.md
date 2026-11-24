@@ -2,7 +2,7 @@
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 89 | near-gcd | OK | full | sampled (3000) | sampled (3000) | full (687016 orbits, equal) | PASS |
 | 131 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
-| 149 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
+| 149 | near-gcd | not downloaded | full (4307522 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 967875) | not checked | PASS |
 | 157 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
 | 163 | near-gcd | OK | full (7383739 rows) | sampled (3000 ir rows + 3000 ext survivor lines) | sampled (3000 of 107244) | not checked | PASS |
 | 167 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
@@ -12,14 +12,14 @@
 | 191 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
 | 193 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
 | 197 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
-| 199 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
+| 199 | near-gcd | not downloaded | full (25180487 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 196288) | not checked | PASS |
 | 211 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
 | 223 | near-gcd | OK | full | sampled (3000) | sampled (3000) | not checked | PASS |
-| 227 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
-| 229 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
+| 227 | near-gcd | not downloaded | full (28242035 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 44974) | not checked | PASS |
+| 229 | near-gcd | not downloaded | full (19201544 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 62072) | not checked | PASS |
 | 233 | near-gcd | OK | full | sampled (3000) | sampled (3000) | not checked | PASS |
 | 239 | J empty | OK | full | full | full | full (1441284 orbits, equal) | PASS |
-| 241 | near-gcd | not downloaded | not checked | not checked | not checked | not checked | — |
+| 241 | near-gcd | not downloaded | full (22356624 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 14401) | not checked | PASS |
 | 251 | J empty | OK | full | full | full | not checked | PASS |
 | 257 | J empty | OK | full | full | full | not checked | PASS |
 | 263 | J empty | OK | full | full | full | not checked | PASS |
@@ -72,4 +72,4 @@
 | 563 | J empty | OK | full | full | full | not checked | PASS |
 | 569 | J empty | OK | full | full | full | not checked | PASS |
 
-**Verdict:** independent re-check of 58/71 LRC(14) gates (52 in full, 6 sampled); level-one completeness at p = 89, 239; no discrepancy found.
+**Verdict:** independent re-check of 63/71 LRC(14) gates (52 in full, 11 sampled); level-one completeness at p = 89, 239; no discrepancy found.

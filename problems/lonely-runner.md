@@ -283,13 +283,13 @@ So, unlike 14 and 15 runners, the tight orbit needs no extra fibre search at the
 
 Per-gate JSON files are in `results/lrc14_gates/`.
 
-**Overall verdict (step 5, checkpoint 1):** independent re-check of 58/71 LRC(14) gates.
+**Overall verdict (step 5, checkpoint 2):** independent re-check of 63/71 LRC(14) gates.
 
 - All 52 "J empty" gates were checked in full.
-- 6 of the 19 near-gcd gates were checked: every stored row tested, with the cascade and kill on seeded samples.
+- 11 of the 19 near-gcd gates were checked: every stored row tested, with the cascade and kill on seeded samples (3,000, or 500 for the large archives).
 - Level-one completeness was checked at p = 89 and p = 239.
 - **No discrepancy was found.**
-- The 13 near-gcd archives over 60 MB are in progress (step 5).
+- Still in progress: 131, 157, 167, 181, 191, 193, 197, 211.
 
 - **"J(14,p) = ∅" gates (decomposition type, τ(p) ≥ 13): all 52 checked in full. All pass.**
   - Step 3 covered the 47 primes from 263 to 569.
@@ -323,8 +323,14 @@ Per-gate JSON files are in `results/lrc14_gates/`.
     - Kills: 3,000 of 107,244 and 3,000 of 96,840 match. 0 improper after the near-gcd lemma.
     - The number of kill files equals the certificate's persistent-orbit count.
     - Time: about 34 min each.
+  - **Large near-gcd archives (step 5),** streaming checker, **sample 500** (500 irredundant rows, 500 extension-survivor lines, 500 kills per gate). Every stored row is tested, and every gate passes with 0 mismatches and 0 improper after the near-gcd lemma:
+    - p = 149: 4,307,522 rows; 967,875 kill files; extension-survivor lines 3,203,434; 411 s.
+    - p = 199: 25,180,487 rows; 196,288 kill files; extension-survivor lines 817,224; 367 s.
+    - p = 227: 28,242,035 rows; 44,974 kill files; extension-survivor lines 308,105; 353 s.
+    - p = 229: 19,201,544 rows; 62,072 kill files; extension-survivor lines 314,785; 350 s.
+    - p = 241: 22,356,624 rows; 14,401 kill files; extension-survivor lines 78,382; 361 s.
   - **Not checked:**
-    - The 13 near-gcd archives over 60 MB, skipped as planned: 131, 149, 157, 167, 181, 191, 193, 197, 199, 211, 227, 229, 241.
+    - Large near-gcd archives still in progress: 131, 157, 167, 181, 191, 193, 197, 211.
 - **No discrepancy with any certificate was found.** Two apparent issues turned out to be artefacts of our own scripts:
   - p = 263: 1021 against 1023 level-2 lifts. The certificate counts with multiplicity over rows; per-row counts agree exactly.
   - The k = 13 SHA-256 lookup: duplicate kill-file copies under `cloud_gates/` with LF line endings were matched against the wrong manifest. With paths resolved relative to each manifest, every file matches.
@@ -367,7 +373,7 @@ Per-gate JSON files are in `results/lrc14_gates/`.
 | n = 15 flag constants: K_15, ratio min 3751/2349 > 4/3 | exact | `flag_bound.py` |
 | n = 15 shape factor ≈ 0.48796, hence target 483.24 | **heuristic** (no shape lemma) | `flag_bound.py` |
 | 4 of 71 LRC(14) gate certificates (p = 263, 311, 397, 401): rows improper, cascade and kill reproduced | independent re-computation of the certificate's claims **except level-one completeness** | `check_allikvere.py`, `results/allikvere_spotcheck.jsonl` |
-| LRC(14) certificates: independent re-check of 58/71 gates. All 52 "J empty" gates in full. Near-gcd gates 89, 163, 173, 179, 223, 233: all rows, plus seeded samples of the cascade and kill. Level-one completeness at p = 89 and p = 239. No discrepancy found. | independent re-computation of the certificates' claims; 13 large near-gcd archives in progress; completeness at 2 gates only | `results/lrc14_gates/`, Approach 7 |
+| LRC(14) certificates: independent re-check of 63/71 gates. All 52 "J empty" gates in full. Near-gcd gates 89, 163, 173, 179, 223, 233 (sample 3,000 or 1,000) and 149, 199, 227, 229, 241 (sample 500): all rows, plus seeded samples of the cascade and kill. Level-one completeness at p = 89 and p = 239. No discrepancy found. | independent re-computation of the certificates' claims; in progress: 131, 157, 167, 181, 191, 193, 197, 211; completeness at 2 gates only | `results/lrc14_gates/`, Approach 7 |
 | LRC(13) certificates: terminal level-14 kill of both persistent orbits re-computed at 19 of 111 gate primes; kill-file SHA-256s match manifests | independent re-computation (cascade and level one not checkable: rows not archived) | `results/lrc13_kills.jsonl` |
 | (1..15) dies at level 16 at all 79 primes 251–743 | computed exactly (one orbit only) | `results/tight_orbit_k15.jsonl` |
 | Cost of LRC(15) level one + kill with Allikvere-class code: about 1.75·10⁵ CPU-h (about 20 CPU-years) for 79 gates 251–743 under the heuristic flag target; about 8.7·10⁶ CPU-h under the proved B_15 | **heuristic extrapolation from measurements** | `cost_estimate.py`, `results/knuth_covergen_k14_k15.txt` |
