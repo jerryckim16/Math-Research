@@ -24,7 +24,12 @@
 // A meeting is reported with the two states and their groups only (no path):
 // recover a path with ac_search_compact (--passive) if it ever happens.
 //
-// Usage: ac_search_par CAP [--slots N] [--threads T] SRC ... [+ SRC ...] [--passive SRC ...]
+// --undirected: edges may also be used backwards (neighbours = successors and
+// predecessors, preds_of below), so a MEET is an undirected path whose energies
+// all stay below the cap; the sets settled are the components of the sources
+// in the undirected sublevel graph.
+//
+// Usage: ac_search_par CAP [--slots N] [--threads T] [--undirected] SRC ... [+ SRC ...] [--passive SRC ...]
 #include <atomic>
 #include <cstdint>
 #include <cstdio>
@@ -139,10 +144,139 @@ static int CAP;
 
 struct Local { long settled[4] = {0, 0, 0, 0}; vector<uint32_t> stack; };
 
+// --- predecessor enumeration (exact; derivation in ac_graph.py) -------------
+// For a state {p, v}, calls visit(u) for every cyclically reduced u (|u| <= maxu)
+// such that {u, v} -> {p, v} is an edge (v kept, u replaced by p).  With M a
+// rotation of p^{+-1} and Z a rotation of v^{+-1}, u is one of
+//   (I)   f M f^-1 Z   (cyclic word reduced; f any word)
+//   (II)  M1 Z         M = M1 M2, M1, M2 nonempty, M2 Z^-1 a rotation of v^{+-1}
+//   (III) Z            g M g^-1 Z^-1 a rotation of v^{+-1}
+// Duplicates may be reported.  (The forward move rotates only the canonical
+// orientation of u, but these shapes are closed under inverting u, so no
+// orientation test is needed; test_ac.py checks this exhaustively.)
+static int rotset(const W& w, W* out) {  // distinct rotations of w and w^-1
+    int n = w.n, c = 0;
+    if (n == 0) { out[0].n = 0; return 1; }
+    for (int f = 0; f < 2; f++)
+        for (int k = 0; k < n; k++) {
+            W r; r.n = n;
+            for (int i = 0; i < n; i++) r.a[i] = f ? (w.a[(2 * n - 1 - k - i) % n] ^ 2) : w.a[(k + i) % n];
+            bool dup = false;
+            for (int j = 0; j < c && !dup; j++) dup = !memcmp(out[j].a, r.a, n);
+            if (!dup) out[c++] = r;
+        }
+    return c;
+}
+template <class F>
+static void preds_of(const W& p, const W& v, int maxu, F&& visit) {
+    if (v.n == 0) return;
+    static thread_local W Ms[64], Vs[64];
+    int nM = rotset(p, Ms), nV = rotset(v, Vs);
+    int pn = p.n, vn = v.n;
+    // (I): f M f^-1 Z, |u| = 2|f| + |p| + |v|
+    if (pn + vn <= maxu) {
+        int fmax = (maxu - pn - vn) / 2;
+        if (pn == 0) fmax = 0;
+        int e[32];  // e[0] = letter of f next to M, e[k] further out; f = e[L-1] ... e[0]
+        for (int mi = 0; mi < nM; mi++) {
+            const W& M = Ms[mi];
+            int L = 0;
+            for (;;) {
+                // visit the current f (length L)
+                for (int zi = 0; zi < nV; zi++) {
+                    const W& Z = Vs[zi];
+                    uint8_t zl = Z.a[vn - 1], z0 = Z.a[0];
+                    if (L) { int f0 = e[L - 1]; if (f0 == (zl ^ 2) || z0 == f0) continue; }
+                    else if (pn) { if (M.a[0] == (zl ^ 2) || z0 == (M.a[pn - 1] ^ 2)) continue; }
+                    W u; u.n = 0;
+                    for (int k = L - 1; k >= 0; k--) u.a[u.n++] = (uint8_t)e[k];
+                    for (int k = 0; k < pn; k++) u.a[u.n++] = M.a[k];
+                    for (int k = 0; k < L; k++) u.a[u.n++] = (uint8_t)(e[k] ^ 2);
+                    for (int k = 0; k < vn; k++) u.a[u.n++] = Z.a[k];
+                    visit(u);
+                }
+                // next f in DFS order (grow outward, then advance letters)
+                if (L < fmax) { e[L] = -1; L++; }
+                for (;;) {
+                    if (L == 0) break;
+                    int c = e[L - 1] + 1;
+                    for (; c < 4; c++) {
+                        if (L == 1) { if (c == (M.a[0] ^ 2) || c == M.a[pn - 1]) continue; }
+                        else if (c == (e[L - 2] ^ 2)) continue;
+                        break;
+                    }
+                    if (c < 4) { e[L - 1] = c; break; }
+                    L--;  // exhausted this position
+                }
+                if (L == 0) break;
+            }
+        }
+    }
+    // (II): M = M1 M2, rotation of v^{+-1} = M2 Z^-1, u = M1 Z
+    for (int mi = 0; mi < nM; mi++) {
+        const W& M = Ms[mi];
+        for (int j = 1; j < pn; j++) {
+            int m2 = pn - j;
+            if (m2 >= vn) continue;
+            for (int vi = 0; vi < nV; vi++) {
+                const W& V = Vs[vi];
+                if (memcmp(V.a, M.a + j, m2)) continue;
+                W u; u.n = 0;
+                for (int k = 0; k < j; k++) u.a[u.n++] = M.a[k];
+                for (int k = vn - 1; k >= m2; k--) u.a[u.n++] = V.a[k] ^ 2;
+                // reduced (junction M1|Z) and cyclically reduced (Z|M1)
+                if (u.a[j - 1] == (u.a[j] ^ 2) || u.a[0] == (u.a[u.n - 1] ^ 2)) continue;
+                if (u.n <= maxu) visit(u);
+            }
+        }
+    }
+    // (III): rotation of v^{+-1} = g M g^-1 Z^-1, u = Z
+    for (int vi = 0; vi < nV; vi++) {
+        const W& V = Vs[vi];
+        for (int gl = 0; 2 * gl + pn < vn; gl++) {
+            bool gok = true;
+            for (int k = 0; k < gl && gok; k++) gok = V.a[gl + pn + k] == (V.a[gl - 1 - k] ^ 2);
+            if (!gok) continue;
+            for (int mi = 0; mi < nM; mi++) {
+                if (pn && memcmp(V.a + gl, Ms[mi].a, pn)) continue;
+                W u; u.n = 0;
+                for (int k = vn - 1; k >= 2 * gl + pn; k--) u.a[u.n++] = V.a[k] ^ 2;
+                if (u.n >= 2 && u.a[0] == (u.a[u.n - 1] ^ 2)) continue;
+                if (u.n <= maxu) visit(u);
+                if (!pn) break;
+            }
+        }
+    }
+}
+
+static bool UNDIRECTED = false;
+
 static void expand(uint64_t entry, int level, Local& L) {
     int grp = (entry >> 61) & 3;
     W w[2]; decode(entry & KEYMASK, w[0], w[1]);
     L.settled[grp]++;
+    // neighbour {nw, b0} (nw cyclically reduced)
+    auto visit = [&](const W& nw, const W& b0) {
+        int Ln = nw.n + b0.n;
+        if (Ln >= CAP || nw.n > 29) return;
+        uint64_t k1 = canon(nw), k2 = canon(b0);
+        if (k2 < k1) swap(k1, k2);
+        uint64_t key = encode(k1, k2);
+        int nl = max(level, Ln);
+        bool isnew; uint64_t old;
+        uint64_t s = insert(mk(key, nl, grp), isnew, old);
+        if (isnew) {
+            long c = ++nstates;
+            if (c >= maxstates) { int z = 0; stop.compare_exchange_strong(z, 2); }
+            if (nl == level) L.stack.push_back((uint32_t)s);
+        } else if ((int)((old >> 61) & 3) != grp) {
+            int z = 0;
+            if (stop.compare_exchange_strong(z, 1)) {
+                meetA = entry & KEYMASK; meetGA = grp; meetB = old & KEYMASK;
+                meetGB = (old >> 61) & 3; meetLevel = level;
+            }
+        }
+    };
     for (int i = 0; i < 2; i++) {
         const W& a = w[i]; const W& b0 = w[1 - i];
         for (int e = 0; e < 2; e++) {
@@ -158,29 +292,17 @@ static void expand(uint64_t entry, int level, Local& L) {
                     for (int t = 0; t < na; t++) nw.a[t] = a.a[(ra + t) % na];
                     for (int t = 0; t < nb; t++) nw.a[na + t] = b.a[(rb + t) % nb];
                     cycred(nw);
-                    int Ln = nw.n + b0.n;
-                    if (Ln >= CAP || nw.n > 29) continue;
-                    uint64_t k1 = canon(nw), k2 = canon(b0);
-                    if (k2 < k1) swap(k1, k2);
-                    uint64_t key = encode(k1, k2);
-                    int nl = max(level, Ln);
-                    bool isnew; uint64_t old;
-                    uint64_t s = insert(mk(key, nl, grp), isnew, old);
-                    if (isnew) {
-                        long c = ++nstates;
-                        if (c >= maxstates) { int z = 0; stop.compare_exchange_strong(z, 2); }
-                        if (nl == level) L.stack.push_back((uint32_t)s);
-                    } else if ((int)((old >> 61) & 3) != grp) {
-                        int z = 0;
-                        if (stop.compare_exchange_strong(z, 1)) {
-                            meetA = entry & KEYMASK; meetGA = grp; meetB = old & KEYMASK;
-                            meetGB = (old >> 61) & 3; meetLevel = level;
-                        }
-                    }
+                    visit(nw, b0);
                 }
             }
         }
     }
+    // --undirected: also every S with an edge S -> this state
+    if (UNDIRECTED)
+        for (int i = 0; i < 2; i++) {
+            const W& v = w[1 - i];
+            preds_of(w[i], v, min(29, CAP - 1 - v.n), [&](const W& u) { visit(u, v); });
+        }
 }
 // claim an unsettled entry at slot s of the given level
 static bool claim(uint64_t s, int level, uint64_t& entry) {
@@ -202,6 +324,7 @@ int main(int argc, char** argv) {
         if (!strcmp(argv[i], "--slots")) { nslots = atoll(argv[++i]); continue; }
         if (!strcmp(argv[i], "--threads")) { T = atoi(argv[++i]); continue; }
         if (!strcmp(argv[i], "--junction")) continue;
+        if (!strcmp(argv[i], "--undirected")) { UNDIRECTED = true; continue; }
         string s = argv[i]; size_t p = s.find('/');
         W u, v; u.n = v.n = 0;
         for (char c : s.substr(0, p)) u.a[u.n++] = code(c);
