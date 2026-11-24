@@ -18,6 +18,8 @@ Checked here (all exact; no floating point decides anything):
   F. Prop 8.2 (five-cycle) combinatorics, by brute force over a SUPERSET of
      the configurations allowed in the paper.
   G. The hexagonal seven-colouring inequalities of Section 1.
+  H. Identity (3.14), the unit decomposition x = k + k' and the explicit
+     numerics in the proof of Lemma 2.7.
 
 Run: python3 cert_section8.py   (prints a report; exits non-zero on failure)
 """
@@ -200,6 +202,37 @@ def check_identities():
     return [sp.simplify(x) == 0 for x in (e1, e2, e3, e4, e5, e6, e7, e8, e9, e10)]
 
 
+# ---------------------------------------------------------------- H. §2-3
+def check_section23():
+    """(3.14): for A, B > 0, L = sqrt(AB), |u| = 1:
+         |A - B u^2|^2 = (A-B)^2 + 4AB (Im u)^2 = |-L + (A-B) u + L u^2|^2.
+    Lemma 2.7: k = x/2 + i sqrt(1 - x^2/4), k' = conj(k) have |k| = 1 and
+    k + k' = x (|x| < 2).
+    Lemma 2.7 numerics: 18 tau^2 / s^2 = 0.0018 at s = 100 tau, and the
+    Jensen step 0.95^2/m^2 - 1/|J| > (0.95^2 - 0.1)/m^2 > 1/(4 m^2) when
+    |J| > 10 m^2."""
+    import sympy as sp
+    A, B, t = sp.symbols("A B t", positive=True)
+    L = sp.sqrt(A * B)
+    u = sp.cos(t) + sp.I * sp.sin(t)
+    absq = lambda z: sp.expand(sp.re(sp.expand(z)) ** 2 + sp.im(sp.expand(z)) ** 2)
+    lhs = absq(A - B * u ** 2)
+    mid = (A - B) ** 2 + 4 * A * B * sp.sin(t) ** 2
+    rhs = absq(-L + (A - B) * u + L * u ** 2)
+    r1 = sp.simplify(sp.expand_trig(lhs - mid)) == 0
+    r2 = sp.simplify(sp.expand_trig(rhs - mid)) == 0
+    # for |x| < 2 put s = sqrt(1 - x^2/4) (real, s^2 = 1 - x^2/4)
+    x, sq = sp.symbols("x s", real=True)
+    k, kp = x / 2 + sp.I * sq, x / 2 - sp.I * sq
+    on_curve = {sq ** 2: 1 - x ** 2 / 4}
+    r3 = sp.expand(absq(k) - 1).subs(on_curve) == 0 and sp.expand(absq(kp) - 1).subs(on_curve) == 0
+    r4 = sp.expand(k + kp - x) == 0
+    tau = F(1)
+    r5 = F(18) * tau ** 2 / (100 * tau) ** 2 == F(18, 10000)
+    r6 = F(95, 100) ** 2 - F(1, 10) > F(1, 4)   # per m^2, using 1/|J| < 1/(10 m^2)
+    return [r1, r2, r3, r4, r5, r6]
+
+
 # ---------------------------------------------------------------- F. Prop 8.2
 def five_cycle_bruteforce():
     """Labels 0..4 on a 5-cycle, edge j joins j, j+1. For a sign vector s,
@@ -285,6 +318,10 @@ def main():
     ids = check_identities()
     print(f"E  Lemma 8.8/8.6/6.4 identities: {ids}")
     ok_all &= all(ids)
+
+    h = check_section23()
+    print(f"H  (3.14), Lemma 2.7 identities and numerics: {h}")
+    ok_all &= all(h)
 
     f_ok, f_count = five_cycle_bruteforce()
     print(f"F  five-cycle: sign patterns are a (2,3) run split: {f_ok}; "
