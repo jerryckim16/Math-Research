@@ -209,8 +209,33 @@ What this does **not** cover:
   - The statement is exactly Theorem 1.1, with ℂ = R² and the complex norm equal to the Euclidean distance.
   - Negative control: a `sorry`-proved theorem in the same environment reports `[sorryAx]`.
 - **Trust base.** The Lean 4.34.1 kernel and elaborator (official release binary), Mathlib `d13f23b`, and our 5-line restatement.
-  - Not done: an independent kernel replay (`leanchecker` / lean4checker) of the `.olean` files.
+  - The kernel replay below removes the elaborator and the `.olean` writer from the trust base for the 70 OAI modules.
   - Not done: a human audit of the paper's §§2–7.
+
+### 3b. Kernel replay of the OAI `.olean` files with `leanchecker` (worked; full-environment replay FRESH_STATUS)
+
+- **Tool.**
+  - `leanchecker` ships with the Lean toolchain (`bin/leanchecker` of the official v4.34.1 release; source `src/lean/LeanChecker.lean`, by K. Morrison and S. Ullrich; it is lean4checker moved into core).
+  - It loads compiled `.olean` files and re-adds every stored declaration through the kernel's `addDecl` (`Lean.Kernel.Environment.replay`).
+  - So it re-checks what the files contain, independently of the elaborator, tactics and `.olean` writer that produced them. Its own docstring says it detects "environment hacking"; it is not an external verifier, since it uses the same kernel.
+- **Default mode, all 70 OAI modules** (`lean_recheck/kernel_replay.sh` step 2).
+  - Each module's own constants are replayed on top of its imported environment, one module per process: `LEAN_PATH=<mathlib paths>:oaicheck/build leanchecker -v <module>`.
+  - **70/70 exit 0, no errors. 569 s wall in total; the slowest is `OAI.Analysis.PlaneSpectrum.Basic` at 100 s; `OAI.Geometry.PlaneColoring.Five` takes 5.5 s.**
+  - The replay covers **4,273 constants, 3,553 of them theorems**. They were counted from the 70 `.olean` files with `lean_recheck/count_constants.lean`, which reads exactly the constant table `leanchecker` replays.
+  - Every OAI declaration on which `no_proper_five_coloring` depends is therefore re-checked by the kernel.
+  - Running all 70 at once (`leanchecker OAI`) starts one task per module, each importing Mathlib. On 15 GB RAM it was OOM-killed after 65 s, so the modules were run one at a time.
+- **Controls** (`lean_recheck/controls/NegCtl/`, each compiled with `lean -o` and checked the same way).
+  - *Hack:* an ill-typed `theorem NegCtl.bad : False := True.intro`, injected with `addDecl` under `debug.skipKernelTC = true` (environment hacking), plus a theorem that uses it.
+    - It compiles without error, and `leanchecker` **rejects** it: `(kernel) declaration type mismatch, 'NegCtl.bad' has type True but it is expected to have type False`, exit 1.
+    - This shows the tool really re-checks declarations, rather than trusting the `.olean`.
+  - *Good:* the same mechanism with the kernel check on and a well-typed value. Passes.
+  - *Sorry:* a `sorry` proof also passes, because `sorryAx` is an axiom, not a kernel error. So `leanchecker` does not replace the `#print axioms` check above. The two together are the evidence.
+- **Fresh mode** (`leanchecker --fresh OAI.Geometry.PlaneColoring.Five`, step 4).
+  - It replays the *entire* environment of `Five` into an empty kernel environment, single-threaded: Init, Std, Lean, all of Mathlib and its dependencies, and the OAI modules. That is **787,391 constants** in 10,814 modules (`env_size.lean`).
+  - This also re-checks Mathlib and core rather than trusting their `.olean` files.
+  - Calibration: `--fresh` on `Mathlib.Algebra.Group.Basic` (143,112 constants) took 95 s; on `Mathlib.Topology.Basic` (209,366) 142 s at 1.45 GB peak RSS.
+  - The full run: FRESH_RESULT
+- **Label.** The OAI part of the proof is **kernel-replayed (`leanchecker`, default mode)** on top of a Mathlib that was built here from source but not itself replayed, FRESH_LABEL.
 ### 4. Find a finite 6-chromatic unit-distance graph (not attempted)
 
 - Theorem 1.1 plus compactness implies one exists, but the proof is non-constructive.
