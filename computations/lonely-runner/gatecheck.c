@@ -19,6 +19,11 @@
  *       e = #{i : d does not divide w_i}, m_d = ceil(2d/(k+1)); it applies
  *       when 2 <= e and e*m_d < d.
  *     Prints "idx wf3 wf5 crt wf15 improper_after_gcd improper_after_neargcd".
+ *   gatecheck hexrows k p n   stdin: certificate row files (hex, 2 or 4 hex
+ *     digits per class, n classes per line).  Tests every row for a level-1
+ *     witness t = m/p with (k+1) d_p(m v_i) >= p for all i (the threshold
+ *     uses k even when n = k-1, as for km1 covers).  Prints
+ *     "rows R with_witness X" and up to 20 offending rows.
  * Branch and bound as in liftfree.c (cuts only branches with no
  * witness-free completion).
  */
@@ -99,7 +104,28 @@ static int add3(const int *w) { if (n3 >= MAXW) { fprintf(stderr, "W3 overflow\n
 static int add5(const int *w) { if (n5 >= MAXW) { fprintf(stderr, "W5 overflow\n"); exit(1); } memcpy(W5[n5++], w, k * sizeof(int)); return 0; }
 
 int main(int argc, char **argv) {
-    if (argc != 4) { fprintf(stderr, "usage: gatecheck cascade|kill k p\n"); return 2; }
+    if (argc < 4) { fprintf(stderr, "usage: gatecheck cascade|kill k p | hexrows k p n\n"); return 2; }
+    if (!strcmp(argv[1], "hexrows")) {
+        if (argc != 5) return 2;
+        k = atoi(argv[2]); p = atoi(argv[3]); int n = atoi(argv[4]);
+        level_t L = mk(p); int W = L.W; word acc[1024];
+        char line[4096]; unsigned long long rows = 0, bad = 0;
+        while (fgets(line, sizeof line, stdin)) {
+            int len = (int)strcspn(line, "\r\n"); if (len == 0) continue;
+            int wdt = len / n;
+            if (wdt * n != len || (wdt != 2 && wdt != 4)) { fprintf(stderr, "bad hex row length %d\n", len); return 1; }
+            int v[64];
+            for (int i = 0; i < n; i++) { char b[5]; memcpy(b, line + i * wdt, wdt); b[wdt] = 0; v[i] = (int)strtol(b, 0, 16) % p; }
+            for (int x = 0; x < W; x++) acc[x] = ~0ULL;
+            if (L.N % 64) acc[W - 1] = (1ULL << (L.N % 64)) - 1;
+            int any = 1;
+            for (int i = 0; i < n && any; i++) { const word *g = L.g + (size_t)v[i] * W; any = 0; for (int x = 0; x < W; x++) { acc[x] &= g[x]; any |= acc[x] != 0; } }
+            rows++;
+            if (any) { bad++; if (bad <= 20) { printf("WITNESS"); for (int i = 0; i < n; i++) printf(" %d", v[i]); printf("\n"); } }
+        }
+        printf("rows %llu with_witness %llu\n", rows, bad);
+        return 0;
+    }
     int mode_kill = !strcmp(argv[1], "kill");
     k = atoi(argv[2]); p = atoi(argv[3]);
     if (k > MAXK) return 2;
