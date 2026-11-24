@@ -2,7 +2,7 @@
 
 **Area:** Diophantine approximation / combinatorics
 **Status:** in progress. Done so far:
-- The prime-gate framework is reproduced end to end for LRC(3)–LRC(9) (4–10 runners), conditional on one cited bound (B_k).
+- The prime-gate framework is reproduced end to end for LRC(3)–LRC(10) (4–11 runners), conditional on one cited bound (B_k). LRC(10) uses an explicit ×11 lift, independent of Sungkawichai–Trakulthongchai's Prop. corlarge (step 7).
 - All 71 of Allikvere's 15-runner (LRC(14)) gate certificates are independently re-checked, with no discrepancy found. Stored rows were checked in full at every gate; the cascade and kill in full at 52 gates and sampled at 19; level-one completeness at 3 gates. See "Independent re-check summary". His 14-runner terminal kills are re-checked at all 111 of his gate primes.
 - The cost of the next open case (16 runners) is estimated from measurements.
 
@@ -185,10 +185,10 @@ This is the same argument as Rosenfeld's Lemma 5 in arXiv:2509.14111 and Allikve
 
 The proofs are in the docstring.
 
-### 2. Prime-gate sieve, reproduced end to end for 4–10 runners (done)
+### 2. Prime-gate sieve, reproduced end to end for 4–11 runners (done)
 
 - **Steps 1–2:**
-  - The level-one step uses a naive bitset DFS (k ≤ 8) or the minimal-cover generator (k = 9).
+  - The level-one step uses a naive bitset DFS (k ≤ 8) or the minimal-cover generator (k = 9, 10). For k = 10 the ×11 lift uses `liftfree.c`.
   - Lifting and projection chains are as in arXiv:2604.23906.
   - The exact test ∏p ≥ B_k uses the MSS/Rosenfeld B_k. We do not use the flag bound or the forced divisor in our reproductions.
 - **Cross-check against the papers' gate sets:**
@@ -196,6 +196,7 @@ The proofs are in the docstring.
   - **k = 7:** our first passing prime (31) equals Rosenfeld's.
   - **k = 8:** our passing set from 47 is all 39 primes from 47 to 241, **identical to Trakulthongchai's S_8**.
   - **k = 9:** every prime from 137 to 401 passed, **identical to Trakulthongchai's S_9**.
+  - **k = 10:** every prime from 127 to 467 passed (61 primes), **identical to Sungkawichai–Trakulthongchai's P_10**. They reach it via Prop. corlarge; we reach it via an explicit ×11 lift (Next steps 6).
 - **Failed gates (kept):**
   - k = 3: p = 5.
   - k = 6: p = 11, 17, 23, 29.
@@ -467,9 +468,10 @@ Scope: J. Allikvere's computer-assisted proofs of LRC(13) and LRC(14), i.e. 14 a
 | ML(1, …, n) = 1/(n+1) exactly, n ≤ 10; ML(1,3,4,7) = 1/5 | computed exactly | `test_lonely.py` |
 | Every primitive tuple with max speed ≤ N has a witness at 1/(n+1): (n, N) = (3, 150), (4, 60), (5, 32), (6, 22), (7, 18) | computed up to N | `results/exhaustive.txt` |
 | Tight primitive tuples in those ranges: (1,2,3); (1,2,3,4), (1,3,4,7); (1,…,5), (1,3,4,5,9); (1,…,6); (1,…,7), (1,2,3,4,5,7,12), (1,4,5,6,7,11,13) | computed up to N | `results/exhaustive.txt` |
-| Sieve, naive level one, cover generator and `liftfree.c` agree with each other and with brute force from the definitions | tested (17 tests; 125 (k,p) pairs for the generator) | `test_lonely.py` |
+| Sieve, naive level one, cover generator and `liftfree.c` agree with each other and with brute force from the definitions | tested (21 tests; 125 (k,p) pairs for the generator) | `test_lonely.py` |
 | LRC(3) … LRC(8) (4–9 runners); gate sets in `results/lrc_k*.jsonl`; the k = 8 set equals Trakulthongchai's S_8 | certificate-checked computation **+ cited B_k** | `results/lrc_k3..8.jsonl` |
 | LRC(9) (10 runners): all 47 primes 137…401 pass (identical to Trakulthongchai's S_9), Σ ln p = 259.94 > 254.30; cover generator, chain ×2×2×2, proj, ×5×2; 1,313 s wall on 4 processes | certificate-checked computation **+ cited B_k** | `results/lrc_k9.jsonl` |
+| LRC(10) (11 runners): all 61 primes 127…467 pass (identical to Sungkawichai–Trakulthongchai's P_10), Σ ln p = 342.72 > ln B_10 = 337.63 (exact test `prod_ge_B_k_exact`); cover generator, chain ×2×2×2, proj, ×11 (`liftfree.c`); in every gate only (1..10) survives the ×2 lifts and the ×11 lift kills it; 13,924 s wall (about 13.8 core-hours, almost all level one) on 4 processes. Depends on cited B_10, LRC(9) and tested-not-verified code; does **not** use Prop. corlarge (Next steps 6) | certificate-checked computation **+ cited B_k** | `results/lrc_k10.jsonl` |
 | Allikvere constants: K_13, K_14, ratio minima, ln bounds 341.031991 and 414.779365, target 401.984506 | exact rational re-derivation | `flag_bound.py` |
 | n = 15 flag constants: K_15, ratio min 3751/2349 > 4/3 | exact | `flag_bound.py` |
 | n = 15 shape factor ≈ 0.48796, hence target 483.24 | **heuristic** (no shape lemma) | `flag_bound.py` |
@@ -507,7 +509,7 @@ Our code is tested against brute force, but not formally verified. These reprodu
    - the 13 near-gcd archives over 60 MB (0.1–1.6 GB; kills about 0.5 s per orbit, and p = 181 has 8.2M orbits);
    - full rather than sampled cascade and kill at the 4 sampled near-gcd gates;
    - level-one completeness at more gates. Unpruned, p = 239 took about 4.4 core-hours; with `LRC_PRUNE=2`, p = 251 took about 8.4 core-hours (8.93·10¹⁰ nodes). The pruning gives only a modest node saving at these primes (Approach 8), so cost grows quickly with p. The next "J empty" gate, p = 257, is estimated (Knuth probes calibrated on the 239 and 251 runs, `results/knuth_completeness_257.txt`; heuristic) at 2.16·10¹¹ nodes, about 20 core-hours. It was not run. A faster generator is the precondition for many more completeness gates. Approach 9's sharper gain bound gives about 1.7×, which brings p = 257 to about 12 core-hours; that is still not enough.
-6. **LRC(10) (11 runners): in progress (step 7).** Chain ×2 ×2 ×2, projection, ×11, with the ×11 lift done by `liftfree.c` (`sieve.lift_c`, tested equal to the Python `lift`). Gates are being recorded in `results/lrc_k10.jsonl`. This differs from Sungkawichai–Trakulthongchai, who avoid the ×11 lift via their Prop. (corlarge, p > k² + k). Their P_10 is all 61 primes from 127 to 467 (Σ ln p > 342 > ln B_10 ≈ 337.63; read in the arXiv:2604.23906v2 source, Table 2).
+6. **LRC(10) (11 runners): done (step 7), with the label in the Results table.** Chain ×2 ×2 ×2, projection, ×11, with the ×11 lift done by `liftfree.c` (`sieve.lift_c`, tested equal to the Python `lift`). All 61 gates 127…467 pass and ∏p ≥ B_10 holds exactly; see `results/lrc_k10.jsonl` and the SUMMARY line. Failed gates: none in this range (the run started at 127, P_10's first prime; we did not test p < 127). This differs from Sungkawichai–Trakulthongchai, who avoid the ×11 lift via their Prop. (corlarge, p > k² + k). Their P_10 is all 61 primes from 127 to 467 (Σ ln p > 342 > ln B_10 ≈ 337.63; read in the arXiv:2604.23906v2 source, Table 2).
    - **Dependencies of our LRC(10) chain.** It is the same trust base as for LRC(3)–LRC(9) (see "Certificate-checked computation + cited B_k"):
      - the cited bound B_10 = (C(11,2)⁹/10)^10, i.e. Malikiosis–Santos–Schymura in the form of Rosenfeld's Cor. 3;
      - LRC(9) (Trakulthongchai; also reproduced here);
