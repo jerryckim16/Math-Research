@@ -18,7 +18,7 @@ Cost of a sampled cube:
                          (next refinement layer) were sampled, Knuth's estimate
                          siblings x mean(child cost), where a timed-out child
                          again counts only its time limit (lower bound).
-So every number printed is a LOWER bound whenever a timeout occurs in its
+So every number printed is biased LOW whenever a timeout occurs in its
 sample; the script says how many.
 
 With --cvc5-times=FILE (probe_regions.py cvc5 output) the coefficient c of
@@ -74,7 +74,7 @@ def main():
         if x.startswith("--map="):
             k, v = x[6:].split("=")
             maps[k] = v.split(",")
-    recs = [json.loads(l) for f in files for l in open(f)]
+    recs = [r for f in files for r in map(json.loads, open(f)) if "probe" in r]   # sampled records only
     ct = next((x.split("=", 1)[1] for x in sys.argv if x.startswith("--cvc5-times=")), None)
     fit = None
     if ct:
@@ -85,6 +85,8 @@ def main():
               f" all verdicts: {sorted(set(t['cvc5'] for t in ts))}")
     m = recs[0]["m"]
     key = lambda br: json.dumps(br)
+    seen = set()          # a region run twice (repeatability check) counts once: first record
+    recs = [r for r in recs if not (key(r["branch"]) in seen or seen.add(key(r["branch"])))]
     children = defaultdict(list)
     for r in recs:
         if r["probe"]["layer"] != "cube":
@@ -139,7 +141,7 @@ def main():
         tot = [u + v for u, v in zip(tot, sub)]
         print(f"  {s}: {cc[s]} cubes x mean from groups {gs} ({len(cs)} samples) -> "
               f"CEGAR {sub[0]:.0f} CPU-h, Z3 re-solve {sub[1]:.0f}, cvc5 {sub[2]:.0f}")
-    print(f"TOTAL (lower bound if any timeout): CEGAR {tot[0]:.0f} CPU-h, Z3 re-solve {tot[1]:.0f}, "
+    print(f"TOTAL (sample-mean projection; timeouts only at their limit): CEGAR {tot[0]:.0f} CPU-h, Z3 re-solve {tot[1]:.0f}, "
           f"cvc5 {tot[2]:.0f} (m = 8 rule), sum {sum(tot):.0f} CPU-h")
     if fit:
         print(f"  with the fitted cvc5 rule: cvc5 {tot[2] * fit / CVC5_COEF:.0f} CPU-h, "

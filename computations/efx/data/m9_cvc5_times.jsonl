@@ -7,5 +7,10 @@
 {"branch": [[4, 2], [4, 2], [5, 0]], "m": 9, "num_allocs": 167, "cvc5": "unsat", "cvc5_seconds": 146.7578775882721}
 {"branch": [[2, 0], [2, 5], [6, 0]], "m": 9, "num_allocs": 251, "cvc5": "unsat", "cvc5_seconds": 430.84079933166504}
 {"branch": [[7, 2], [7, 4], [7, 4]], "m": 9, "num_allocs": 455, "cvc5": "unsat", "cvc5_seconds": 1351.0725355148315}
+{"branch": [[7, 0, 2], [7, 5, 3], [7, 5, 6]], "m": 9, "num_allocs": 256, "cvc5": "unsat", "cvc5_seconds": 187.40794587135315}
+{"branch": [[7, 0, 6], [7, 5, 1], [7, 5, 4]], "m": 9, "num_allocs": 272, "cvc5": "unsat", "cvc5_seconds": 213.1364767551422}
+{"branch": [[7, 0, 6], [7, 5, 0], [7, 5, 3]], "m": 9, "num_allocs": 383, "cvc5": "unsat", "cvc5_seconds": 343.0920612812042}
+{"branch": [[7, 0, 5], [7, 5, 3], [7, 5, 3]], "m": 9, "num_allocs": 539, "cvc5": "unsat", "cvc5_seconds": 804.2009735107422}
 {"branch": [[0, 6], [1, 7], [6, 1]], "m": 9, "num_allocs": 492, "cvc5": "killed (job time limit)", "cvc5_seconds_lower_bound": 1240}
 {"branch": [[0, 1], [1, 8], [6, 1]], "m": 9, "num_allocs": 546, "cvc5": "killed (job time limit)", "cvc5_seconds_lower_bound": 956}
+{"branch": [[7, 0, 5], [7, 5, 0], [7, 5, 3]], "m": 9, "num_allocs": 665, "cvc5": "killed (job time limit)", "cvc5_seconds_lower_bound": 869}
