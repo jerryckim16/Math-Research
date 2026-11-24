@@ -1,7 +1,10 @@
 """Level-one completeness for one LRC(14) gate: regenerate the orbits of
 I(14,p,1) independently and compare with the certificate's stored rows.
 
-Usage: python3 completeness_check.py evidence_<p>_s0.tgz
+Usage: python3 completeness_check.py evidence_<p>_s0.tgz [COVERS_FILE]
+  COVERS_FILE: optional, precomputed covergen.c output (e.g. the
+  concatenation of a sharded run, LRC_NSHARDS/LRC_SHARD); otherwise
+  covergen.c is run here.
 
 Ours:   covergen.c (all minimal covers containing class 1; completeness
         proof in its header), expanded to every k-multiset C + extras and
@@ -39,9 +42,17 @@ def main():
     h = (p - 1) // 2
     # ours
     t1 = time.time()
-    cov = subprocess.run([binary("covergen"), str(k), str(p)], capture_output=True, text=True, check=True)
-    ours_p = subprocess.run([binary("canon"), str(k), str(p), "expand"], input=cov.stdout,
-                            capture_output=True, text=True, check=True)
+    if len(sys.argv) > 2:
+        class _C:
+            stderr = "precomputed covers: %s" % sys.argv[2]
+        cov = _C()
+        with open(sys.argv[2]) as fin:
+            ours_p = subprocess.run([binary("canon"), str(k), str(p), "expand"], stdin=fin,
+                                    capture_output=True, text=True, check=True)
+    else:
+        cov = subprocess.run([binary("covergen"), str(k), str(p)], capture_output=True, text=True, check=True)
+        ours_p = subprocess.run([binary("canon"), str(k), str(p), "expand"], input=cov.stdout,
+                                capture_output=True, text=True, check=True)
     ours = {tuple(map(int, l.split())) for l in ours_p.stdout.splitlines()}
     t_ours = time.time() - t1
     # theirs

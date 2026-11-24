@@ -32,6 +32,10 @@
  *   at NODECAP nodes to measure nodes/second.  Nothing is printed to stdout
  *   in this mode.
  * Output: one cover per line, classes separated by spaces.
+ * Sharding: with environment LRC_NSHARDS=m and LRC_SHARD=r, only root
+ * branches with index = r (mod m) are explored (each skipped branch still
+ * excludes its class for later siblings, exactly as in the unsharded run),
+ * so the union over r = 0..m-1 is the unsharded output.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,6 +53,7 @@ static bs cov[2048];
 static unsigned long long nodes = 0, leaves = 0, printed = 0;
 static int L[MAXK + 1], nL;
 static long maxtop = -1;
+static long shard = 0, nshards = 1;   /* env LRC_SHARD / LRC_NSHARDS: split root branches */
 static unsigned long long nodecap = 0;
 static int quiet = 0;
 static unsigned long long rng = 88172645463325252ULL;
@@ -102,6 +107,7 @@ static void dfs(const bs *U, const bs *A, int depth) {
         if (depth == 0 && maxtop >= 0 && branch >= maxtop) break;
         branch++;
         clr(&A2, c);                  /* excluded for later siblings and below */
+        if (depth == 0 && nshards > 1 && (branch - 1) % nshards != shard) continue;
         bs U2; for (int w = 0; w < W; w++) U2.w[w] = U->w[w] & ~cov[c].w[w];
         L[nL++] = c;
         dfs(&U2, &A2, depth + 1);
@@ -140,6 +146,7 @@ int main(int argc, char **argv) {
     if (argc < 3) { fprintf(stderr, "usage: covergen k p [maxtop]\n"); return 2; }
     k = atoi(argv[1]); p = atoi(argv[2]);
     if (argc > 3) maxtop = atol(argv[3]);
+    if (getenv("LRC_NSHARDS")) { nshards = atol(getenv("LRC_NSHARDS")); shard = getenv("LRC_SHARD") ? atol(getenv("LRC_SHARD")) : 0; }
     long probes = 0;
     if (argc > 6) { probes = atol(argv[4]); rng ^= (unsigned long long)atol(argv[5]) * 2654435761ULL; nodecap = strtoull(argv[6], 0, 10); maxtop = -1; quiet = 1; }
     h = (p - 1) / 2; W = (h + 1 + 63) / 64;

@@ -184,6 +184,17 @@ class TestCoverGenAndLiftFree(unittest.TestCase):
             self.assertEqual(sieve.level1_improper_covers(k, p)[0],
                              sieve.level1_improper_c(k, p)[0], (k, p))
 
+    def test_covergen_sharding(self):
+        import os, subprocess
+        b = sieve._covergen_bin()
+        for k, p in ((7, 61), (9, 137)):
+            full = sorted(subprocess.run([b, str(k), str(p)], capture_output=True, text=True).stdout.splitlines())
+            parts = []
+            for r in range(3):
+                env = dict(os.environ, LRC_NSHARDS="3", LRC_SHARD=str(r))
+                parts += subprocess.run([b, str(k), str(p)], capture_output=True, text=True, env=env).stdout.splitlines()
+            self.assertEqual(sorted(parts), full)
+
     def test_liftfree_matches_python_lift(self):
         import check_allikvere as ca
         for k, p, c in ((4, 13, 5), (5, 23, 2), (5, 23, 3), (6, 19, 2)):
