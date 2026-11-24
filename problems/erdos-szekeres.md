@@ -1,7 +1,7 @@
 # Erdős–Szekeres convex polygon conjecture
 
 **Area:** combinatorial geometry
-**Status:** in progress (ES(6) = 17 reproduced and certified twice; ES(7) cost-probed, not resolved)
+**Status:** in progress (ES(6) = 17 reproduced and certified three times; ES(7) open, cost-probed at about 10³ CPU-years, which is out of reach here)
 **Started:** 2026-11-23
 **ProofAtlas:** rank 256, "open with solved subcases"
 
@@ -25,40 +25,104 @@ re-verified below.
   1500 CPU hours by their report).
 - ES(n) ≤ 2^(n + O(√(n log n))) (Suk 2017; refined by Holmsen–Mojarrad–Pach–Tardos).
 - SAT approaches: Marić 2019 (formally verified ES(6) encoding) and Scheucher
-  (signotope encodings; ES(6) in CPU hours). Heule–Scheucher 2024 used SAT
-  plus a verified encoding for the empty-hexagon number h(6) = 30.
+  (signotope/chirotope encodings; ES(6) in about 10 CPU-min per
+  arXiv:2105.08406). Heule–Scheucher 2024 proved the empty-hexagon number
+  h(6) = 30 by SAT. Their base ("trusted") encoding is not formally verified;
+  the optimised encoding is linked to it by checked proof steps, and the
+  LRAT proofs were checked by cakeLPR (see the literature section).
 - ProofAtlas note: a SoCG 2025 paper refutes an ordered-hypergraph
   generalisation, but the planar conjecture stays open.
 
-- Scheucher, "A SAT attack on higher dimensional Erdős–Szekeres numbers"
-  (arXiv:2105.08406). It uses chirotope/signotope encodings with DRAT
-  certificates. A 2026 survey says SAT brought ES(6) verification down to
-  about an hour (Marić; Scheucher).
-- **Closest prior work on ES(7):** B. Dumitru, "Notes on the 33-point
-  Erdős–Szekeres problem" (arXiv:2512.24061, Dec 2025). It proposes a SAT
-  encoding (triple orientations plus a 4-subset reduction) for 33 points,
-  but does not resolve it, and reports heavy-tailed solver behaviour. Read
-  this before investing in ES(7).
+- Closer SAT literature (Dumitru on ES(7); Heule–Scheucher; Scheucher;
+  Koshelev–Koshka) is summarised in the next section. It was read from the
+  arXiv sources on 2026-11-23 and replaces the earlier snippet-only notes.
+  Balko–Valtr (SoCG 2017) has still not been read.
 
-- **Literature attempt, 2026-11-23 (second worker).**
-  - arXiv.org is blocked by this session's network policy. WebFetch failed
-    with ENOTFOUND, and curl got a CONNECT 403 from the proxy, so the full
-    text of arXiv:2512.24061 was **not read**.
-  - A web-search snippet of the abstract (not verified against the paper)
-    says it uses:
-    - triple-orientation variables;
-    - a 4-set convexity criterion for excluding convex 7-gons;
-    - "convex-layer anchoring" constraints.
-  - The same snippet says it reports UNSAT certificates for a collection of
-    *anchored subfamilies* only, with heavy-tailed runtimes dominating the
-    effort.
-  - Nothing more is assumed here about its encoding, sizes or timings.
-  - The same search also listed arXiv:2604.20120, "Combinatorial Geometry of
-    Erdős–Szekeres Type Problems: SAT/ASP Modeling and Linear Subreduction".
-    It was not read, and its relevance to ES(7) is unknown.
+## Literature on SAT attacks (read 2026-11-23)
 
-The citations were checked against web search results only (2026-11-23), not
-the full papers. Run `mathbox:literature-check` before any write-up.
+Sources were fetched from arxiv.org (abstract page plus the LaTeX source via
+`arxiv.org/e-print/<id>`) and read in full unless marked otherwise. Numbers
+below are as reported by the authors, not re-measured here.
+
+- **B. Dumitru, "Notes on the 33-point Erdős–Szekeres problem",
+  arXiv:2512.24061v1 (Dec 2025). [read]** The only paper found that attacks
+  ES(7) ≤ 33 directly.
+  - *Encoding.* 5,456 triple-orientation variables, but points are labelled
+    by convex layers in cyclic order, not in x-order, so there are no
+    signotope axioms. Instead it uses a *reduced, explicitly relaxed* subset
+    of Knuth's 5-point CC axiom (9,493,440 clauses). Each 4-set gets 14
+    selector variables for its "realizable" cyclic sign patterns (71 clauses
+    per 4-set); each 7-set gets one 280-literal clause saying "some 4-subset
+    is non-convex" (4,272,048 clauses). Total 578,336 variables and
+    16,670,808 clauses, about 23× our compact formula. The 4-pattern
+    classification in the paper was not checked here.
+  - *Symmetry breaking / splitting.* "Convex-layer anchoring": a template
+    fixes the layer sizes h = (h₀, h₁, …) and adds unit clauses for
+    within-layer convexity and nesting; a manual "sub-cube" vector w fixes a
+    wedge at an anchor vertex of each layer.
+  - *Results.* Kissat UNSAT, single thread, for 13 selected templates/sub-cubes,
+    2.5·10³ s to 2.28·10⁶ s each (up to about 26 days). Within the 5⁶ template
+    the sub-cubes range over three orders of magnitude.
+  - *What it does not give.* No claim that the templates cover all 33-point
+    configurations, no exhaustiveness argument for the splits, no total cost
+    estimate, and no proof checking is described. **ES(7) is not resolved
+    there, and its data cannot be turned into a cost estimate** (the number
+    of templates needed, and their mix, is unknown).
+- **M. J. H. Heule and M. Scheucher, "Happy Ending: An Empty Hexagon in Every
+  Set of 30 Points", arXiv:2403.00737 (TACAS 2024). [read]** h(6) = 30; also
+  every 24 points contain a 6-hole or a 7-gon.
+  - *Encoding.* x-sorted orientation variables; 4 signotope clauses per
+    4-tuple (a subset of our 8); unit clauses o₁ₐᵦ (point 1 extremal, others
+    counterclockwise around it; justified by Scheucher's Lemma 1, the same
+    lemma as ours). Gon/hole detection from k−2 consecutive orientation
+    literals, compressed to O(n⁴) clauses with auxiliaries u⁴, u⁵, v⁴. For
+    k-gons this is "simply remove the 3-hole literals", which is essentially
+    our compact cup/cap encoding.
+  - *Reflection symmetry.* Lex-leader predicate (their eq. sbp) on the
+    consecutive triples o_{a,a+1,a+2}, read from the middle outwards, under
+    o_{a,b,c} ↦ o_{n−c+2,n−b+2,n−a+2}. On g(6) ≤ 17 it cut 623,540
+    conflicts / 42.0 s to 316,785 / 17.4 s.
+  - *Hull-vertex choice.* Explicitly **not** broken ("complicated … left it
+    on the table"; they expect at least a factor 3).
+  - *Partitioning.* Static split on the consecutive triples o_{a,a+1,a+2} in a
+    centred window of length ℓ, skipping patterns that unit propagation kills
+    at once (for 6-gons: three consecutive true or four consecutive false),
+    plus a further split on o_{b,b+2,b+4} at every alternating +−+ pattern.
+    Each assignment roughly halves cube time. On "6-hole or 7-gon at 24
+    points", the total is 231–606 CPU-h for ℓ = 7…21 (optimum ℓ = 15),
+    against about 1,000 CPU-h estimated monolithic. The march lookahead
+    splitter (-d 13) was "very poor": at least 18 cubes over 10⁵ s and about
+    10× the monolithic estimate. **This matches our Approach 4 failure.**
+  - *Solver.* CaDiCaL 1.9.3 with `--sat --reducetarget=10 --forcephase
+    --phase=0`. g(6) ≤ 17 with 1,108 cubes (ℓ = 12) as iCNF: 8.53 s.
+  - *Scale.* h(6) ≤ 30: 312,418 cubes, about 17,300 CPU-h (≈ 2 CPU-years),
+    LRAT checked concurrently by cakeLPR, 180 TB of proofs. The trusted
+    encoding with off-the-shelf partitioning was first estimated at about
+    1,000 CPU-years, so encoding plus partitioning gained about 500×.
+  - *On 33 points.* The published text says nothing about g(7). A passage
+    commented out in the arXiv source (not part of the paper) says they were
+    "optimistic that we can determine … g(7) on a computing cluster with some
+    further engineering", and that Balko–Valtr found 7-gon-free
+    configurations on 33 elements "in a more general setting". This is
+    recorded only as context. Balko–Valtr (SoCG 2017) was not read.
+- **M. Scheucher, "A SAT attack on higher dimensional Erdős–Szekeres
+  numbers", arXiv:2105.08406v2. [read]** Acyclic-chirotope SAT model with
+  DRAT certificates. It gives g⁽³⁾(7) = 13, g⁽⁴⁾(8) ≤ 13, g⁽⁵⁾(9) ≤ 13 and
+  hole bounds, with single-instance runs of 2–19 CPU-days. Planar
+  g(6) ≤ 17 takes about 10 CPU-min (668 MB DRAT). Nothing on g(7).
+- **V. Koshelev and A. Koshka, "Combinatorial Geometry of Erdős–Szekeres Type
+  Problems: SAT/ASP Modeling and Linear Subreduction", arXiv:2604.20120
+  (Apr 2026). [read, skimmed outside §§3–4 and the results tables]**
+  Coloured and empty-polygon variants with signotope SAT/ASP models (same
+  L_{0bc} = true normalisation), plus an SMT method for finding
+  realisations. No ES(7) computation. **Not relevant to the ES(7) attack.**
+
+Literature conclusion: no published work resolves ES(7). The closest
+working method for problems of this size is Heule–Scheucher's: a compact
+encoding, a reflection lex-leader, a static split on consecutive triples,
+and tuned CaDiCaL. Its largest success (h(6) = 30) took about 2 CPU-years.
+Dumitru's per-template times (up to 2.3·10⁶ s each, encoding 23× larger)
+are consistent with ES(7) being much harder than h(6) = 30.
 
 ## Approach 1: signotope SAT encoding (reproduce ES(6) = 17)
 
@@ -244,6 +308,226 @@ only. Nothing here is a certificate, and ES(7) remains open.
     results were only written at the end. The sampler now writes each cube
     as it finishes.
 
+## Approach 5: stronger symmetry breaking and solver settings (`symmetry_extra.py`)
+
+**Goal.** A large, certified speed-up on ES(6) ≤ 17 before spending anything on
+ES(7). Flags `--reflect short|full` and `--ear` of `encode_compact.py` add the
+clauses. Without the flags the CNF is byte-identical to before (sha256
+`682629f2…a252e81e3`, re-checked).
+
+- **(R) Reflection lex-leader.** Let σ(a,b,c) = (N−c, N−b, N−a) on triples
+  with 1 ≤ a < b < c ≤ N−1. Add the lex-leader constraint
+  (A(v₁),…,A(v_m)) ≤_lex (A(σv₁),…,A(σv_m)), with false < true, using the
+  usual chain of "prefix equal" auxiliaries e_i (3 clauses per position).
+  - `short`: V = X(a,a+1,a+2) for a = ⌊(N−3)/2⌋ down to 1. This is
+    Heule–Scheucher's predicate, transcribed to our labels.
+  - `full`: the short list, then every other triple with a ≥ 1 not fixed by
+    σ.
+- **(E) Hull-ear rule (partial break of the choice of point 0).** For a hull
+  vertex v with hull neighbours v⁻, v⁺, let ear(v) be the number of points
+  strictly inside the triangle v⁻vv⁺. Require ear(0) ≤ ear(1) and
+  ear(0) ≤ ear(N−1). In the normalisation:
+  - i is a hull vertex iff X(a,i,c) holds for all 1 ≤ a < i < c;
+  - ear(0) = #{b : ¬X(1,b,N−1)};
+  - ear(1) = h₂ − 2 and ear(N−1) = N − 2 − h′, where h₂ and h′ are the
+    hull vertices after 1 and before N−1.
+  It is encoded with hull indicators, a sequential counter, and the clauses
+  H_i → ¬G_{i−1} and H_i → ¬G_{N−1−i}. All auxiliaries are forced upward
+  only.
+
+**Soundness (proved).**
+
+- *Lemma R.* Let P be in general position, p₀ a hull vertex, and A the
+  normalised assignment: labels 1…N−1 in counterclockwise order around p₀,
+  A(a,b,c) = [orient(p_a,p_b,p_c) > 0]. Let P′ be the mirror image
+  (x,y) ↦ (−x,y), with the same p₀. Then P′'s normalised assignment is
+  A′ = σ(A).
+  - *Proof.* Mirroring reverses every orientation and the angular order
+    around p₀, so old label i ≥ 1 becomes N−i.
+  - For new labels a < b < c the old labels are N−a > N−b > N−c. Hence
+    A′(a,b,c) = [orient(p_{N−a},p_{N−b},p_{N−c}) < 0]
+    = [orient(p_{N−c},p_{N−b},p_{N−a}) > 0] = A(N−c,N−b,N−a). The middle
+    step swaps the first and last arguments, an odd permutation.
+  - X(0,·,·) stays true because the new labels are again counterclockwise
+    around p₀. ∎
+- *Theorem.* If some N-point set in general position has no convex k-gon,
+  then `encode_compact.py N k --reflect (short|full) [--ear]` is
+  satisfiable. So UNSAT still implies ES(k) ≤ N.
+  - *Proof.* Take such a P and let p₀ be a hull vertex minimising ear(·).
+    Then ear(0) ≤ ear(1) and ear(0) ≤ ear(N−1) in the normalisation.
+  - P′ has the same convex subsets (an affine map) and the same ear counts,
+    with the roles of 1 and N−1 swapped. So (E) holds for both A and σ(A).
+  - By the symmetry lemma of Approach 1 (Scheucher's Lemma 1), both A and
+    σ(A) are realised by x-sorted sets with no convex k-gon. So both satisfy
+    (S), (B), (R), (E), (F) and (Y), with the auxiliaries set to their
+    definitions (Approach 3).
+  - σ is an involution, so the lex-smaller B ∈ {A, σ(A)} on V satisfies
+    B ≤_lex σ(B). Setting e_i := [B and σB agree on v₁…v_i] satisfies the
+    chain clauses, and the counters and hull indicators set to their
+    definitions satisfy (E). ∎
+  - Without --ear, any hull vertex can serve as p₀.
+- *Not used:* a lex-leader over all hull vertices. The relabelling then
+  depends on the assignment, so it is not a variable permutation. This is
+  the symmetry Heule–Scheucher also left unbroken.
+
+**Tests** (`test_encoding.py`, item 4). 150 trials gave 128 point sets
+with N ≥ 6: random sets and subsets of the explicit ES sets, N = 6…14,
+k = 5…7, 87 of them without a convex k-gon. That is 1,302 normalisations in
+all. All checks pass. Each check is run for
+every hull vertex as point 0 and for both mirror images.
+- The exact transform of the lemma produces the angular labelling in
+  x-order.
+- The mirrored set's assignment equals σ(A).
+- The ear counts read off the formula's definitions equal the geometric
+  counts.
+- The (R)+(E) clauses with orientations fixed are SAT iff the semantic
+  predicate holds (CaDiCaL via pysat).
+- Every set has at least one normalisation satisfying the predicate.
+- The full compact formula with `--reflect full --ear` is SAT for some
+  normalisation iff brute force finds no convex k-gon.
+- The test is not vacuous: the predicate excludes 776 of the 1,302
+  normalisations (short list) and 867 (full list).
+
+**N = 17, k = 6 timings.** CaDiCaL 1.7.3, single runs, one core each,
+4 jobs in parallel on the 4-core machine. "HS opts" means `--sat
+--reducetarget=10 --forcephase --phase=0`; "phase=1" is the same with
+`--phase=1`.
+
+| formula | solver options | process time (s) | conflicts |
+| --- | --- | --- | --- |
+| compact (baseline, Approach 3) | default | 162.3 | 1,173,226 |
+| + ear | default | 196.3 | 1,305,545 |
+| + reflect short | default | 78.2 | 610,570 |
+| + reflect full | default | 72.5 (seed 2: 74.1) | 581,282 |
+| + reflect short + ear / full + ear | default | 77.9 / 76.8 | 627,100 / 611,253 |
+| compact | HS opts | 116.8 | 810,109 |
+| + reflect short | HS opts | 43.4 | 385,442 |
+| + reflect full | HS opts | 42.1 | 349,979 |
+| + reflect full | phase=1 | 35.0 | 310,169 |
+| **+ reflect short** | **phase=1** | **35.7** (38.1 with LRAT output) | **359,436** |
+| + reflect short, 987 iCNF cubes (ℓ = 12 middle window) | HS opts | 24.4 | 220,298 |
+
+- **Speed-up: 162 s → 36 s, a factor of 4.5** (reflection about 2.1×, solver
+  options about 2.2×). Conflicts fall by 3.3×. Heule–Scheucher report a
+  similar factor of 2 from reflection.
+- The ear rule does not help: it is about 20% slower alone and neutral with
+  reflection. It stays implemented and tested, but is not used.
+- **Certificate.** `encode_compact.py 17 6 --reflect short` (6,942 variables,
+  40,667 clauses, sha256 `e81aee68…5a2dba`). CaDiCaL with
+  `--sat --reducetarget=10 --forcephase --phase=1 --lrat=true
+  --binary=false`: UNSAT in 38.1 s. The LRAT proof (139 MB, 478,525 lemmas)
+  was checked by `lrat_check.py` in 13.6 s and reports VERIFIED. This is a
+  third certificate for ES(6) ≤ 17, now trusting the reflection lemma as
+  well. The proof file was deleted after checking.
+
+## Approach 6: near-root hardness with the strongest encoding (static split)
+
+**Goal.** Measure how hard cubes are near the root, which was the dominant
+uncertainty in Approach 4. Use the strongest setting from Approach 5 and
+Heule–Scheucher's split instead of the lookahead. **This is an estimate,
+not a certificate.**
+
+- **Setting.**
+  - Formula: `encode_compact.py 33 7 --reflect short`, with 64,254
+    variables, 722,843 clauses and sha256 `6796f2ea…5251b4f3`.
+  - Leaf solver: CaDiCaL 1.7.3 with `--sat --reducetarget=10 --forcephase
+    --phase=1`, one core per cube and up to 4 cubes in parallel on the
+    4-core machine. Times are wall-clock times of the CLI, including about
+    0.3 s of parsing.
+  - Split: `cube_sample.py --order static`. It branches on X(a,a+1,a+2)
+    from the middle outwards (30 variables), then on X(b,b+2,b+4).
+    Variables already fixed by unit propagation are skipped, and children
+    refuted by unit propagation are dropped.
+  - Walks are random, and the Knuth weight is the product of the number of
+    children. The same seed and probe index give the same walk at every
+    depth, so the depths are nested prefixes of one walk.
+  - Raw records: `es7_probe_data/static33_*.jsonl`. Summary:
+    `walk_profile.py es7_probe_data/static33_*.jsonl`.
+- **Calibration at k = 6 (N = 17, the same setting, where the truth is
+  known).**
+  - Monolithic solve: 35.7 s.
+  - Enumerating every leaf of the static tree gives 29.0 s at depth 2
+    (4 leaves, max 19.0 s) and 29.3 s at depth 4 (16 leaves, max 10.3 s).
+    So with this split the **total is roughly depth-independent near the
+    root**: r ≈ the branching factor ≈ 2. This matches Heule–Scheucher.
+  - Six random probes gave Knuth estimates of only 5.6–9.3 s at depths 2–8,
+    an underestimate by 3–5×. They missed the one heavy leaf, which carries
+    65% of the depth-2 total. **Few-probe Knuth sums here are biased low by
+    heavy tails.**
+  - Records: `es7_probe_data/static17_*.jsonl`.
+- **N = 33 measurements.** 10 walks (seeds 11 and 12, probes 0–5), 22 cubes
+  in total. The ≥ entries are timeouts at the stated cap.
+
+  | walk | depth 16 | depth 24 | depth 32 | r(24→32) |
+  | --- | --- | --- | --- | --- |
+  | s11p0 | ≥ 1440 s | 516 s | 0.7 s | 2.28 |
+  | s11p1 | ≥ 1440 s | 460 s | 9.2 s | 1.63 |
+  | s11p2 | – | ≥ 1380 s | ≥ 1440 s | – |
+  | s11p3 | – | ≥ 1380 s | 20.2 s | ≥ 1.70 |
+  | s12p0 | – | ≥ 1380 s | 72.5 s | ≥ 1.45 |
+  | s12p1 | – | ≥ 1380 s | 98.3 s | ≥ 1.39 |
+  | s12p2 | – | 428 s | 1.6 s | 2.01 |
+  | s12p3 | – | ≥ 1000 s | ≥ 500 s | – |
+  | s12p4 | – | ≥ 1000 s | ≥ 500 s | – |
+  | s12p5 | – | ≥ 1000 s | 2.5 s | ≥ 2.12 |
+
+  - **Depth 8 was not run.** Both depth-16 cubes already exceeded the
+    1,440 s cap, so a depth-8 run under the same cap could only return
+    "≥ 1,440 s". The compute went to more depth-24 walks instead.
+  - **Lost runs.** A container restart killed the first depth-16 attempt,
+    one depth-24 cube and four depth-32 cubes; all of them were re-run.
+    Before that, one depth-24 cube was killed by a wall-clock limit after
+    about 1,040 s; it was re-run as s11p3 above. Only results written to
+    disk are reported.
+  - **Knuth totals** (CPU time on this machine; lower bounds wherever a cube
+    timed out):
+
+    | depth | probes | timeouts | Knuth total (CPU-years) |
+    | --- | --- | --- | --- |
+    | 16 | 2 | 2 | ≥ 1.5 (uninformative) |
+    | 24 | 10 | 7 | ≥ 375 (bootstrap ≥ 270 to ≥ 490) |
+    | 32 | 10 | 3 | ≥ 3.1·10⁴ (one probe carries 63%) |
+
+    Leaf counts are about 2²³–2²⁴ at depth 24 and 2³⁰–2³² at depth 32;
+    unit propagation prunes almost nothing this shallow.
+  - **Per-decision hardness r(24→32):** measured 1.63, 2.01 and 2.28 on the
+    three walks solved at both depths, and ≥ 1.39 to ≥ 2.12 on four more.
+    Near the root, only r(16→24) ≥ 1.14 is known (both depth-16 cubes timed
+    out).
+- **Comparison with Approach 4** (lookahead split, no reflection, default
+  CaDiCaL).
+  - There, every cube shallower than depth 44 timed out, and fixed-depth
+    totals were ≥ 10⁸ CPU-years.
+  - Here, depth-32 cubes often take seconds, and the depth-24 total is
+    ≥ 375 CPU-years.
+  - The static split is the main gain, by a factor of 10⁵ or more in the
+    fixed-depth bound. The encoding and solver changes add about 4.5×, as
+    measured at N = 17.
+- **Updated estimate (heuristic; all CPU time on one core of this machine).**
+  1. *Cube-and-conquer at depth 24, measured:* at least 375 CPU-years.
+     - Seven of ten cubes are censored at 1,000–1,440 s, so the true
+       total is larger.
+     - If a censored cube costs 3–10× its cap (the depth-32 times span
+       three orders of magnitude), the total is about 10³–4·10³ CPU-years.
+  2. *Monolithic or optimal-depth cost, extrapolated as t(24)·r²⁴ along
+     the three fully measured walks:* about 1.8, 260 and 6,400 CPU-years
+     (r = 1.63, 2.01 and 2.28).
+     - The N = 17 calibration says the total is flat near the root
+       (r ≈ 2). That picks the middle of this range and agrees with item 1.
+     - The 1.8-year value needs r to stay at 1.6 all the way to the root,
+       which the k = 6 data contradict. Even then it is one sequential
+       solve of years.
+  3. **Best estimate: 10^2.5–10^4 CPU-years, central about 10³.** This
+     replaces "weeks to > 10⁸" from Approach 4. The heavy tails remain:
+     30% of depth-32 cubes and 70% of depth-24 cubes hit the cap. Tail mass
+     that no probe hit is not covered. Confidence is low to moderate: the
+     lower bound of 375 CPU-years is solid for this split and solver; the
+     upper end is not.
+  4. *Reference point:* h(6) = 30 cost Heule–Scheucher about 2 CPU-years
+     with the same kind of encoding, split and solver. ES(7) ≤ 33 is
+     **2–4 orders of magnitude harder**, before counting proof production
+     and checking. For h(6) = 30 these produced 180 TB of LRAT.
+
 ## Results
 
 | Claim | Evidence level | Where |
@@ -260,45 +544,62 @@ only. Nothing here is a certificate, and ES(7) remains open.
 | ES(6) ≤ 17 (second, independent certificate) | compact encoding UNSAT in 161 s (old encoding 201 s, same machine); LRAT proof (471 MB, 1,319,776 lemmas) checked by `lrat_check.py`; CNF sha256 `682629f2…a252e81e3` | `COMPACT=1 reproduce.sh` |
 | ES(7) ≤ 33 | **open**. N = 33 compact formula (64,240 vars, 722,800 clauses) not solved: direct CaDiCaL 1,480 s gave no answer | `es7_probe_data/` |
 | Fixed-depth lookahead cube-and-conquer for ES(7) ≤ 33 costs ≥ 10⁸ CPU-years at depths 44–60 | empirical sample estimate (Knuth probes, 2–11 per depth, timeouts counted as lower bounds); heavy-tailed | `cube_sample.py`, `cube_estimate.py` |
-| Cost of an optimised SAT proof of ES(7) ≤ 33: weeks to > 10⁸ CPU-years, central guess 10³–10⁶ | **heuristic** extrapolation of per-level hardness ratio from 4 walks; method within ×30 per walk on ES(6) | Approach 4 |
+| *(superseded by the two rows below)* Cost of an optimised SAT proof of ES(7) ≤ 33: weeks to > 10⁸ CPU-years, central guess 10³–10⁶ | **heuristic** extrapolation of per-level hardness ratio from 4 walks; method within ×30 per walk on ES(6) | Approach 4 |
+| Reflection lex-leader (and hull-ear rule) sound | proof (Lemma R + theorem, Approach 5); tested on 128 point sets / 1,302 normalisations against brute force | `symmetry_extra.py`, `test_encoding.py` |
+| ES(6) ≤ 17 (third certificate, compact + reflection SB) | UNSAT in 35.7 s (38.1 s with LRAT) vs 162 s baseline; LRAT proof (139 MB, 478,525 lemmas) checked by `lrat_check.py` in 13.6 s; CNF sha256 `e81aee68…5a2dba` | `REFLECT=1 reproduce.sh` |
+| Static-split cube-and-conquer for ES(7) ≤ 33 at depth 24 costs ≥ 375 CPU-years | empirical Knuth estimate, 10 walks, 7 of 10 cubes censored (lower bound); heavy-tailed | Approach 6, `es7_probe_data/static33_*` |
+| Cost of a SAT proof of ES(7) ≤ 33 with the best current setting: 10^2.5–10^4 CPU-years, central ~10³ | **heuristic**; Knuth lower bound plus r-extrapolation on 3 walks; near-root r taken from the k = 6 calibration | Approach 6 |
 
 ## Trust base for ES(6) ≤ 17
 
 - `encode.py` is correct, meaning the soundness argument and symmetry lemma above hold. This part is not formally verified. It is supported by `test_encoding.py`.
 - `lrat_check.py` is correct. It is about 80 lines, and it was tested to reject a corrupted proof.
+- The third certificate (Approach 5) also trusts Lemma R, the reflection lemma, which is proved above and tested in `test_encoding.py`.
 - Upgrade path: check the same proof with cake_lpr (a verified checker), and formalise the encoding as Marić 2019 did.
 
 ## Next steps
 
-- **ES(7) ≤ 33 needs a structural reduction before any big run.** The probe
-  in Approach 4 shows that generic lookahead cubing on orientation variables
-  is hopeless at fixed depth (≥ 10⁸ CPU-years). The heuristic cost of even an
-  optimised solve is uncertain over about 7 orders of magnitude. Candidate
-  bounded steps, cheapest first:
-  1. **Measure the near-root hardness profile.** Pick 3–4 walks and solve
-     the cubes at depths 8, 16, 24, 32 and 40 with a 2–4 h cap each, about
-     1 core-day. This pins r near the root, which dominates the uncertainty
-     in the extrapolation.
-  2. **Stronger symmetry breaking and redundant clauses.** Both must be
-     sound, with an argument written down.
-     - The remaining symmetries after fixing point 0 are the choice of hull
-       vertex and reflection; use lex-leader constraints over them, as in
-       Scheucher / Heule–Scheucher.
-     - Add explicit no-6-cup clauses among points 1…32. They are implied
-       already, since X(0,·,·) is true and point 0 extends every cup;
-       test whether stating them helps. There is no cap analogue.
-     - Add monotone "≥ l" auxiliaries.
-     - Re-measure on ES(6) first. The target is a large speed-up, not 20%.
-  3. **Domain splitting instead of literal splitting.** Split on structural
-     invariants, such as the size of the convex hull or of the first convex
-     layer, or the longest cup or cap through point 1. This is close in
-     spirit to Dumitru's anchoring. Each piece must be argued exhaustive.
-  4. **Read arXiv:2512.24061 in full** before step 3. This needs arxiv.org to
-     be allowed in the session's network settings. Also read
-     Heule–Scheucher's cubing for h(6) = 30 (arXiv:2403.00737) and
-     arXiv:2604.20120.
+- **Go/no-go for ES(7) (2026-11-24): NO-GO for further compute in this
+  project.**
+  - With the strongest setting found (compact encoding, reflection
+    lex-leader, Heule–Scheucher static split, tuned CaDiCaL), a SAT proof
+    of ES(7) ≤ 33 costs **at least 375 CPU-years** at depth 24. This is a
+    measured lower bound.
+  - The best estimate is about 10³ CPU-years, with a range of
+    10^2.5–10^4 (Approach 6). That is 2–4 orders of magnitude more than
+    h(6) = 30 (about 2 CPU-years on a 1,000-instance cluster), and
+    centuries on this project's 4 cores.
+  - The earlier gap of "weeks to 10⁸" is closed from both sides. The
+    pessimistic end is gone (the static split beats the lookahead by
+    ≥ 10⁵). The optimistic end ("weeks") needs r ≈ 1.6 up to the root,
+    which the k = 6 calibration contradicts.
+  - **Do not run more ES(7) cubes here.**
+- **What would change the verdict.** ES(7) needs a structural idea from the
+  literature or new mathematics before more compute, cheapest first:
+  1. *Break the hull-vertex symmetry.* Heule–Scheucher left it unbroken and
+     expect at least 3×. The local ear rule tried here gave nothing
+     (Approach 5). A full break must handle an assignment-dependent
+     relabelling.
+  2. *A structural case split with an exhaustiveness proof.* For example
+     the hull size (at most 6 for a 7-gon-free set) or the convex-layer
+     sizes, as in Dumitru's templates. His published template times
+     (10³–2·10⁶ s each) suggest it is not cheap either.
+  3. *Encoding work.* Further domain-consistent clauses, and
+     Heule–Scheucher's extra split on X(b,b+2,b+4) at alternating
+     patterns, which cut their worst cubes from days to under an hour.
+     Re-measure on ES(6) first; the bar is a 10× gain.
+  - Only if these bring the estimate near 10 CPU-years is a cluster
+    campaign worth planning. It should start with a pilot of about 100
+    unbiased depth-20–24 cubes, uncapped or with caps ≥ 4 h, to pin the
+    censored tail (roughly 1–2 core-months).
+- **Literature still unread:** Balko–Valtr (SoCG 2017), "A SAT attack on
+  the Erdős–Szekeres conjecture". A commented-out remark in the
+  Heule–Scheucher arXiv source says it found 7-gon-free configurations on
+  33 elements in a more general setting; this has not been checked. Read it
+  before any structural work, since it may limit what a purely
+  combinatorial argument can do.
 - **ES(6) trust upgrades.**
-  - Check either LRAT proof with cake_lpr, a verified checker.
+  - Check any of the three LRAT proofs with cake_lpr, a verified checker.
   - Formalise one of the two encodings, as Marić 2019 did.
   - The compact encoding's soundness argument is short (convex-under-chord
     geometry), which makes it the better formalisation target.

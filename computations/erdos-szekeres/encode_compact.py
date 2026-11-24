@@ -66,13 +66,19 @@ pattern forces, via (B),(R),(E), a pair of aux variables that (F) forbids).
 So the two formulas are equisatisfiable; test_encoding.py and the
 agreement table in problems/erdos-szekeres.md check this empirically.
 
-Usage: python3 encode_compact.py N k out.cnf [--nosym]
+Optional extra symmetry breaking (symmetry_extra.py; soundness proof in
+problems/erdos-szekeres.md, Approach 5): --reflect short|full adds a
+lex-leader constraint for the mirror symmetry, --ear adds the hull-ear rule
+for the choice of point 0. Without these flags the output is unchanged
+(byte-identical CNF).
+
+Usage: python3 encode_compact.py N k out.cnf [--nosym] [--reflect short|full] [--ear]
 """
 import argparse
 import itertools
 
 
-def build(N, k, sym=True):
+def build(N, k, sym=True, reflect=None, ear=False):
     """Return (var, aux, clauses, nvars).
 
     var: dict (a,b,c) -> orientation variable (same numbering as encode.py).
@@ -134,6 +140,10 @@ def build(N, k, sym=True):
     if sym:
         for b, c in itertools.combinations(range(1, N), 2):
             clauses.append([X(0, b, c)])
+    if reflect or ear:
+        import symmetry_extra
+        assert sym, "--reflect/--ear assume the X(0,b,c) normalisation"
+        nv = symmetry_extra.add(N, var, aux, clauses, nv, reflect=reflect, ear=ear)
     return var, aux, clauses, nv
 
 
@@ -167,8 +177,10 @@ def main():
     ap.add_argument("k", type=int)
     ap.add_argument("out")
     ap.add_argument("--nosym", action="store_true")
+    ap.add_argument("--reflect", choices=["short", "full"], default=None)
+    ap.add_argument("--ear", action="store_true")
     a = ap.parse_args()
-    var, aux, clauses, nv = build(a.N, a.k, sym=not a.nosym)
+    var, aux, clauses, nv = build(a.N, a.k, sym=not a.nosym, reflect=a.reflect, ear=a.ear)
     write_cnf(a.out, nv, clauses)
     print(f"N={a.N} k={a.k} vars={nv} (orientation {len(var)}, aux {len(aux)}) clauses={len(clauses)}")
 
