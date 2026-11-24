@@ -181,6 +181,7 @@ What this does **not** cover:
   - Extrapolated: about 6 CPU-hours for Mathlib, so about 2 h wall here.
   - Throughput falls in the analysis-heavy layers, so this is a lower estimate.
   - After slice 2 (47 min wall in total): 3,820 modules, 997,769 lines (43 % of Mathlib by lines), 155 min user CPU, 94.6 lines per CPU-second, no errors. Updated extrapolation: about 7 CPU-hours for Mathlib.
+  - After slice 4 (94 min wall in total): 6,575 modules, 1,705,584 lines (73 %), about 330 min user CPU, 79.3 lines per CPU-second, no errors. Extrapolation: about 8.2 CPU-hours for all of Mathlib, about 2.5 h wall on 4 cores.
 - **Source hygiene.** The 70 OAI files contain no `set_option` at all, and no `macro`, `syntax`, `elab_rules`, `initialize`, `run_cmd` or `#eval`. Nothing in them can switch off kernel checking.
   - The 30k-line OAI development comes on top.
 - **Scripted:** `computations/chromatic-plane/lean_recheck/lean_recheck.sh` (text only; no build outputs are kept in the repository).
