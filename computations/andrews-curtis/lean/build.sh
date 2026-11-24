@@ -16,6 +16,10 @@ for m in Defs Checker Certs Audit; do
   lean -j 1 -M "$MEM" -o "$OUT/AC/$m.olean" -i "$OUT/AC/$m.ilean" "$here/AC/$m.lean"
   printf 'built AC/%s.lean in %.1f s\n' "$m" "$(echo "$(date +%s.%N) - $t0" | bc)"
 done
+# Re-check the compiled modules with the standalone kernel checker.
+for m in AC.Defs AC.Checker AC.Certs AC.Audit; do leanchecker "$m"; done
+echo "leanchecker OK"
+[ "${AC_LEAN_FRESH:-0}" = 1 ] && leanchecker --fresh AC.Audit && echo "leanchecker --fresh OK"
 # Negative control: a corrupted certificate claimed `= true` must NOT elaborate.
 if lean -j 1 -M "$MEM" "$here/test/BadCert.lean" > "$OUT/badcert.log" 2>&1; then
   echo "NEGATIVE CONTROL FAILED: test/BadCert.lean elaborated"; exit 1
