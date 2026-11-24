@@ -6,8 +6,13 @@ one-variable inequality behind the (3−√5)/2 bound is **certificate-checked**
 here with self-contained interval arithmetic. **Every finite computation** in
 Costa–Sadhu's proofs of c_UC ≥ c_L ≈ 0.3827091 (their Thm 1.1) and of the
 record c_UC ≥ 0.3828852549667978 (their Thm 1.2), and in Jiang's independent
-proof of c_UC ≥ 0.38288525, is **independently re-certified** (analytic steps
-read, not machine-checked). The conjecture is **checked
+proof of c_UC ≥ 0.38288525, is **independently re-certified**. The analytic
+glue of Thm 1.2 (Lemmas 4.1, 4.4, 6.1, W₀ monotonicity, Lemma 6.2 Cases 1–3
+and the residual region) is now **machine-checked** with sympy (exact) + z3 +
+interval arithmetic, up to listed standard hand steps (Approach 6; no Lean:
+the Mathlib cache is unreachable from here). Its measure-theoretic part
+(Prop. 6.3's integration, Lemma 2.1's limit, Liu's Prop. 3) is still read
+only. The conjecture is **checked
 exhaustively for universes of size n ≤ 6**: all 75,973,751,474 labeled
 families, reproducing the known labeled counts exactly.
 **Started:** 2026-11-24
@@ -422,10 +427,11 @@ Not used by Thm 1.2: Certificate A.3 (the ceiling ĉ) and A.8 (§7).
 computations re-verified independently (own interval code, own tails, own
 local rectangle, own cover); analytic steps read, not machine-checked.**
 
-- Read but not machine-checked: Lemma 6.1's case analysis (with Lemmas 4.1
-  and 4.4), the W₀-monotonicity argument, Cases 1–3 of Lemma 6.2 and the
-  reduction to the compact region, Prop. 6.3, Lemma 2.1, and Liu's Prop. 3
-  (read only as Costa–Sadhu restate it).
+- Read but not machine-checked *at the time of Approach 4*: Lemma 6.1's case
+  analysis (with Lemmas 4.1 and 4.4), the W₀-monotonicity argument, Cases 1–3
+  of Lemma 6.2 and the reduction to the compact region, Prop. 6.3, Lemma 2.1,
+  and Liu's Prop. 3 (read only as Costa–Sadhu restate it). **All but the last
+  three are now machine-checked in Approach 6.**
 - We found no error. One presentational point: the tails of A.5 live only
   in the Zenodo supplement, not in the paper. We supplied our own.
 
@@ -548,6 +554,255 @@ domain); analytic steps read, not machine-checked.**
   constructions are genuinely different (Liu's Example 5 vs Example 4), and
   both are now checked.
 
+### 6. Machine-checking the analytic glue of Costa–Sadhu Thm 1.2
+
+Goal: check by machine as much as practical of the steps of Approach 4 that
+were only read: Lemma 6.2 Cases 1–3 and the residual region, Lemmas 4.1 and
+4.4, Lemma 6.1's case analysis, W₀ monotonicity, Prop. 6.3. Source:
+arXiv:2610.02295 v1 LaTeX, §§2, 4, 6 **[read]**.
+
+- **Tooling.**
+  - **Lean: not available here.** The elan installer downloads, but
+    `elan toolchain install` fails: the proxy refuses `releases.lean-lang.org`
+    (HTTP 403 on CONNECT). GitHub release assets are reachable, so a bare Lean
+    binary could be fetched by hand. But both Mathlib cache hosts
+    (`lakecache.blob.core.windows.net`, `cache.lean-lang.org`) are refused too,
+    and building Mathlib from source takes hours. We stopped there (about 5
+    minutes spent) and did not retry.
+  - **Used instead:**
+    - sympy 1.14 for exact identities, derivatives and Sturm sequences;
+    - the z3 SMT solver for the case-analysis skeletons;
+    - python-flint/Arb (200-bit balls) as a second evaluation of the one
+      transcendental scalar;
+    - our own `interval.py`.
+
+    All are pip-installed. The sympy install downgraded mpmath from 1.4.1 to
+    1.3.0, and the existing tests still pass.
+- **Labels used below.**
+  - **sympy-exact.** The identity reduces to 0 in exact rational-function
+    arithmetic (`sympy.cancel`). Every log(·) atom is first replaced by an
+    independent symbol, so nothing transcendental is left to sympy's
+    heuristics, and an identity that holds with the logs as free symbols holds
+    a fortiori.
+  - **sturm.** An exact Sturm root count over Q.
+  - **z3.** The negated implication is unsat over the reals (nonlinear real
+    arithmetic, exact rationals). The hypotheses fed to z3 are exactly the
+    facts proved by the other checks.
+  - **interval.** `interval.py`.
+  - **hand.** A standard analysis fact that we state but do not formalise:
+    Taylor bounds with positive terms; "f(0) = 0 and f′ > 0 ⇒ f > 0" (MVT);
+    FTC/Tonelli; Jensen; weak limits; continuity at the boundary.
+- **Code.** `computations/frankl/analytic_glue.py`, output in
+  `results/analytic_glue.txt`: 24 claims, 14 s. Test:
+  `test_frankl.py::test_analytic_glue`. It runs all claims plus negative
+  controls showing each tool can fail:
+  - a false log identity (G′ = S + x) is rejected;
+  - a Sturm count with roots present is correct;
+  - z3 refuses four false variants, namely Case 1 with 7.11 in place of
+    178/25, Case 3 with 6 log 2 in place of 8 log 2, ξ < 14/17 in place of
+    15/17, and the residual region without "not Case 3".
+
+Notation as in Approach 4. In addition, S(x) := −log(1−x)/x, x = e^{−u}.
+
+#### G facts (used by 4.4 and 6.2) — closed form instead of the paper's series
+
+- **Statement.** G(u) = u + (1−x)S(x), G′(u) = S(x), G″(u) = S(x) − 1/(1−x).
+  On (0, ∞): G′ > 1, G″ < 0, G(u) − u < 1, −G″(u) < 1/(e^u−1) < 1/u, and
+  G(0+) = 0.
+- **Reduction.**
+  - The three formulas are derivatives of H(x)/x under d/du = −x d/dx
+    (sympy-exact). sympy also sums Σx^k/(k(k+1)) = 1 + (1−x)log(1−x)/x, so
+    the closed form agrees with the paper's series (Lemma 5.2).
+  - S > 1 because f = −log(1−x) − x has f(0) = 0 and f′ = x/(1−x) > 0.
+  - ψ(x) := x + (1−x)log(1−x) has ψ(0) = 0 and ψ′ = −log(1−x) > 0. The
+    identities G″ = −ψ/(x(1−x)), G − u = 1 − ψ/x and
+    −G″ − x/(1−x) = 1 − S (sympy-exact) then give the three signs.
+- **Label:** sympy-exact + hand (MVT, twice).
+
+#### Lemma 4.1: −Λ″/Λ′ > 1/u + 1/(1−u) on (0, ½), Λ = log H
+
+- **Reduction.**
+  - (a) −Λ″/Λ′ − 1/u − 1/(1−u) = N/(u(1−u)λH), where
+    N = q(1−λ) + uλ(1−uλ), λ = log((1−u)/u), q = −log(1−u), H = uλ + q and
+    H′ = λ (sympy-exact). The denominator is > 0 because λ > 0 on (0, ½).
+  - (b) q ≤ u/(1−u): f = u/(1−u) + log(1−u) has f(0) = 0 and
+    f′ = u/(1−u)² (sympy + MVT).
+  - (c) The algebra (u/(1−u))(1−λ) + uλ(1−uλ) =
+    (u/(1−u))(1 − uλ(λ+1) + u²λ²) (sympy-exact). Also u = 1/(1+e^λ).
+  - (d) 1 − λ²/2 + λ³/6 > 0 on [1, ∞): no root by an exact Sturm count;
+    the minimum is 1/3 at λ = 2. With the Taylor bound
+    e^λ > 1 + λ + λ²/2 + λ³/6 (hand) this gives uλ(λ+1) < e^{−λ}λ(λ+1) < 1.
+  - (e) N > 0 in both cases, λ ≤ 1 and λ > 1: z3, from (b) and (d).
+- **Cross-check** (not needed for the proof): N(u)/u > 0 on [2⁻⁴⁰, ½] by 624
+  interval cells; the minimum lower bound is 0.42.
+- **Label: machine-checked** (sympy-exact + Sturm + z3), with two hand steps
+  (a Taylor bound and one MVT).
+
+#### Lemma 4.4: M = uH′/H is strictly decreasing on (0, 1)
+
+- **Reduction.**
+  - With H an abstract function, d/dv log H(e^{−v}) = −M(e^{−v}) and
+    d²/dv² log H(e^{−v}) = e^{−v}M′(e^{−v}) (sympy-exact).
+  - log H(e^{−v}) = −v + log G(v), and
+    (log G)″ = G″/G − (G′/G)² < 0 by G″ < 0 and G > 0.
+  - Hence M′ < 0 pointwise.
+- **Wording point, not a gap.** The paper says "strict concavity makes this
+  quantity negative". Strict concavity alone does not give a negative second
+  derivative everywhere (think of −x⁴ at 0). But the paper's previous display
+  already proves (log G)″ < 0 pointwise, which is what is used.
+- **Cross-check:** the numerator K = (λ − 1/(1−u))H − uλ² of M′ = K/H² is
+  < 0 on [2⁻⁴⁰, 1 − 2⁻⁴⁰] (11,493 interval cells).
+- **Label: machine-checked** (sympy-exact), with G facts as above.
+
+#### Lemma 6.1: H(r(x,y))² ≥ H(g(x))H(g(y)) — the case analysis
+
+- **Reduction.**
+  - (a) r_x, r_y, r_xy, the identity W r_xy − r_x r_y/(xy) = τ₀xy, and
+    r_xy/(r_x r_y) = 1/r + τ₀/(WUV), where r_x = yU and r_y = xV
+    (sympy-exact).
+  - (b) On [0,1]²: W ≥ 1 and U, V ≥ 1 − τ₀ > 0 (z3). Also
+    g′ ≥ 2x(1 − τ₀/8) via (1−x)(1−2x) + 1/8 = 2(x − ¾)², the exact value of
+    g(45/64) − ½, g ≥ z², and g(1) = 1.
+  - (c) **A.4 by a second method.** We solve the 16×16 monomial linear
+    system for the Bernstein coefficients, instead of using the
+    degree-elevation formula of Approach 4. All 16 are > 0, and the minimum is
+    the published rational.
+  - (d) With Λ and H abstract: ∂_yΔ_x = L₂(x,y) − L₂(y,y);
+    L₁₂ = Λ″(r)r_x r_y + Λ′(r)r_xy; L₂ = (r_y/r)M(r) with
+    r_y/r = 1/y − τ₀(1−x)/(1+τ₀(1−x)(1−y)); and
+    a ↦ τ₀a/(1+τ₀a(1−y)) has derivative τ₀/(1+τ₀a(1−y))² > 0. All
+    sympy-exact.
+  - (e) **Case logic** (z3).
+    - Case A: P(ρ + ℓ) < 0 from P > 0, ρ ≤ 1/r + 1/(1−r) and
+      ℓ < −1/r − 1/(1−r). These hypotheses come from (a), A.4 and Lemma 4.1;
+      the last applies because 0 < r(s,y) ≤ g(y) < ½.
+    - Case B: A_x M(r) > A_y M(g) from 0 < A_x < A_y, M > 0 below ½,
+      M ≤ 0 above ½, and M decreasing.
+  - Hand steps: Δ_x(x) = 0 plus the FTC in s and in y, and continuity at the
+    boundary.
+- **Label: machine-checked**, except the FTC and continuity steps.
+
+#### W₀ is increasing
+
+- **Reduction.**
+  - With H abstract, W₀′(v) = (2H(q) − z q_z H′(q))/z², where q = g(z) and
+    z = e^{−v}.
+  - z q_z = 2q − 2τ₀z³(1−z) and H(q) − qH′(q) = −log(1−q). Hence
+    z²W₀′ = −2log(1−q) + 2τ₀z³(1−z)H′(q).
+  - H′(q) − log(1−q) = −log q.
+
+  All of these are sympy-exact. Then:
+  - z³(1−z) ≤ 27/256, by the exact factorisation in Approach 4, so
+    c := 2τ₀z³(1−z) < 2.
+  - The sign skeleton is checked by z3: with A = −log(1−q) > 0,
+    H′ ≥ 0 for q ≤ ½ and H′ ≥ −A for q > ½, we get 2A + cH′ > 0.
+- **Label: machine-checked.** The interval check of (√W₀)′ > 0 on
+  [2⁻¹², 8] in Approach 4 is an independent confirmation there.
+
+#### Lemma 6.2: F₀(s,σ) > 0 for 0 < s ≤ σ
+
+- **(a) Reduction** (sympy-exact):
+  - Divide (6.tuned-second) by 2xy, with logs of x, y, 1−x, 1−y and 1−xy as
+    free symbols. This gives F₀ = α₀G(s+σ) − (G(s)+G(σ))/(2m₀) + β₀P with
+    P = √(W₀(s)W₀(σ)).
+  - Then F₀ = G(u)/8·10⁸ − D/(2m₀) + β₀P.
+- **(b)** D ≤ G(s) − s < G(s) and D < 1 (z3 skeleton). The inputs are
+  G(s+σ) − G(σ) ≥ s (MVT with G′ > 1) and G(s) − s < 1. *Our route differs
+  from the paper's*, which compares series term by term. Both are valid.
+- **(c) Case 1, G(σ) ≥ (178/25)G(s).** This is the y → 1 (s → 0) edge.
+  - **Exact certificate** (sympy-exact):
+    F₀ − [G(u)/8·10⁸ + c₁G(s)] = (G(s) − D)/(2m₀) + β₀(P − (8/5)Q)
+    + (8β₀/5)(Q − kG(s)), where Q = √(G(s)G(σ)) and k = √178/5. Each bracket
+    is ≥ 0 by (b) and A.5; the first is > 0.
+  - **The margin c₁ = (8β₀/5)k − 1/(2m₀) > 0 is now proved in exact rational
+    arithmetic.** We show (8β₀√178/25)² > (1/(2m₀))², and, with a rational
+    lower bound for √178, c₁ ≥ 2.89081907812·10⁻⁶ (paper: ≥ 2.8908190756·10⁻⁶).
+    Before this session it was an interval enclosure.
+  - z3 also proves the whole implication without square roots, using
+    P² ≥ (64/25)(178/25)G(s)².
+  - The 7.7·10⁻¹⁰ margin m₀α₀ − ½ = m₀/8·10⁸ is never needed: the
+    G(u)/8·10⁸ term is only dropped (it is > 0).
+- **(d) Case 2, s, σ ≥ 2.**
+  - Certificate: F₀ − [G(u)/8·10⁸ + (β₀W₀(2) − 1/(2m₀))]
+    = (1−D)/(2m₀) + β₀(P − W₀(2)) (sympy-exact). P ≥ W₀(2) because W₀ is
+    increasing.
+  - The scalar β₀W₀(2) − 1/(2m₀) ≥ 0.4053615705664 is transcendental. It is
+    interval-verified (`interval.py`), and independently by Arb at 200 bits;
+    the two agree to 10⁻¹².
+  - z3 skeleton.
+- **(e) Case 3, s, σ ≤ 2⁻¹⁰.**
+  - sympy evaluates ∫₀^s∫₀^σ db da/(a+b) = (s+σ)log(s+σ) − s log s − σ log σ
+    = uH(λ) (exact, logs as symbols). The mixed derivative of
+    G(a) + G(b) − G(a+b) is −G″(a+b).
+  - The rest is identities (sympy-exact): e^{2w}(1 − g(e^{−w})) =
+    e^{2w} − 1 − τ₀(1−e^{−w})² (an identity in z = e^{−w}),
+    √(sσ) = u√(λ(1−λ)), and A + B − 1 − AB = −(1−A)(1−B) (for
+    H(λ) ≤ 2√(λ(1−λ))).
+  - z3 skeletons: e^{2w}r_w ≥ 2w, from e^{2w} ≥ 1 + 2w + 2w² and
+    0 ≤ 1 − e^{−w} ≤ w; and the final step, from D < uH(λ), H(λ) ≤ 2R,
+    P ≥ 2uR log(1/2u) and log(1/2u) ≥ 8 log 2.
+  - The final certificate F₀ − [G(u)/8·10⁸ + 2uR(β₀ log(1/2u) − 1/(2m₀))] =
+    (uH − D)/(2m₀) + β₀(P − 2uR log(1/2u)) + u(2R − H)/(2m₀) is sympy-exact.
+  - **The scalar 8β₀ log 2 − 1/(2m₀) ≥ 0.2421300730523 is now proved
+    exactly.** It uses the rational lower bound for log 2 from the atanh
+    series, which Arb confirms lies below log 2.
+  - Hand steps:
+    - the FTC/Tonelli representation D = −∫∫G″. It is improper at 0, since
+      G′(v) ~ log(1/v), but valid because G is continuous at 0 with G(0) = 0
+      and G′ is integrable there;
+    - log t ≤ t − 1;
+    - e^t ≥ 1 + t + t²/2.
+
+    A cross-check of H(λ) ≤ 2√(λ(1−λ)) on [1/4096, ½] in 2047 interval cells
+    gives a minimum gap of 0.027.
+- **(f) Residual region** (z3). From 0 < s ≤ σ, not Case 1, not Case 2, not
+  Case 3, A.5 at v = s (G(16s) ≥ (178/25)G(s)) and G increasing, z3 derives
+  2⁻¹¹ < t < 17 and ξ < 15/17. The bound on ξ is stated as
+  17(σ−s) < 15(σ+s). It also derives the paper's intermediate bounds
+  2⁻¹⁴ < s < 2 and 2⁻¹⁰ < σ < 32. That region is covered by A.6 + A.7
+  (Approach 4, our own rectangle and cover).
+- **Label: machine-checked**, given A.5–A.7 (certificate-checked in
+  Approach 4), with the hand steps listed in (b) and (e). Symmetry and
+  boundary continuity are also hand steps.
+
+#### Prop. 6.3 and the theorem
+
+- **Checked** (exact rationals + z3): α₀ + β₀ = 1, 0 < α₀, β₀ < 1,
+  2m₀(1 − 1/8·10⁸) > 1, 1 − m₀ = 0.3828852549667978, and γ = (1−c)/m₀ > 1
+  for 0 < c < 1 − m₀. Also the finite Jensen identity
+  Σλᵢaᵢ² − (Σλᵢaᵢ)² = Σλᵢ(aᵢ − ā)², checked for n = 3, which is Lemma 2.1
+  before the weak limit.
+- **Sanity test (not a proof).** Prop. 6.3's inequality is certified by
+  interval arithmetic on 200 random finitely supported P, with ρ a finite
+  mixture of Q⊗Q (so ρ ∈ C₃(P)), and on a point mass at e^{−t_c}.
+  Negative control: raising 1/m₀ by 10⁻⁷ makes the point-mass instance
+  certifiably negative.
+- **Read only.** Integration against P⊗P (Fubini), Lemma 2.1's weak limit,
+  the reflection argument (C₃ is preserved by x ↦ 1−x), and Liu's Prop. 3
+  together with which couplings each protocol induces. These are measure
+  theory or Liu's framework; none of them is a computation.
+
+#### Outcome
+
+| step | method | status |
+| --- | --- | --- |
+| G facts (G′ > 1, G″ < 0, G − u < 1, −G″ < 1/u) | sympy-exact + MVT | machine-checked (MVT by hand) |
+| Lemma 4.1 | sympy-exact + Sturm + z3 (+ interval cross-check) | machine-checked (Taylor bound, MVT by hand) |
+| Lemma 4.4 | sympy-exact (+ interval cross-check) | machine-checked |
+| Lemma 6.1 identities, A.4 (second method), positivity | sympy-exact + z3 | machine-checked |
+| Lemma 6.1 case analysis (Cases A, B) | z3 on sympy-checked inputs | machine-checked (FTC, continuity by hand) |
+| W₀ increasing | sympy-exact + z3 | machine-checked |
+| Lemma 6.2 reduction, D bounds | sympy-exact + z3 | machine-checked (MVT by hand) |
+| Lemma 6.2 Case 1 (y → 1 edge) | sympy certificate + **exact** margin c₁ ≥ 2.89·10⁻⁶ + z3 | machine-checked, given A.5 |
+| Lemma 6.2 Case 2 | sympy certificate + z3 + interval + Arb | machine-checked, given A.5 |
+| Lemma 6.2 Case 3 | sympy (integral, identities) + **exact** scalar + z3 | machine-checked (FTC/Tonelli, two elementary bounds by hand) |
+| Lemma 6.2 residual region → A.6/A.7 | z3 | machine-checked |
+| Prop. 6.3 arithmetic, γ > 1 | exact + z3 | machine-checked |
+| Prop. 6.3 measure theory, Lemma 2.1 limit, Liu's Prop. 3 | — | read only |
+
+**No gap or error found.** The only finding is the harmless wording point in
+Lemma 4.4. Nothing was Lean-verified.
+
 ## Results
 
 | Claim | Evidence level | Where |
@@ -559,7 +814,8 @@ domain); analytic steps read, not machine-checked.**
 | Costa–Sadhu Lemma S (2D inequality at Liu's parameter), Lemma R's Bernstein certificate, all constants | certificate-checked independently (own interval code, own cover) | `computations/frankl/costa_sadhu_checks.py`, `results/costa_sadhu_thm11.txt` |
 | c_UC ≥ c_L = 0.3827090879187350… | proved in Costa–Sadhu (preprint); analytic steps read here, all computations re-certified here | same + arXiv:2610.02295 |
 | Costa–Sadhu Lemma 6.1 Bernstein certificate (A.4), 1D inequalities (A.5), contact convexity (A.6, F₀ ≥ 1.1386·10⁻⁸), compact cover (A.7) at ℓ₀ = 1409/2000 | certificate-checked independently (own interval code, own tails, own rectangle, own cover of 15,323 boxes) | `computations/frankl/costa_sadhu_thm12.py`, `results/costa_sadhu_thm12.txt` |
-| c_UC ≥ 0.3828852549667978 (Costa–Sadhu Thm 1.2) | proved in Costa–Sadhu (preprint); analytic steps read here, all computations re-certified here | same + arXiv:2610.02295 |
+| Costa–Sadhu Thm 1.2 analytic glue: Lemmas 4.1, 4.4, 6.1 (case analysis), W₀ increasing, Lemma 6.2 Cases 1–3 + residual region, Prop. 6.3 arithmetic; Case 1 margin c₁ ≥ 2.89·10⁻⁶ and Case 3 scalar now exact | machine-checked (sympy-exact + Sturm + z3 + interval/Arb), up to listed standard hand steps (MVT, FTC/Tonelli, Taylor bounds, continuity); not Lean | `computations/frankl/analytic_glue.py`, `results/analytic_glue.txt` |
+| c_UC ≥ 0.3828852549667978 (Costa–Sadhu Thm 1.2) | proved in Costa–Sadhu (preprint); all computations re-certified here; analytic glue machine-checked here except the measure-theoretic integration (Prop. 6.3, Lemma 2.1) and Liu's Prop. 3, which were read | same + arXiv:2610.02295 |
 | Jiang's 12 scalar signs, bridge, kernel (K) on [1/16,15/16]², mixture (M) on [0.001,16]×[0,1] | certificate-checked independently (own interval code; 1,306 kernel + 4,357 mixture boxes) | `computations/frankl/jiang_checks.py`, `results/jiang.txt` |
 | c_UC ≥ 0.38288525 (Jiang) | proved in Jiang (preprint); analytic steps read here, all computations re-certified here | same + arXiv:2609.08291 |
 
@@ -582,13 +838,19 @@ domain); analytic steps read, not machine-checked.**
 
 Realistic for the next session (bounded, about 3 hours):
 
-1. **Machine-check the analytic glue of one record proof.** Every finite
-   computation of both record proofs (Costa–Sadhu Thm 1.2, Jiang) is now
-   re-verified. What remains unchecked is analytic. The cheapest
-   high-value step is to formalise the one-variable lemmas: Costa–Sadhu
-   Lemmas 4.1 and 4.4 (Lean or a CAS), then the Case 1–3 reductions of
-   Lemma 6.2. Alternatively, ask for the Zenodo supplement (record 22727713)
-   and diff its covers against ours.
+1. **Finish the analytic glue.** For Costa–Sadhu Thm 1.2 only the
+   measure-theoretic layer is left (Prop. 6.3's integration, Lemma 2.1's weak
+   limit, Liu's Prop. 3 and which couplings the protocols induce). Next:
+   - check Liu's Prop. 3 against Liu's own text (arXiv:2306.08824), not the
+     restatement;
+   - do the same sympy/z3 treatment for Jiang's analytic pieces (geometric
+     concavity, profile ordering, lower/upper strips, the small-t and large-t
+     tails, the two edge bounds).
+
+   Optionally, ask for the Zenodo supplement (record 22727713) and diff its
+   covers against ours. For Lean, a session with access to the Mathlib cache
+   is needed (`lakecache.blob.core.windows.net` or `cache.lean-lang.org`);
+   from here both are blocked.
 2. **Lean.**
    - Ho (arXiv:2601.19327) already formalised Boppana's inequality in Lean 4.
    - Mathlib-adjacent projects (PFR) have Shannon entropy.

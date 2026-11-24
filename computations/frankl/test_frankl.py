@@ -389,6 +389,52 @@ def test_jiang():
           " kernel/P/mixture values and derivatives vs mpmath OK")
 
 
+def test_analytic_glue():
+    """Costa-Sadhu Thm 1.2 analytic glue (analytic_glue.py): all claims, plus negative
+    controls showing that each tool can fail (false identity, false z3 implications,
+    Sturm count with roots present)."""
+    import analytic_glue as ag
+    import sympy as sp
+    z3 = ag.z3
+    res = ag.run_all(verbose=False)
+    assert len(res) == len(ag.ALL) and all(r[3] == "OK" for r in res)
+    x = ag.x
+    # false identity: G' = S + x is rejected
+    S = -sp.log(1 - x) / x
+    assert not ag.zero_with_logs(-x * sp.diff(ag.Hs(x) / x, x) - S - x, {x: ag.La, 1 - x: ag.Lb})
+    # Sturm: (lam-2)(lam-3)(lam+5) has two roots in (1, oo), one in (1, 5/2]
+    p = (ag.lam - 2) * (ag.lam - 3) * (ag.lam + 5)
+    assert ag.sturm_roots(p, 1) == 2 and ag.sturm_roots(p, 1, sp.Rational(5, 2)) == 1
+
+    def must_fail(hyps, goal):
+        try:
+            ag.z3_valid(hyps, goal, None)
+        except AssertionError:
+            return
+        raise AssertionError("z3 proved a false implication")
+    Q = ag.Q
+    # Case 1 with 7.11 in place of 178/25 = 7.12: the scalar (8 beta0/5) sqrt(7.11) - 1/(2 m0) < 0
+    Gs_, Gu_, P_, D_ = z3.Reals("Gs Gu P D")
+    F0z = Gu_ / 800000000 - D_ / (2 * Q(ag.M0)) + Q(ag.BETA0) * P_
+    must_fail([Gs_ > 0, Gu_ > 0, D_ >= 0, D_ < Gs_, P_ >= 0,
+               P_ * P_ >= Q(Fraction(64, 25) * Fraction(711, 100)) * Gs_ * Gs_, Gu_ < 1], F0z > 0)
+    # Case 3 with log(1/2u) >= 6 log 2 only (6 beta0 log 2 < 1/(2 m0))
+    U2, R_, H_, Lg_ = z3.Reals("u R H Lg")
+    must_fail([Gu_ > 0, Gu_ < 1, U2 > 0, U2 <= Q(Fraction(1, 512)), R_ > 0, D_ < U2 * H_,
+               H_ <= 2 * R_, P_ >= 2 * U2 * R_ * Lg_, Lg_ >= 6 * Q(ag._L2LO)], F0z > 0)
+    # residual region: xi < 14/17 does NOT follow
+    S_, Sg, Gs2, Gsg, G16 = z3.Reals("s sigma Gs Gsig G16")
+    K = Q(ag.k2)
+    hyps = [S_ > 0, Sg >= S_, Gs2 > 0, G16 >= K * Gs2, z3.Implies(Sg >= 16 * S_, Gsg >= G16),
+            z3.Not(Gsg >= K * Gs2), z3.Not(z3.And(S_ >= 2, Sg >= 2)),
+            z3.Not(z3.And(S_ <= Q(Fraction(1, 1024)), Sg <= Q(Fraction(1, 1024))))]
+    must_fail(hyps, 17 * (Sg - S_) < 14 * (Sg + S_))
+    # and dropping "not Case 3" loses the lower bound t > 2^-11
+    must_fail(hyps[:-1], (S_ + Sg) / 2 > Q(Fraction(1, 2048)))
+    print(f"  analytic glue: {len(res)} claims OK; negative controls (false identity, Sturm, "
+          "z3 with 7.11, 6 log 2, 14/17, no Case 3) behave")
+
+
 if __name__ == "__main__":
     tests = [test_bruteforce, test_c_enumerator, test_interval, test_boppana]
     if os.path.exists(os.path.join(HERE, "costa_sadhu_checks.py")):
@@ -402,6 +448,13 @@ if __name__ == "__main__":
         tests.append(test_costa_sadhu_thm12)
     if os.path.exists(os.path.join(HERE, "jiang_checks.py")):
         tests.append(test_jiang)
+    if os.path.exists(os.path.join(HERE, "analytic_glue.py")):
+        try:
+            import sympy  # noqa: F401
+            import z3  # noqa: F401
+            tests.append(test_analytic_glue)
+        except ImportError:
+            print("(sympy or z3-solver missing: analytic-glue checks skipped)")
     for t in tests:
         print(t.__name__)
         t()
