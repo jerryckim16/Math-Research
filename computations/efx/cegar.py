@@ -29,7 +29,15 @@ implies v_i(g) >= v_i(h) for g, h in the target A_j, the remove-g disjunct
 implies the remove-h disjunct and is dropped (see _keep_goods); disjuncts for
 singleton targets are dropped (they say v_i(A_i) < 0, false under v >= 0).
 `recheck` re-solves with the full unreduced clauses, so a final unsat does
-not depend on this reduction.
+not depend on this reduction.  With lemma_m=True also AFM Lemma M items 2-3
+(dominance between disjuncts, disjuncts false on the region); see
+reduced_disjuncts and test_efx.test_lemma_m_equivalence.
+
+Options (all off by default; measured in problem file, Approach 4a):
+c0 (Lemma C0': agent 0 has the largest top-two sum; a fixed symmetric set
+intersected with every region, so a run must use it everywhere or nowhere),
+lemma_m, multi / seed_points (heuristic choice of extra allocations),
+z3opts (e.g. {"smt.arith.solver": 2}).
 
 Usage:
   python3 cegar.py --n 4 --m 7                       # whole space

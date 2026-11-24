@@ -11,11 +11,13 @@ See `problems/efx-allocations.md` for the statement, literature and results.
 | `search.py` | Adversarial search for 4 agents. `random` mode draws from 10 instance families; `climb` mode does simulated annealing on valuations, minimising either the max–min slack ("score") or the number of EFX allocations ("count"). Any instance without EFX is re-verified (fast, full, brute) and logged with `COUNTEREXAMPLE_CANDIDATE`. |
 | `cegar.py` | Z3 QF_LRA counterexample-guided search over a polyhedral valuation region. An `unsat` answer certifies (modulo Z3) that no counterexample exists in the region. Each `sat` model is an adversarial instance and is checked exactly. `recheck` re-solves from scratch with the full, unreduced clauses. |
 | `cegar_branches.py` | Runs `cegar.py` over the argmax branches b₁ ≤ … ≤ b_{n−1}, which cover the normalised space up to symmetry. |
-| `recheck_cvc5.py` | Independent re-check of stored certificates: its own encoding, full clauses, cvc5, and a coverage check of all branches. |
+| `recheck_cvc5.py` | Independent re-check of stored certificates: its own encoding, full clauses, cvc5, and a coverage check of all branches (`--cover`) or of a refinement tree of any depth (`--tree`); `--workers=4` runs in parallel; reads `.jsonl` and `.jsonl.gz`. |
+| `run_tree.py` | Resumable driver: all argmax branches with a time limit, timeouts split into cubes and finer layers (`cegar_branches.refine`); every finished region is appended and flushed at once. Options of `cegar_branches.py`: `--arith 2` (Z3 `smt.arith.solver=2`), `--lemma-m` (AFM Lemma M items 2–3), `--c0` (Lemma C0′), `--multi K`, `--seed-points P`. |
+| `pack_certs.py` | Packs a driver output into a gzipped certificate file (allocations as digit strings). |
 | `box_runs.py` | CEGAR in small ℓ∞ boxes around the hardest profiles found by annealing (local exhaustive search). |
 | `rules_m10.py` | Failed route: AFM's Lemma L1 rule and "tops + round robin" at m = 10. |
 | `summarize.py` | Aggregates `data/*.jsonl` into the coverage numbers and scans for counterexample flags. |
-| `data/` | JSONL logs of every run reported in the problem file. |
+| `data/` | JSONL logs of every run reported in the problem file. `speedups_n4.jsonl`: the speed-up measurements (problem file, Approach 4a). `m8_tree_certs.jsonl.gz`: the m = 8 refinement-tree records (unsat certificates and timeouts). |
 
 Reproduce: `python3 test_efx.py`, then the commands listed in the problem
 file's Results table. Requirements: gcc, Python 3, `pip install z3-solver`
