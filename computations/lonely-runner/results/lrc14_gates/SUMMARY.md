@@ -2,8 +2,15 @@
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 89 | near-gcd | sample 3000 | 110720 + 855976 | 2671 / 2671 | sampled: ours subset of cert = True | 3000 | PASS | 2535 |
 | 179 | near-gcd | sample 1000 | 2133835 + 570935 | 25 / 25 | sampled: ours subset of cert = True | 1000 | PASS | 815 |
+| 223 | near-gcd | sample 3000 | 1886974 + 328893 | 140 / 140 | sampled: ours subset of cert = True | 3000 | PASS | 2883 |
+| 233 | near-gcd | sample 3000 | 5767782 + 782536 | 46 / 46 | sampled: ours subset of cert = True | 3000 | PASS | 2790 |
+| 239 | J empty | full | 1342843 + 99484 | 2030 / 2030 | True | 1 | PASS | 501 |
+| 251 | J empty | full | 2252712 + 153250 | 3228 / 3228 | True | 1 | PASS | 891 |
+| 257 | J empty | full | 5646943 + 361216 | 12208 / 12208 | True | 1 | PASS | 2489 |
 | 263 | J empty | full | 812780 + 36549 | 942 / 942 | True | 1 | PASS | 442 |
 | 269 | J empty | full | 192883 + 5092 | 113 / 113 | True | 1 | PASS | 96 |
+| 271 | J empty | full | 10027392 + 725625 | 26521 / 26521 | True | 1 | PASS | 4509 |
+| 277 | J empty | full | 2773057 + 162150 | 3266 / 3266 | True | 1 | PASS | 1148 |
 | 281 | J empty | full | 486338 + 9800 | 116 / 116 | True | 1 | PASS | 251 |
 | 283 | J empty | full | 444870 + 36519 | 818 / 818 | True | 1 | PASS | 234 |
 | 293 | J empty | full | 244454 + 3504 | 66 / 66 | True | 1 | PASS | 135 |
@@ -50,5 +57,5 @@
 | 563 | J empty | full | 7 + 0 | 1 / 1 | True | 1 | PASS | 18 |
 | 569 | J empty | full | 3 + 0 | 1 / 1 | True | 1 | PASS | 18 |
 
-LRC(14) gates checked: 49  full: 47  all pass: True
+LRC(14) gates checked: 56  full: 52  all pass: True
 LRC(13) kill gates: [83, 139, 167, 181, 191, 211, 223, 239, 263, 307, 401, 449, 503, 563, 601, 701, 797, 853, 877]  all pass: True

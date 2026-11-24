@@ -20,6 +20,7 @@ Everything is exact integer or `Fraction` arithmetic. There is no floating point
 | `run_lrc14_batch.sh` | Step 3: batch driver writing `results/lrc14_gates/gate_<p>.json`. |
 | `completeness_check.py` | Step 3: level-one completeness. It regenerates I(14,p,1) with `covergen.c` (no private-time pruning) and compares orbit sets with the certificate's stored rows. |
 | `check_lrc13_kills.py` | Step 3: LRC(13) archive. It checks the kill files' SHA-256 against the gate manifests and recomputes the level-14 kill of the two persistent orbits. |
+| `coverage_table.py` | Step 4: per-gate coverage table for all 71 LRC(14) gates → `results/lrc14_gates/COVERAGE.md`. |
 | `prove_small.py` | End-to-end reproduction of LRC(k) for small k. It walks primes upwards, runs the sieve chain at each one, and stops once the product of the successful gate primes reaches B_k. |
 | `exhaustive.py` | Direct bounded check over all primitive tuples with max speed ≤ N. It also lists the tight tuples, i.e. those with ML = 1/(n+1). |
 | `test_lonely.py` | Tests (17). See the list below. |
@@ -58,6 +59,7 @@ python3 exhaustive.py 4 60
   - The C engine agrees with the Python engine.
   - The B_k arithmetic matches the value `log B_13 < 670.3498` quoted in the abstract of arXiv:2609.02604.
 
+- Step 4: `covergen.c` sharding (`LRC_NSHARDS`/`LRC_SHARD`) gives exactly the unsharded output.
 - Step 2:
   - The cover generator equals the naive enumerator on a sample of (k, p). 125 pairs were checked during development.
   - `liftfree.c` plus the gcd clause equals the Python `lift`.
