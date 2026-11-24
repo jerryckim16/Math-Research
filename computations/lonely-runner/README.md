@@ -16,7 +16,7 @@ Everything is exact integer or `Fraction` arithmetic. There is no floating point
 | `cost_estimate.py` | Step 2: measured-basis cost estimate for LRC(15). |
 | `gatecheck.c` | Step 3: per-row binary cascade (levels 2–32) and per-orbit level-15 kill for LRC(14) gates. The kill does level-3/5 witness-free lifts, CRT, the level-15 grid, the gcd clause and the near-gcd Lemma 3.12. |
 | `canon.c` | Step 3: unit-orbit canonical forms of level-one multisets, with dedup (`rows`, `expand`) or per line (`each`). |
-| `check_gate_full.py` | Step 3: full re-check of one LRC(14) gate archive (or a seeded random sample): SHA-256, stored rows improper, cascade per orbit, persistent orbits, every kill record. |
+| `check_gate_full.py` | Step 3: full re-check of one LRC(14) gate archive (or a seeded random sample): SHA-256, stored rows improper, cascade per orbit, persistent orbits, every kill record. Step 8: optional `KILL_SAMPLE` (0 = skip the kill) for a full cascade with a sampled or separate kill. |
 | `run_lrc14_batch.sh` | Step 3: batch driver writing `results/lrc14_gates/gate_<p>.json`. |
 | `completeness_check.py` | Step 3: level-one completeness. It regenerates I(14,p,1) with `covergen.c` (no private-time pruning) and compares orbit sets with the certificate's stored rows. |
 | `check_lrc13_kills.py` | Step 3: LRC(13) archive. It checks the kill files' SHA-256 against the gate manifests and recomputes the level-14 kill of the two persistent orbits. |
