@@ -99,6 +99,7 @@ def main():
     tmp_km = tempfile.NamedTemporaryFile(delete=False)
     with tarfile.open(tgz, "r|gz") as tf:
         for m in tf:
+            tf.members = []   # tarfile keeps every TarInfo otherwise (8e6 kill files -> GBs)
             if not m.isfile():
                 continue
             name = m.name
@@ -173,6 +174,7 @@ def main():
     th.start()
     with tarfile.open(tgz, "r|gz") as tf:
         for m in tf:
+            tf.members = []   # tarfile keeps every TarInfo otherwise (8e6 kill files -> GBs)
             if not m.isfile():
                 continue
             name = m.name
