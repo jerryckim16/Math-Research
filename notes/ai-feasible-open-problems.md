@@ -37,6 +37,23 @@ partial result that is within reach.
 | 383 | Andrews–Curtis conjecture | Trivialise or obstruct specific potential counterexamples (Akbulut–Kirby, Miller–Schupp families) | RL and search have already settled individual candidate presentations. A full disproof would need a new invariant, which is much harder. |
 | 347 | Fewest variables for undecidable H10 over Z | Lower the current record (11 unknowns over Z) | Each improvement is an explicit, checkable polynomial construction, which suits search plus careful verification. |
 
+### Status updates found 2026-11-24
+
+Each item below is **reported by the cited source and not checked here**.
+The summaries come from the arXiv abstracts.
+
+- **Hadamard 668:** Egan, Kotsireas, London and Ó Catháin, arXiv:2610.27175v2,
+  report that Alpöge, Voinov and Reynolds-Haertle announced Hadamard matrices
+  at the twelve orders below 2000 where none was known, in August 2026. Order
+  668 was the smallest of these. The survey says it verifies the claimed
+  matrices. So the Tier 1 target "order 668" appears to be resolved (reported,
+  not checked here).
+- **Kissing numbers:** several unrefereed 2026 lower-bound papers publish their
+  data (dims 19, 25–31, 25–55, 32–39, 49–61). See `problems/kissing-numbers.md`.
+- **Turán K₄⁽³⁾:** Jeong, Park, Im, Lee and Yang, arXiv:2609.27495v2, claim
+  π(K₄⁽³⁾) ≤ 0.557789 with a Lean 4 proof (reported; the Lean proof was not
+  replayed here).
+
 ## Tier 2: short statements where a proof idea could plausibly come from AI
 
 These have no finite shortcut. They need a genuine argument, but the

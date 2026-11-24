@@ -7,7 +7,10 @@ https://github.com/Oxelra-AI/Qiushi-Engine-Kissing-Number-Research
 against the sha256 pinned below (which also equals the sha256 the authors
 publish in the release's configurationN.json) before it is decompressed.
 
-Usage: python3 -I fetch_qiushi.py OUTDIR
+Usage: python3 -I fetch_qiushi.py OUTDIR [--with-43]
+--with-43 also fetches the 43D export (release `section-vectors-2026-10-11`,
+2,553,792 x 48 int8, 55 MB compressed) and checks the sha256 of the raw
+file against the value in the authors' section43-verification.json.
 Writes OUTDIR/configurationN.json, OUTDIR/configurationN.i8.gz (or .i64.gz)
 and the decompressed raw files OUTDIR/qiushiN.i8 (OUTDIR/qiushi38.i64).
 """
@@ -41,7 +44,31 @@ def sha256(path):
     return h.hexdigest()
 
 
-def main(out):
+BASE43 = ("https://github.com/Oxelra-AI/Qiushi-Engine-Kissing-Number-Research/"
+          "releases/download/section-vectors-2026-10-11/")
+GZ43 = ("section43.i8.gz", "482660ef7fe595bd069d55d609c736bd54acaa786a6a5cab16581639260b7cbd")
+RAW43 = "101491f3864debc2c778ebbe370fe80b033cc9039802de59c54575ea3d4bf4bd"
+
+
+def fetch43(out):
+    gz = os.path.join(out, GZ43[0])
+    if not os.path.exists(gz) or sha256(gz) != GZ43[1]:
+        urllib.request.urlretrieve(BASE43 + GZ43[0], gz)
+    if sha256(gz) != GZ43[1]:
+        raise SystemExit("section43.i8.gz: sha256 mismatch")
+    raw = os.path.join(out, "qiushi43.i8")
+    with gzip.open(gz, "rb") as f, open(raw, "wb") as g:
+        while True:
+            chunk = f.read(1 << 24)
+            if not chunk:
+                break
+            g.write(chunk)
+    if sha256(raw) != RAW43 or os.path.getsize(raw) != 2553792 * 48:
+        raise SystemExit("qiushi43.i8: raw sha256 or size mismatch")
+    print(f"43 {GZ43[0]} sha256 OK (gz and raw) rows=2553792 cols=48 -> {raw}")
+
+
+def main(out, with43=False):
     os.makedirs(out, exist_ok=True)
     for dim, name, digest, rows, cols, dt in FILES:
         gz = os.path.join(out, name)
@@ -62,7 +89,9 @@ def main(out):
         with open(raw, "wb") as f:
             f.write(data)
         print(f"{dim} {name} sha256 OK rows={rows} cols={cols} -> {raw}")
+    if with43:
+        fetch43(out)
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1], "--with-43" in sys.argv[2:])
