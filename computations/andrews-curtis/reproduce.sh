@@ -39,6 +39,9 @@ if [ "${AC_HEAVY:-0}" = 1 ]; then
   "$W/ac_compact" 29 --maxstates 190000000 $AK3 + $P1 + $P2 | tail -2 # 88,628,824 states (68481208 5374816 14772800), no meeting; 34 min, 3.1 GB
   "$W/ac_par" 26 --slots 40000000 --undirected $AK3 + $P1 + $P2 | tail -1  # 6,373,628 states (5562224 371140 440264), no meeting; 2.5 min
   "$W/ac_par" 27 --slots 40000000 --undirected $AK3 + $P1 + $P2 | tail -1  # 13,873,120 states (10340996 877892 2654232), no meeting; 5 min, 1.1 GB
+  # single-source undirected components (other sources passive): a MEET would show up; expect EXHAUSTED
+  "$W/ac_par" 29 --slots 40000000 --undirected $P2 --passive $AK3 $P1 | tail -1   # 15,211,400 states; 5.5 min
+  "$W/ac_par" 30 --slots 50000000 --undirected $P1 --passive $AK3 $P2 | tail -1   # 18,141,004 states; 7 min, 0.4 GB
   "$W/ac_par" 27 --slots 40000000 $AK3 + $P1 + $P2 | tail -1        # 13,504,944 states (10118636 851836 2534472), no meeting; 93 s
   "$W/ac_par" 30 --slots 600000000 $AK3 + $P1 + $P2 | tail -4       # levels 26-28 give the cap-27/28/29 totals; then
   # 351,388,696 states (284176652 17796820 49415224), no meeting; 54 min wall on 4 threads, 4.7 GB
