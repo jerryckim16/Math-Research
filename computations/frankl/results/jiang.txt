@@ -1,0 +1,45 @@
+# jiang_checks.py, run 2026-11-24 (Python 3.13, pure-Python outward-rounded double intervals; own code, not Jiang's Appendix B program).
+# 'quick' = 12 scalar signs + bridge; kernel i = pair of coordinate maps KERNEL_PAIRS[i]; mixture i = t-strip i (3 jobs in parallel).
+  scalar E'(1) > 0                        in [0.2176623973, 0.2176623973]
+  scalar 1 - C_g C_t                      in [0.06286037724, 0.06286037724]
+  scalar 1 - C_b P0                       in [0.5135707905, 0.5135707905]
+  scalar 1 - 2 C_b P0                     in [0.02714158094, 0.02714158094]
+  scalar 1 - E'(1/2) - h'(z^2)/h(z^2)     in [0.08172121683, 0.08172121683]
+  scalar A - s(A) C_b                     in [0.1824987934, 0.1824987934]
+  scalar s(A) - phi(A)                    in [0.001634984171, 0.001634984171]
+  scalar -(h'(A)/(2h(A)) + E'(A))         in [0.1595984649, 0.1595984649]
+  scalar k0 - 1/2                         in [8.685974939e-09, 8.68597505e-09]
+  scalar 2 m w4 (1 - ln 4T) - 1           in [0.5275184168, 0.5275184168]
+  scalar e^{-2T} - B                      in [0.2770019987, 0.2770019987]
+  scalar 16 m w4 C^2 - 1/2                in [0.1323172025, 0.1323172025]
+bridge h(Ay) - s(A)phi(y) > 0 on [1/16, A]: 68 cells, min lower bound 4.61016e-06 (0.1s)
+kernel maps (0,0): 64 boxes, min lower bound 0.02197 at (0.5, 0.625, 0.0, 0.125) (0.3s)
+KERNEL (0, 0) OK (64, 0.021965731104194027, (0.5, 0.625, 0.0, 0.125))
+kernel maps (0,1): 64 boxes, min lower bound 0.0001003 at (0.875, 1.0, 0.75, 0.875) (0.4s)
+KERNEL (0, 1) OK (64, 0.00010026379465122302, (0.875, 1.0, 0.75, 0.875))
+kernel maps (0,2): 64 boxes, min lower bound 0.003289 at (0.25, 0.375, 0.0, 0.125) (0.4s)
+KERNEL (0, 2) OK (64, 0.003288878558568797, (0.25, 0.375, 0.0, 0.125))
+kernel maps (1,1): 897 boxes, min lower bound 1.431e-10 at (0.326171875, 0.326416015625, 0.32568359375, 0.326171875) (10.1s)
+KERNEL (1, 1) OK (897, 1.430744084206264e-10, (0.326171875, 0.326416015625, 0.32568359375, 0.326171875))
+kernel maps (1,2): 147 boxes, min lower bound 5.319e-07 at (0.421875, 0.4375, 0.0, 0.00390625) (1.6s)
+KERNEL (1, 2) OK (147, 5.318862387274633e-07, (0.421875, 0.4375, 0.0, 0.00390625))
+kernel maps (2,2): 70 boxes, min lower bound 0.0001235 at (0.0, 0.03125, 0.0, 0.0625) (0.4s)
+KERNEL (2, 2) OK (70, 0.0001235476116593682, (0.0, 0.03125, 0.0, 0.0625))
+mixture t in [0.0009999999999999998,0.01]: 169 boxes (23 by edge bounds), min lower bound 1.255e-10 at (0.0009999999999999998, 0.01, 0.9999961853027344, 1.0, 'edge') (1.6s)
+MIXTURE STRIP (0.0009999999999999998, 0.01) OK (169, 23, 1.254572285842674e-10, (0.0009999999999999998, 0.01, 0.9999961853027344, 1.0, 'edge'))
+mixture t in [0.01,0.1]: 178 boxes (21 by edge bounds), min lower bound 8.619e-10 at (0.01, 0.1, 0.999969482421875, 1.0, 'edge') (2.0s)
+MIXTURE STRIP (0.01, 0.1) OK (178, 21, 8.619074139080903e-10, (0.01, 0.1, 0.999969482421875, 1.0, 'edge'))
+mixture t in [0.1,0.3]: 229 boxes (10 by edge bounds), min lower bound 5.021e-09 at (0.1, 0.3, 0.99951171875, 1.0, 'edge') (3.6s)
+MIXTURE STRIP (0.1, 0.3) OK (229, 10, 5.021408904132472e-09, (0.1, 0.3, 0.99951171875, 1.0, 'edge'))
+mixture t in [0.3,0.5]: 3051 boxes (4 by edge bounds), min lower bound 1.782e-11 at (0.370458984375, 0.37050781250000003, 0.000244140625, 0.00048828125) (57.1s)
+MIXTURE STRIP (0.3, 0.5) OK (3051, 4, 1.7821468174988495e-11, (0.370458984375, 0.37050781250000003, 0.000244140625, 0.00048828125))
+mixture t in [0.5,1.0]: 359 boxes (3 by edge bounds), min lower bound 1.553e-08 at (0.5, 1.0, 0.998046875, 1.0, 'edge') (6.4s)
+MIXTURE STRIP (0.5, 1.0) OK (359, 3, 1.5531679880908376e-08, (0.5, 1.0, 0.998046875, 1.0, 'edge'))
+mixture t in [1.0,2.0]: 181 boxes (4 by edge bounds), min lower bound 2.544e-08 at (1.0, 2.0, 0.99609375, 1.0, 'edge') (2.8s)
+MIXTURE STRIP (1.0, 2.0) OK (181, 4, 2.5441696066305696e-08, (1.0, 2.0, 0.99609375, 1.0, 'edge'))
+mixture t in [2.0,4.0]: 82 boxes (3 by edge bounds), min lower bound 4.335e-08 at (2.0, 4.0, 0.9921875, 1.0, 'edge') (0.9s)
+MIXTURE STRIP (2.0, 4.0) OK (82, 3, 4.334983997281404e-08, (2.0, 4.0, 0.9921875, 1.0, 'edge'))
+mixture t in [4.0,8.0]: 55 boxes (3 by edge bounds), min lower bound 7.817e-08 at (4.0, 8.0, 0.984375, 1.0, 'edge') (0.6s)
+MIXTURE STRIP (4.0, 8.0) OK (55, 3, 7.817231738080823e-08, (4.0, 8.0, 0.984375, 1.0, 'edge'))
+mixture t in [8.0,16.0]: 53 boxes (2 by edge bounds), min lower bound 1.477e-07 at (8.0, 16.0, 0.984375, 1.0, 'edge') (0.5s)
+MIXTURE STRIP (8.0, 16.0) OK (53, 2, 1.4766157347943296e-07, (8.0, 16.0, 0.984375, 1.0, 'edge'))

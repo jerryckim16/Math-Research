@@ -5,8 +5,9 @@
 one-variable inequality behind the (3−√5)/2 bound is **certificate-checked**
 here with self-contained interval arithmetic. **Every finite computation** in
 Costa–Sadhu's proofs of c_UC ≥ c_L ≈ 0.3827091 (their Thm 1.1) and of the
-record c_UC ≥ 0.3828852549667978 (their Thm 1.2) is **independently
-re-certified** (analytic steps read, not machine-checked). The conjecture is **checked
+record c_UC ≥ 0.3828852549667978 (their Thm 1.2), and in Jiang's independent
+proof of c_UC ≥ 0.38288525, is **independently re-certified** (analytic steps
+read, not machine-checked). The conjecture is **checked
 exhaustively for universes of size n ≤ 6**: all 75,973,751,474 labeled
 families, reproducing the known labeled counts exactly.
 **Started:** 2026-11-24
@@ -52,17 +53,19 @@ counts are taken from Brinkmann–Deklerck (below).
 | ≈ 0.3823455 (exactly the optimum of Sawin's iid + max-entropy mixture, 0.382345533366703) | Sawin (strict improvement, no value); Yu arXiv:2212.00658 (≈ 0.38234, numerical); Cambie arXiv:2212.12500 (proof of the optimum, computer-aided) | proved (Cambie) | Cambie [skimmed], Yu [abstract] |
 | > 0.3823455 strictly; ≈ 0.382709 under numerically checked hypotheses | Liu, arXiv:2306.08824 (CISS 2024), conditionally-iid couplings | the strict improvement is analytic; 0.382709 is not proved | [skimmed] |
 | c_L = 1 − x*H(x*)/H(x*²) > 0.382709087918735, where x* is the root in (0,1) of x⁴−2x³+3x²−1 | Costa–Sadhu, arXiv:2610.02295 Thm 1.1 (Oct 2026); earlier Zenodo preprint by Costa | preprint; computer-assisted (MPFR intervals, Bernstein certificate) | [read] §§1–5 |
-| **0.38288525 = 1531541/4000000** | Jiang, arXiv:2609.08291 (8 Sep 2026) | preprint; computer-assisted (interval code in the appendix) | [read] intro, §ceiling |
+| **0.38288525 = 1531541/4000000** | Jiang, arXiv:2609.08291 (8 Sep 2026) | preprint; computer-assisted (interval code in the appendix). **All finite computations re-verified here** (Approach 5) | [read] §§1–8, App. A–B |
 | **0.3828852549667978** | Costa–Sadhu, arXiv:2610.02295 Thm 1.2 (1 Oct 2026). **This is the ProofAtlas "Oct 2026" claim.** | preprint, not refereed; computer-assisted (Zenodo supplement). **All finite computations re-verified here** (Approach 4) | [read] §6, App. A |
 
 Current best *claimed* constant: **0.3828852549667978** (Costa–Sadhu,
-unrefereed; every finite computation of its proof independently re-verified
-here, analytic steps read). The best constant in a refereed journal is (3−√5)/2 (AHS, EJC
+unrefereed). Every finite computation of its proof, and of Jiang's
+0.38288525, is independently re-verified here; the analytic steps were read. The best constant in a refereed journal is (3−√5)/2 (AHS, EJC
 2024). Cambie's 0.3823455 is in an arXiv v2 (2025); whether it was refereed
 was not checked. Two independent groups give near-identical values
 (0.38288525 and 0.38288525497), and both bounds sit within 10⁻⁸ of the same
 proved ceiling (next section). That agreement is decent evidence that the
-numerics are right, but it is not a referee check.
+numerics are right, but it is not a referee check. We have since re-run every
+finite computation of both proofs with our own code (Approaches 4–5). That
+also is not a referee check of the analytic arguments, which were read only.
 
 ### Barriers: what each variant of the method can give
 
@@ -426,7 +429,7 @@ local rectangle, own cover); analytic steps read, not machine-checked.**
 - We found no error. One presentational point: the tails of A.5 live only
   in the Zenodo supplement, not in the paper. We supplied our own.
 
-### 5. Jiang's 0.38288525 (arXiv:2609.08291): proof map, not yet re-verified
+### 5. Independent re-verification of Jiang's 0.38288525 (arXiv:2609.08291)
 
 Source: arXiv v1 LaTeX, §§2–8 and Appendices A–B **[read]**. Parameters are
 exact rationals: m = 2468459/4·10⁶ (so 1 − m = 1531541/4·10⁶), w₀ = 0.8102221,
@@ -472,8 +475,78 @@ so k₀ − ½ = 8.69·10⁻⁹.
   - Jiang also has an analytic finite-N global-coupling gain, which tends
     to 0.
 
-Status: **map only.** None of Jiang's finite computations has been re-run
-or re-implemented here yet.
+#### What we re-computed (`computations/frankl/jiang_checks.py`, `results/jiang.txt`)
+
+All of this is our own code: outward-rounded doubles, with the accurate
+G/H evaluation from Approach 4. It is not Jiang's Decimal program. Every
+rational parameter is entered exactly.
+
+- **Exact rationals.**
+  - w₀ + w₄ = 1 and 1 − m = 1531541/4·10⁶.
+  - k₀ − ½ = 347439/4·10¹³.
+  - 1/2 < z < 1/√2 < A (as 2z² < 1 < 2A²), and z² + z > 1.
+- **The 12 scalar signs.** All are positive. The smallest is
+  k₀ − ½ ∈ [8.685974939·10⁻⁹, 8.68597505·10⁻⁹]. The next smallest are
+  s(A) − φ(A) ≥ 1.63·10⁻³ and 1 − 2C_bP₀ ≥ 0.0271.
+- **Bridge** on [1/16, A]: 68 cells, minimum lower bound 4.6·10⁻⁶.
+- **Kernel** on [1/16, 15/16]², using our own implementation of the three
+  coordinate maps (x(p) = 1/(p² + √((p²−1)² + 1)), so that a(x(p)) = p).
+  The proven range xy ≤ r ≤ min(x,y) is intersected in.
+
+  | maps | boxes | min lower bound | time |
+  | --- | --- | --- | --- |
+  | (low, low) | 64 | 0.022 | 0.3 s |
+  | (low, mid) | 64 | 1.0·10⁻⁴ | 0.4 s |
+  | (low, high) | 64 | 3.3·10⁻³ | 0.4 s |
+  | (mid, mid) | 897 | 1.4·10⁻¹⁰ (at x ≈ y ≈ x*) | 10 s |
+  | (mid, high) | 147 | 5.3·10⁻⁷ | 1.6 s |
+  | (high, high) | 70 | 1.2·10⁻⁴ | 0.4 s |
+
+  The true kernel gap at (x*, x*) is exactly ln 2·(1 − σ²) = 1.386·10⁻⁸,
+  because r(x,x) = ½ on [½, 1/√2] and φ(x*)² = σ² ln 2. Our enclosure is
+  [1.38629304·10⁻⁸, 1.38629528·10⁻⁸]. Negative control: raising σ by a
+  factor 1 + 2·10⁻⁸ gives a certified negative gap there.
+- **Mixture** on [0.001, 16] × [0, 1]: nine t-strips; the edge bounds
+  (edge1, edge2) are used next to ξ = 1.
+
+  | t-strip | boxes (by edge bound) | min lower bound | time |
+  | --- | --- | --- | --- |
+  | [0.001, 0.01] | 169 (23) | 1.3·10⁻¹⁰ (edge2) | 1.6 s |
+  | [0.01, 0.1] | 178 (21) | 8.6·10⁻¹⁰ (edge2) | 2.0 s |
+  | [0.1, 0.3] | 229 (10) | 5.0·10⁻⁹ (edge2) | 3.6 s |
+  | [0.3, 0.5] | 3,051 (4) | **1.8·10⁻¹¹** (mean value, t ≈ 0.3705, ξ ≈ 4·10⁻⁴) | 57 s |
+  | [0.5, 1] | 359 (3) | 1.6·10⁻⁸ | 6.4 s |
+  | [1, 2] | 181 (4) | 2.5·10⁻⁸ | 2.8 s |
+  | [2, 4] | 82 (3) | 4.3·10⁻⁸ | 0.9 s |
+  | [4, 8] | 55 (3) | 7.8·10⁻⁸ | 0.6 s |
+  | [8, 16] | 53 (2) | 1.5·10⁻⁷ | 0.5 s |
+
+  - **Two thin spots, both resolved.**
+    - The diagonal near x*: F(−log x*, 0) ≈ 1.105·10⁻⁸, reflecting
+      C* − c₀ ≈ 10⁻⁸. Our point enclosures there have width ≈ 4·10⁻¹⁴,
+      and the weakest mean-value box still clears zero by 1.8·10⁻¹¹, about
+      400 times the rounding width.
+    - The ξ → 1 edge, where the edge bounds certify (k₀ − ½)G(2t), down to
+      1.3·10⁻¹⁰.
+  - Negative control: lowering k₀ by 2·10⁻⁸ makes the certified value at
+    the diagonal point negative.
+- **Tests.** `test_frankl.py::test_jiang` checks the kernel gap, its two
+  partial derivatives, P, P′ and the mixture value and derivatives against
+  40-digit mpmath models of Jiang's definitions, written separately from
+  `jiang_checks.py`.
+
+**Label: c_UC ≥ 0.38288525 (Jiang): all finite computations re-verified
+independently (own interval code and own covers, same decomposition of the
+domain); analytic steps read, not machine-checked.**
+
+- Read but not machine-checked: the reduction, geometric concavity, profile
+  ordering, the lower/upper strips, small t ≤ 0.001, large t ≥ 16, and the
+  two edge estimates.
+- We reused Jiang's *decomposition* (the strip/square split, the coordinate
+  maps and the edge bounds), but none of his code.
+- We found no error. Neither record bound has been refereed. The two
+  constructions are genuinely different (Liu's Example 5 vs Example 4), and
+  both are now checked.
 
 ## Results
 
@@ -487,7 +560,8 @@ or re-implemented here yet.
 | c_UC ≥ c_L = 0.3827090879187350… | proved in Costa–Sadhu (preprint); analytic steps read here, all computations re-certified here | same + arXiv:2610.02295 |
 | Costa–Sadhu Lemma 6.1 Bernstein certificate (A.4), 1D inequalities (A.5), contact convexity (A.6, F₀ ≥ 1.1386·10⁻⁸), compact cover (A.7) at ℓ₀ = 1409/2000 | certificate-checked independently (own interval code, own tails, own rectangle, own cover of 15,323 boxes) | `computations/frankl/costa_sadhu_thm12.py`, `results/costa_sadhu_thm12.txt` |
 | c_UC ≥ 0.3828852549667978 (Costa–Sadhu Thm 1.2) | proved in Costa–Sadhu (preprint); analytic steps read here, all computations re-certified here | same + arXiv:2610.02295 |
-| c_UC ≥ 0.38288525 (Jiang) | claimed, computer-assisted preprint; **not** re-verified here | arXiv:2609.08291 |
+| Jiang's 12 scalar signs, bridge, kernel (K) on [1/16,15/16]², mixture (M) on [0.001,16]×[0,1] | certificate-checked independently (own interval code; 1,306 kernel + 4,357 mixture boxes) | `computations/frankl/jiang_checks.py`, `results/jiang.txt` |
+| c_UC ≥ 0.38288525 (Jiang) | proved in Jiang (preprint); analytic steps read here, all computations re-certified here | same + arXiv:2609.08291 |
 
 ## Failed or closed routes (do not retry blindly)
 
@@ -508,12 +582,13 @@ or re-implemented here yet.
 
 Realistic for the next session (bounded, about 3 hours):
 
-1. **Re-verify Jiang's independent 0.38288525 (arXiv:2609.08291).** Costa–Sadhu
-   Thm 1.2 is done (Approach 4). Jiang's construction is different (map:
-   Approach 5), so this would check a second, independent record proof. Its
-   thin spot is the ξ → 1 edge, where mw₀ − 1/2 = 8.7·10⁻⁹ and an analytic
-   edge bound is used inside the cover. Start with the 12 scalar signs and the
-   1D bridge, then the mixture cover, then the 6-square kernel cover.
+1. **Machine-check the analytic glue of one record proof.** Every finite
+   computation of both record proofs (Costa–Sadhu Thm 1.2, Jiang) is now
+   re-verified. What remains unchecked is analytic. The cheapest
+   high-value step is to formalise the one-variable lemmas: Costa–Sadhu
+   Lemmas 4.1 and 4.4 (Lean or a CAS), then the Case 1–3 reductions of
+   Lemma 6.2. Alternatively, ask for the Zenodo supplement (record 22727713)
+   and diff its covers against ours.
 2. **Lean.**
    - Ho (arXiv:2601.19327) already formalised Boppana's inequality in Lean 4.
    - Mathlib-adjacent projects (PFR) have Shannon entropy.

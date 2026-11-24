@@ -12,6 +12,8 @@
 5. Costa-Sadhu Lemma R pieces (exact rational checks) and constants.
 6. Costa-Sadhu Thm 1.2 (costa_sadhu_thm12.py): exact pieces, 1D and contact
    certificates, mpmath.iv cross-check of the 1e-8 contact margin, negative controls.
+7. Jiang arXiv:2609.08291 (jiang_checks.py): scalars, bridge, coordinate map, the
+   1e-8 kernel/mixture margins with negative controls, derivative formulas.
 """
 from __future__ import annotations
 
@@ -305,6 +307,88 @@ def test_costa_sadhu_thm12():
           " derivative formulas, negative controls OK")
 
 
+def test_jiang():
+    """Jiang arXiv:2609.08291: scalar signs, bridge, coordinate map, the 1.4e-8
+    kernel margin at (x*, x*) (+ negative control), and derivative formulas of the
+    kernel gap / P / mixture against mpmath finite differences."""
+    import jiang_checks as jc
+    jc.scalar_checks(verbose=False)
+    jc.verify_bridge(verbose=False)
+    import mpmath as mp
+    mp.mp.dps = 40
+    xs = mp.mpf(172727) / 250000
+    p = float(mp.sqrt((1 - 2 * xs**2) / (2 * xs * (1 - xs))))
+    gap = jc.kernel_gap(I(p), I(p), 1, 1)
+    assert 1.38e-8 < gap.lo and gap.hi < 1.39e-8          # = ln2 (1 - sigma^2) at the tangency
+    old = jc.SIGi
+    try:
+        jc.SIGi = old * (1.0 + 2e-8)                      # negative control: gap must go negative
+        assert jc.kernel_gap(I(p), I(p), 1, 1).hi < 0
+    finally:
+        jc.SIGi = old
+    # mpmath model of the construction
+    m, w0, w4 = mp.mpf(2468459) / 4000000, mp.mpf(8102221) / 10**7, mp.mpf(1897779) / 10**7
+    A, B, z, sig = mp.mpf(716) / 1000, mp.mpf(721) / 1000, mp.mpf(181) / 256, mp.mpf(99999999) / 10**8
+    h = lambda x: -x * mp.log(x) - (1 - x) * mp.log(1 - x)
+    hp = lambda x: mp.log((1 - x) / x)
+    ks = hp(xs) / (2 * h(xs))
+    E = lambda x: -ks * (x - xs) - mp.mpf(7) / 10 * (x - xs) ** 2
+    D = lambda x: h(x) if x <= 0.5 else (mp.log(2) if x <= z else mp.log(2) * h(x * x) / h(z * z))
+    phi = lambda x: sig * mp.sqrt(D(x) * h(x) / h(xs)) * mp.e ** E(x)
+    s = lambda x: mp.sqrt(h(x * x))
+    psi = lambda x: phi(x) if x <= A else (s(x) if x >= B else
+                                           (1 - (x - A) / (B - A)) * phi(x) + (x - A) / (B - A) * s(x))
+    a = lambda x: 1 if x <= 0.5 else (mp.sqrt((1 - 2 * x * x) / (2 * x * (1 - x))) if x < 1 / mp.sqrt(2) else 0)
+    r = lambda x, y: x * y + a(x) * a(y) * (min(x, y) - x * y)
+    xmap = lambda q, br: _xmap(mp.mpf(q), br)
+    _xmap = lambda q, br: (mp.mpf(1) / 16 + (mp.mpf(1) / 2 - mp.mpf(1) / 16) * q if br == 0 else
+                          (1 / (q * q + mp.sqrt((q * q - 1) ** 2 + 1)) if br == 1 else
+                           1 / mp.sqrt(2) + (mp.mpf(15) / 16 - 1 / mp.sqrt(2)) * q))
+    gapm = lambda q1, q2, i, j: h(r(xmap(q1, i), xmap(q2, j))) - phi(xmap(q1, i)) * phi(xmap(q2, j))
+    G = lambda u: h(mp.e**-u) * mp.e**u
+    P = lambda u: psi(mp.e**-u) * mp.e**u
+    F = lambda t, xi: m * w0 * G(2 * t) + m * w4 * P(t * (1 + xi)) * P(t * (1 - xi)) - (G(t * (1 + xi)) + G(t * (1 - xi))) / 2
+    rnd = random.Random(11)
+    for _ in range(40):
+        q = rnd.uniform(0.02, 0.98)
+        x, aa, _, _ = jc.coord(I(q), 1)
+        assert x.lo - 1e-14 <= xmap(q, 1) <= x.hi + 1e-14 and abs(a(xmap(q, 1)) - q) < 1e-20
+        i, j = rnd.choice(jc.KERNEL_PAIRS)
+        q1, q2 = rnd.uniform(0.02, 0.98), rnd.uniform(0.02, 0.98)
+        if i == j and abs(q1 - q2) < 0.05:
+            continue
+        val, dA, dB = jc.kernel_gap(I(q1), I(q2), i, j, True)
+        assert val.lo - 1e-12 <= gapm(q1, q2, i, j) <= val.hi + 1e-12
+        ra = mp.diff(lambda w: gapm(w, q2, i, j), q1)
+        rb = mp.diff(lambda w: gapm(q1, w, i, j), q2)
+        assert dA.lo - 1e-8 <= ra <= dA.hi + 1e-8 and dB.lo - 1e-8 <= rb <= dB.hi + 1e-8, (i, j, q1, q2)
+        u = rnd.choice([rnd.uniform(0.01, 0.3), rnd.uniform(0.35, 0.7), rnd.uniform(0.75, 20)])
+        pv, pd = jc.P_all(I(u))
+        assert pv.lo - 1e-10 <= P(u) <= pv.hi + 1e-10
+        assert pd.lo - 1e-8 <= mp.diff(P, u) <= pd.hi + 1e-8, (u, pd, mp.diff(P, u))
+        t, xi = rnd.uniform(0.01, 10.0), rnd.uniform(0.0, 0.95)
+        fv = jc.mixture_val(t, xi)
+        assert fv.lo - 1e-10 <= F(t, xi) <= fv.hi + 1e-10
+        Ft, Fx = jc.mixture_derivs(I(t), I(xi))
+        if all(abs(w - c) > 1e-6 for w in (t * (1 + xi), t * (1 - xi))
+               for c in (float(-mp.log(B)), float(-mp.log(A)), float(-mp.log(z)), float(mp.log(2)))):
+            assert Ft.lo - 1e-8 <= mp.diff(lambda w: F(w, xi), t) <= Ft.hi + 1e-8
+            assert Fx.lo - 1e-8 <= mp.diff(lambda w: F(t, w), xi) <= Fx.hi + 1e-8
+    # the thinnest mixture point: the diagonal near x = x*, F(-log x*, 0) ~ 1.105e-8
+    tc = -mp.log(xs)
+    fv = jc.mixture_val(float(tc), 0.0)
+    assert 1.1e-8 < fv.lo and abs(F(float(tc), 0) - fv.mid()) < 1e-13
+    oldk = jc.K0
+    try:
+        jc.K0 = oldk - 2e-8                               # negative control for the mixture
+        assert jc.mixture_val(float(tc), 0.0).hi < 0
+    finally:
+        jc.K0 = oldk
+    print("  Jiang: 12 scalar signs, bridge, coordinate map, kernel margin 1.386e-8 and mixture margin 1.105e-8"
+          " (+ negative controls),"
+          " kernel/P/mixture values and derivatives vs mpmath OK")
+
+
 if __name__ == "__main__":
     tests = [test_bruteforce, test_c_enumerator, test_interval, test_boppana]
     if os.path.exists(os.path.join(HERE, "costa_sadhu_checks.py")):
@@ -316,6 +400,8 @@ if __name__ == "__main__":
             print("(mpmath missing: derivative cross-check skipped)")
     if os.path.exists(os.path.join(HERE, "costa_sadhu_thm12.py")):
         tests.append(test_costa_sadhu_thm12)
+    if os.path.exists(os.path.join(HERE, "jiang_checks.py")):
+        tests.append(test_jiang)
     for t in tests:
         print(t.__name__)
         t()
