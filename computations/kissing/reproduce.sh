@@ -5,7 +5,7 @@
 # 12D 841, arXiv:2606.18984v2). See problems/kissing-numbers.md.
 #
 # Needs: gcc with OpenMP, python3 with numpy, network access to github.com
-# release assets, raw.githubusercontent.com and zenodo.org. About 60 min wall
+# release assets, raw.githubusercontent.com and zenodo.org. About 1.5 h wall
 # on 4 cores; peak RAM < 1 GB (25D/27D field checks: < 2 GB).
 # Usage: reproduce.sh [WORKDIR] [--with-43]   (downloads and logs go to WORKDIR)
 # --with-43 adds the Qiushi 43D export (2,553,792 points; about 75 min more).
@@ -160,5 +160,13 @@ for c in "dup 0 0" "merge 413 756" "nudge 413 756"; do
   if python3 -I "$here/check_decimal.py" "$work/small/tay12_841.txt" 12 --control $c > "$work/neg/t12.txt"; then
     echo "NEGATIVE CONTROL 12D $c WAS ACCEPTED"; exit 1
   fi
+done
+# 10. 19D: Ho's published 11,948 points (arXiv:2603.10425v3); sign rows rescaled
+python3 -I "$here/load_ho19.py" "$work/small/ho19_11948.txt" "$work/small/ho19.i8"
+"$CHK" "$work/small/ho19.i8" 19 | grep -E "^pairs|class_pair|contacts|RESULT"
+python3 "$here/kiss_check_np.py" "$work/small/ho19.i8" 19 | grep -E "contacts|RESULT"
+for m in dup merge; do
+  python3 "$here/perturb.py" "$work/small/ho19.i8" 19 "$m" "$work/neg/h19_$m.i8"
+  if "$CHK" "$work/neg/h19_$m.i8" 19 > "$work/neg/h19_$m.txt"; then echo "NEGATIVE CONTROL h19 $m WAS ACCEPTED"; exit 1; fi
 done
 echo "ALL DONE"
