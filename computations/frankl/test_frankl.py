@@ -14,6 +14,8 @@
    certificates, mpmath.iv cross-check of the 1e-8 contact margin, negative controls.
 7. Jiang arXiv:2609.08291 (jiang_checks.py): scalars, bridge, coordinate map, the
    1e-8 kernel/mixture margins with negative controls, derivative formulas.
+8. Costa-Sadhu Thm 1.2 analytic glue (analytic_glue.py), with negative controls.
+9. Jiang analytic glue (analytic_glue_jiang.py), with negative controls.
 """
 from __future__ import annotations
 
@@ -431,8 +433,67 @@ def test_analytic_glue():
     must_fail(hyps, 17 * (Sg - S_) < 14 * (Sg + S_))
     # and dropping "not Case 3" loses the lower bound t > 2^-11
     must_fail(hyps[:-1], (S_ + Sg) / 2 > Q(Fraction(1, 2048)))
+    # non-vacuity guard: inconsistent hypotheses are refused even though they imply anything
+    must_fail([S_ > 1, S_ < 0], S_ == 5)
     print(f"  analytic glue: {len(res)} claims OK; negative controls (false identity, Sturm, "
-          "z3 with 7.11, 6 log 2, 14/17, no Case 3) behave")
+          "z3 with 7.11, 6 log 2, 14/17, no Case 3, vacuity guard) behave")
+
+
+def test_analytic_glue_jiang():
+    """Jiang arXiv:2609.08291 analytic glue (analytic_glue_jiang.py): all claims, plus negative
+    controls showing that each tool can fail (false log identities, an unlisted log factor, z3 on
+    weakened hypotheses, the z3 vacuity guard, Arb and interval scalars with a changed parameter)."""
+    import analytic_glue_jiang as aj
+    import sympy as sp
+    z3 = aj.z3
+    res = aj.run_all(verbose=False)
+    assert len(res) == len(aj.ALL) and all(r[3] == "OK" for r in res)
+    x = aj.x
+    Lp_ = sp.Symbol("L1px")
+    bases = {x: aj.LX, 1 - x: aj.L1X, 1 + x: Lp_}
+    pr = [(1 - x) / (1 + x), x / (1 + x), x / (1 + x)]
+    H3 = -sum(pi_ * sp.log(pi_) for pi_ in pr)
+    # sympy: the grouping identity with a wrong prefactor (1 + x^2) is rejected
+    assert not aj.zero_logs(2 * aj.hs(x) - aj.hs(x**2) - (1 + x**2) * H3, bases)
+    # sympy: the q' identity with the sign of h/(1-x) flipped is rejected
+    h_ = aj.hs(x)
+    hp = sp.diff(h_, x)
+    lhs = h_**2 * sp.diff(x * hp / h_, x)
+    assert not aj.zero_logs(lhs - (hp * (-sp.log(1 - x)) + h_ / (1 - x)), {x: aj.LX, 1 - x: aj.L1X})
+    # logsub refuses a log factor that is not listed (nothing left to heuristics)
+    try:
+        aj.logsub(sp.log(1 + x), {x: aj.LX})
+        raise RuntimeError("logsub accepted an unlisted factor")
+    except AssertionError:
+        pass
+
+    def must_fail(hyps, goal):
+        try:
+            aj.z3_valid(hyps, goal, None)
+        except AssertionError:
+            return
+        raise AssertionError("z3 proved a false implication")
+    from fractions import Fraction as Fr
+    must_fail(*aj.lower_strip_skeleton("y>=1/2", Fr(101, 100)))     # 2 C_b P0 < 1.01 is not enough
+    must_fail(*aj.upper_strip_checks(Fr(101, 100)))                 # C_t C_g < 1.01 is not enough
+    must_fail(*aj.small_t_skeleton(with_bracket=False))             # bracket <= 0 (e.g. T = 0.1)
+    must_fail(*aj.large_t_skeleton(8))                              # t >= 8 instead of 16
+    must_fail(*aj.edge_skeleton(2, with_tail=False))                # edge2 without v <= -ln B
+    must_fail(*aj.passing_skeleton("mixed", with_bridge=False))     # mixed case without the bridge
+    must_fail(*aj.reduction_skeleton(p_is_max=False))               # p = min p_i instead of max
+    X = z3.Real("x")
+    must_fail([X > 1, X < 0], X == 5)                               # vacuity guard: unsat hypotheses
+    # Arb: the same scalars with a changed parameter are certified NEGATIVE
+    if aj.flint is not None:
+        assert aj.arb_scalars(T=Fr(1, 10))["2 m w4 (1 - ln 4T) - 1"] < 0
+        assert aj.arb_scalars(large_t=8)["16 m w4 C^2 - 1/2"] < 0
+        assert aj.arb_scalars(sigma=aj.jc.SIG * Fr(101, 100))["s(A) - phi(A)"] < 0
+    # interval: the small-t bracket at T = 1/10 is certified negative by interval.py too
+    jc = aj.jc
+    br = 2.0 * jc.MW4 * (1.0 - jc.ilog(4.0 * jc.IF(Fr(1, 10)))) - 1.0
+    assert br.hi < 0
+    print(f"  Jiang analytic glue: {len(res)} claims OK; negative controls (2 false identities, unlisted log, "
+          "z3 x7 + vacuity guard, Arb x3, interval) behave")
 
 
 if __name__ == "__main__":
@@ -455,6 +516,8 @@ if __name__ == "__main__":
             tests.append(test_analytic_glue)
         except ImportError:
             print("(sympy or z3-solver missing: analytic-glue checks skipped)")
+    if os.path.exists(os.path.join(HERE, "analytic_glue_jiang.py")) and test_analytic_glue in tests:
+        tests.append(test_analytic_glue_jiang)
     for t in tests:
         print(t.__name__)
         t()

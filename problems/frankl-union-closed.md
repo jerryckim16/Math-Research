@@ -12,7 +12,12 @@ and the residual region) is now **machine-checked** with sympy (exact) + z3 +
 interval arithmetic, up to listed standard hand steps (Approach 6; no Lean:
 the Mathlib cache is unreachable from here). Its measure-theoretic part
 (Prop. 6.3's integration, Lemma 2.1's limit, Liu's Prop. 3) is read only.
-Liu's Prop. 3 has now been read in Liu's own text. The conjecture is **checked
+Liu's Prop. 3 has now been read in Liu's own text. Jiang's analytic glue
+(reduction, Lemma "geometric", profile order, kernel strips, coordinate maps,
+small-t/large-t tails, edge bounds, App. A derivative formulas) is likewise
+**machine-checked** (Approach 7), up to named hand steps; only its
+probability layer (chain rule, conditioning, conditional independence) is
+read only. No gap was found in either proof. The conjecture is **checked
 exhaustively for universes of size n ≤ 6**: all 75,973,751,474 labeled
 families, reproducing the known labeled counts exactly.
 **Started:** 2026-11-24
@@ -58,19 +63,23 @@ counts are taken from Brinkmann–Deklerck (below).
 | ≈ 0.3823455 (exactly the optimum of Sawin's iid + max-entropy mixture, 0.382345533366703) | Sawin (strict improvement, no value); Yu arXiv:2212.00658 (≈ 0.38234, numerical); Cambie arXiv:2212.12500 (proof of the optimum, computer-aided) | proved (Cambie) | Cambie [skimmed], Yu [abstract] |
 | > 0.3823455 strictly; ≈ 0.382709 under numerically checked hypotheses | Liu, arXiv:2306.08824 (CISS 2024), conditionally-iid couplings | the strict improvement is analytic; 0.382709 is not proved | [skimmed] |
 | c_L = 1 − x*H(x*)/H(x*²) > 0.382709087918735, where x* is the root in (0,1) of x⁴−2x³+3x²−1 | Costa–Sadhu, arXiv:2610.02295 Thm 1.1 (Oct 2026); earlier Zenodo preprint by Costa | preprint; computer-assisted (MPFR intervals, Bernstein certificate) | [read] §§1–5 |
-| **0.38288525 = 1531541/4000000** | Jiang, arXiv:2609.08291 (8 Sep 2026) | preprint; computer-assisted (interval code in the appendix). **All finite computations re-verified here** (Approach 5) | [read] §§1–8, App. A–B |
+| **0.38288525 = 1531541/4000000** | Jiang, arXiv:2609.08291 (8 Sep 2026) | preprint; computer-assisted (interval code in the appendix). **All finite computations re-verified here** (Approach 5); **analytic glue machine-checked** (Approach 7) | [read] §§1–8, App. A–B |
 | **0.3828852549667978** | Costa–Sadhu, arXiv:2610.02295 Thm 1.2 (1 Oct 2026). **This is the ProofAtlas "Oct 2026" claim.** | preprint, not refereed; computer-assisted (Zenodo supplement). **All finite computations re-verified here** (Approach 4) | [read] §6, App. A |
 
 Current best *claimed* constant: **0.3828852549667978** (Costa–Sadhu,
 unrefereed). Every finite computation of its proof, and of Jiang's
-0.38288525, is independently re-verified here; the analytic steps were read. The best constant in a refereed journal is (3−√5)/2 (AHS, EJC
+0.38288525, is independently re-verified here. The analytic glue of both
+proofs is machine-checked (sympy/z3/interval/Arb, Approaches 6–7) up to named
+hand steps and a read-only probability/measure-theory layer. The best constant in a refereed journal is (3−√5)/2 (AHS, EJC
 2024). Cambie's 0.3823455 is in an arXiv v2 (2025); whether it was refereed
 was not checked. Two independent groups give near-identical values
 (0.38288525 and 0.38288525497), and both bounds sit within 10⁻⁸ of the same
 proved ceiling (next section). That agreement is decent evidence that the
 numerics are right, but it is not a referee check. We have since re-run every
-finite computation of both proofs with our own code (Approaches 4–5). That
-also is not a referee check of the analytic arguments, which were read only.
+finite computation of both proofs with our own code (Approaches 4–5), and
+machine-checked their analytic glue (Approaches 6–7). That is still not a
+referee check: the hand steps and the probability layer were read, and
+nothing is Lean-verified.
 
 ### Barriers: what each variant of the method can give
 
@@ -546,9 +555,10 @@ rational parameter is entered exactly.
 
 **Label: c_UC ≥ 0.38288525 (Jiang): all finite computations re-verified
 independently (own interval code and own covers, same decomposition of the
-domain); analytic steps read, not machine-checked.**
+domain); analytic steps read, not machine-checked.** *(Superseded: the
+analytic steps are now machine-checked in Approach 7.)*
 
-- Read but not machine-checked: the reduction, geometric concavity, profile
+- Read but not machine-checked *at the time of Approach 5*: the reduction, geometric concavity, profile
   ordering, the lower/upper strips, small t ≤ 0.001, large t ≥ 16, and the
   two edge estimates.
 - We reused Jiang's *decomposition* (the strip/square split, the coordinate
@@ -591,7 +601,9 @@ arXiv:2610.02295 v1 LaTeX, §§2, 4, 6 **[read]**.
   - **sturm.** An exact Sturm root count over Q.
   - **z3.** The negated implication is unsat over the reals (nonlinear real
     arithmetic, exact rationals). The hypotheses fed to z3 are exactly the
-    facts proved by the other checks.
+    facts proved by the other checks. Since Approach 7, z3 first shows the
+    hypotheses satisfiable (non-vacuity guard). All of this approach's
+    calls pass it.
   - **interval.** `interval.py`.
   - **hand.** A standard analysis fact that we state but do not formalise:
     Taylor bounds with positive terms; "f(0) = 0 and f′ > 0 ⇒ f > 0" (MVT);
@@ -834,6 +846,236 @@ F₀/G(s+σ) ≥ 7.85·10⁻⁹ (the latter at the contact point).
 **No gap or error found.** The only finding is the harmless wording point in
 Lemma 4.4. Nothing was Lean-verified.
 
+### 7. Machine-checking the analytic glue of Jiang's 0.38288525
+
+Goal: give the analytic steps of Approach 5, which were read only, the same
+treatment as Approach 6. That means every step that the finite computations in
+`jiang_checks.py` rely on, or that turns them into the theorem. Source:
+arXiv:2609.08291 v1 LaTeX (`frankl_038288525_proof.tex`), §§2–7 and App. A
+**[read]**. Equation names below are the paper's `\label`s.
+
+- **Tooling and labels.** As in Approach 6: **sympy-exact**, **z3**,
+  **interval**, **Arb**, **exact** (Fraction arithmetic), **hand (named)**,
+  and **read only**. Two things are new.
+  - `logsub` replaces each log(·) atom by an integer combination of symbols.
+    It factors the argument over a *listed* set of bases, and a log of a
+    rational constant becomes a combination of log-of-prime symbols. It
+    refuses any unlisted factor, so nothing transcendental is left to sympy.
+  - Every z3 call first checks that its hypotheses are **satisfiable**
+    (z3 returns a model). So no skeleton is proved vacuously from
+    inconsistent hypotheses. The guard now lives in
+    `analytic_glue.z3_valid`, so Approach 6's 16 z3 calls get it too. All
+    16 have satisfiable hypotheses, and all 26 claims still pass.
+
+  Sturm sequences were not needed: no polynomial sign condition comes up.
+- **Code.** `computations/frankl/analytic_glue_jiang.py`, output in
+  `results/analytic_glue_jiang.txt`: 30 claims, 5 s. Test:
+  `test_frankl.py::test_analytic_glue_jiang`. The test runs all claims plus
+  negative controls:
+  - sympy rejects two false identities: the AND-grouping identity with
+    prefactor 1 + x² instead of 1 − x², and h²q′ with the sign of h/(1−x)
+    flipped. `logsub` refuses an unlisted log factor.
+  - z3 refuses seven weakened skeletons and one vacuous one:
+    - lower strip with 2C_bP₀ < 1.01;
+    - upper strip with C_tC_g < 1.01;
+    - small t with the bracket ≤ 0;
+    - large t with t ≥ 8 instead of 16;
+    - edge2 without v ≤ −ln B;
+    - the mixed case of (K) without the bridge;
+    - the reduction with p = min pᵢ instead of max;
+    - and the vacuity guard rejects unsatisfiable hypotheses.
+  - Arb certifies three scalars **negative** under a changed parameter:
+    T = 1/10 in the small-t bracket, 8 in place of 16 at large t, and
+    σ raised by 1% in s(A) − φ(A). interval.py also certifies the
+    T = 1/10 bracket negative.
+
+#### Reduction (Prop. "Entropy reduction", §3)
+
+- **R.1 (sympy-exact).** With Q_U(x) = x + a(x)(1[U≤x] − x), integrating
+  piecewise over U ∈ [0,1] gives E Q_U(x) = x and
+  E[Q_U(x)Q_U(y)] = xy + a(x)a(y)(min(x,y) − xy) = r(x,y), in both orders.
+  This is eq. (Qproduct).
+- **R.2 (z3).** a ∈ [0,1] gives Q_U ∈ [0,1], and xy ≤ r ≤ min(x,y) ≤ 1.
+- **R.3 (sympy-exact).** Finite forms of the two averaging steps:
+  - the conditional-Jensen step is the variance identity
+    Σλ_v c_v² − (Σλ_v c_v)² = Σλ_v(c_v − c̄)²;
+  - integrating xh(y) + yh(x) against P ⊗ P gives 2(E x)(E h).
+- **R.4 (z3).** The assembly, with three coordinates. The inputs are the
+  per-coordinate bounds (ind-lower), (rule4-lower) and (M) integrated; the
+  chain rule; H(Z₀), H(Z₄) ≤ ln N = H(X) > 0; and pᵢ ≤ p. The output is
+  p ≥ 1 − m. With p = min pᵢ the implication fails (negative control).
+- **Read only.** The chain rule; "conditioning reduces entropy"; maximum
+  entropy; the induction showing that each sample of the shared-uniform rule
+  has the law of X; and conditional independence of the two prefixes given
+  the shared history. These are probability, not computation. They are the
+  same kind of step as Approach 6's measure-theory layer, and simpler,
+  because everything here is finite.
+
+#### Ceiling (Prop. "Limitation", §4; not on the proof path of the bound)
+
+- **C.1 (sympy-exact).** The formulas for f′, f″, f‴; the expansion
+  f = ½(1−q)²ln(1−q) + ½(1−q²)ln(1+q); f(q*) = ½(1−q*)ln(1+q*) at the
+  stationary point; f′(½) = ½ln(4/3); and f″(½) = 2/3 − ln 3.
+- **C.2 (z3).** The endpoint step (E): mw₀ ≥ ½. The diagonal chain to (C).
+  And f′ > q(1−2q) on (0, ½] from the two log bounds (hand).
+
+#### Profiles (§5): definitions, Lemma "geometric", profile order, passing to (K)
+
+- **P.1 (exact + sympy + z3).** The parameter order
+  1/16 < ½ < z < 1/√2 < A < B < 15/16, plus z² + z > 1 and 2U² > 1.
+  Continuity of a at ½ and 1/√2, 0 ≤ a ≤ 1, continuity of D at ½ and z,
+  and θ(A) = 0, θ(B) = 1. Also E″ = −7/5, so E′(1) > 0 gives E′ > 0 on
+  [0,1] (z3). That E is then increasing is a hand step (MVT).
+- **G.1–G.3, Lemma "geometric" (sympy-exact + z3).**
+  - The identities h − xh′ = ℓ and h²q′ = h′ℓ − h/(1−x) =
+    h′(ℓ − x/(1−x)) − ℓ/(1−x), with logs as symbols.
+  - ℓ < x/(1−x) (MVT), and the sign skeleton for x ≥ ½ and x < ½ (z3).
+  - With h abstract: f(t) = ln h(eᵗ) has f′ = q(eᵗ) and f″ = eᵗq′(eᵗ), and
+    d/dx ln(h(xy)/s(x)) = (q(xy) − q(x²))/x.
+  - Hand: concavity at the midpoint.
+  - Cross-check: h²q′ < 0 on [2⁻¹⁰, 1 − 2⁻³⁰] by 303 interval cells.
+- **O.1–O.2, (profile-order) (sympy-exact + z3).**
+  - (φ/s)² = σ²ln2·h(x)e^{2E}/(h(z²)h*) on [z, 1].
+  - (ln φ/s)′ = h′/(2h) + E′, and its derivative is
+    (h″h − h′²)/(2h²) − 7/5 < 0.
+  - Then the convex-combination skeleton φ ≤ ψ ≤ s.
+  - Hand: "L(A) < 0, L′(A) < 0, L″ < 0 ⇒ L < 0 on [A, 1)" (MVT twice).
+  - The two scalars are checked by interval and Arb.
+- **T.1, passing to (K) (z3).** All three cases, x, y ≤ A; x, y ≥ A; and
+  x ≥ A ≥ y. Inputs: (original-K), Lemma "geometric" (both parts),
+  (profile-order) and (bridge), with a = 0 on [A, 1] because 2A² > 1.
+
+#### Kernel strips, coordinate maps, bridge (§6)
+
+- **S.1 (sympy-exact).** The AND inequality h(x²) ≤ 2h(x) is a **grouping
+  identity**:
+  2h(x) − h(x²) = (1−x²)·H₃((1−x)/(1+x), x/(1+x), x/(1+x)),
+  with logs of x, 1−x, 1+x as symbols, which is ≥ 0. For concavity-scaling,
+  g(c) = h(cx) − ch(x) has g(0) = g(1) = 0 and g″ = −x/(c(1−cx)) < 0.
+  Hand: entropy ≥ 0; a concave function with zero ends is ≥ 0.
+- **S.2.** (lower-profile), (P0) and (linear-profile).
+  - (ln φ/x)′ = D′/(2D) + h′/(2h) + E′ − 1/x, with D abstract (sympy).
+  - On [z, 1/√2], D′/(2D) = xh′(x²)/h(x²) ≤ h′(z²)/h(z²), from
+    (h′/h)′ < 0 and 2z² < 1.
+  - The derivative is then < 0 on all three pieces, given the scalar
+    1 − E′(½) − h′(z²)/h(z²) > 0 (z3).
+  - Then φ ≤ C_b h on [0, L], φ ≤ P₀ on [0, ½], and φ(y) ≤ 2P₀y on
+    [½, 1] (z3).
+- **S.3, lower strip (sympy + z3).** If y ≤ ½ then r = x. If y ≥ ½ then
+  r = xk with k = y + a(y)(1−y) ∈ [y, 1]. Both cases close with
+  2C_bP₀ < 1.
+- **S.4, upper strip (z3).**
+  - φ(x) ≤ C_tx, in squared form, from h(x) ≤ h(U), h(x²) ≤ h(U²),
+    E ≤ E(1) and x ≥ U.
+  - D/h ≤ 2ln2/h(z²) on all three pieces, using h(z²) ≤ ln 2,
+    h(z²) ≤ 2h(z) and h(y²) ≤ 2h(y).
+  - Then φ(y) ≤ C_g h(y), and the chain closes with C_tC_g < 1.
+- **S.5, middle coordinate map (sympy-exact + z3).**
+  - x(t) = 1/(t² + R) solves x² + t²x(1−x) = ½. This is reduced modulo
+    R² = (t²−1)² + 1, so a(x(t)) = t.
+  - x(0) = 1/√2 and x(1) = ½, and the derivative formula
+    (coordinate-derivative) holds.
+  - Every positive root for t ∈ [0,1] lies in [½, 1/√2], and |x′| ≤ 4.
+  - Hand: IVT, so the three maps cover [1/16, 15/16].
+- **S.6 (z3).** The bridge on [0, L] reduces to the scalar A − s(A)C_b > 0.
+  The proven kernel range 1/256 ≤ r ≤ 15/16 on the compact square is the
+  intersection used by our cover.
+
+#### Mixture (§7)
+
+- **M.1 (sympy-exact + z3).**
+  - The change of variables is u = t(1+ξ) = −ln x and v = −ln y.
+  - 0 < x ≤ y, xy < 1 ⇒ t > 0 and ξ ∈ [0, 1].
+  - (M)/(2xy) is exactly F, with h and ψ abstract.
+  - Both sides of (M) vanish at xy = 0 and at x = y = 1.
+- **M.2 (sympy-exact).** G = u − (eᵘ−1)ln(1−e^{−u}). The series for G, G′
+  and G″ are summed by sympy, and Σ1/(j(j+1)) = 1. G′ > 0, G″ < 0, G ≥ u
+  and −G″ ≤ 1/(eᵘ−1) ≤ 1/u. This reuses Approach 6's G.1–G.2; e^u ≥ 1 + u
+  is a hand step.
+- **M.3, (Gsmall).** J = G + u ln u has J″ = G″ + 1/u ≥ 0 (z3), and
+  lim J(u)/u = 1 (sympy limit). Hand: chord slopes of a convex function.
+  Cross-check: G(u) ≥ u(1 − ln u) on [2⁻⁸, 64] by 604 interval cells.
+- **M.4, (Gdeficit).**
+  - The identity G(u)+G(v)−G(u+v) = [J(u)+J(v)−J(u+v)] + (u+v)h(u/(u+v))
+    is sympy-exact, and the bracket is ≤ 0 (z3, from chord slopes).
+  - (√p + √(1−p))² = 1 + 2√(p(1−p)), and (u+v)·2√(p(1−p)) = 2√(uv).
+  - Hand: Jensen, and ln(1+r) ≤ r.
+- **M.5, (Ptail) and P ≥ CG.**
+  - P² = G(2u) where ψ = s (sympy).
+  - D ≥ h: x ≥ z ⇒ 1 − x ≤ x² ≤ x (z3, from z² + z > 1). Hand: h on
+    [1−x, x] is ≥ h(x) (concavity and symmetry), and h ≤ ln 2.
+  - Then φ ≥ Ch and P ≥ CG (z3).
+- **M.6, small t ≤ 1/1000 (z3 + exact).**
+  - The skeleton gives F ≥ (k₀ − ½)G(2t).
+  - **Both scalars are now exact:**
+    - e^{−1/500} ≥ 1 − 1/500 > 0.721 (hand: e^{−x} ≥ 1 − x);
+    - e < 2.72 (Taylor tail, hand; Arb confirms), so 2.72⁴ < 250 and
+      ln 250 > 4. Hence 2mw₄(1 + ln 250) − 1 > 10mw₄ − 1 > 0.
+- **M.7, large t ≥ 16 (z3).** The skeleton closes with the scalar
+  16mw₄C² > ½ (interval and Arb), and fails with 8 in place of 16.
+- **M.8, edge bounds (z3).**
+  - (edge1) holds, and so does (edge2) under v ≤ −ln B and
+    G(v) ≤ [2mw₄CG(t)]². Without v ≤ −ln B, edge2 fails.
+  - The box form follows by monotonicity of G (App. A, "Bounds for an
+    entire edge box").
+  - The claim also asserts that the edge tests in
+    `jiang_checks.verify_mixture_strip` use exactly these quantities
+    (v_max, −ln B rounded down, G(t₋), G(2t₋)).
+- **M.9, App. A derivative formulas (sympy-exact, abstract functions).**
+  - φ′ (phiprime); s′; ψ′ on [A, B]; P′ = ψ(x)/x − ψ′(x).
+  - P and P′ on the two closed-form pieces that `jiang_checks.P_all` uses.
+  - F_t and F_ξ (eq. Ft, Fxi).
+  - r_α and r_β in both orders, and Δ_α, Δ_β.
+
+  Earlier, `test_jiang` had checked these only numerically against mpmath.
+
+#### Scalars and stress test
+
+- **SC.** All 12 scalar signs were re-evaluated in Arb at 200 bits,
+  independently of `interval.py`. All are positive, and each Arb ball
+  overlaps the interval.py enclosure. The smallest are:
+  - k₀ − ½ = 8.685975·10⁻⁹ (exact rational);
+  - s(A) − φ(A) = 1.63498·10⁻³;
+  - 1 − 2C_bP₀ = 0.02714;
+  - 1 − C_gC_t = 0.06286.
+- **x (numerical, not a proof).** (K) and (M) were evaluated in 40-digit
+  mpmath at 2000 random points each. Extra points sit near (x*, x*),
+  y → 1, x → 0 and every breakpoint. The minima are K − ψψ ≥ 1.1·10⁻¹¹
+  (near x → 0, where both sides are tiny) and (M)-gap/(xy) ≥ 2.2·10⁻⁸.
+
+#### Outcome
+
+| step | method | status |
+| --- | --- | --- |
+| Reduction: E_U Q = x, E QQ = r, Q ∈ [0,1], r range | sympy-exact + z3 | machine-checked |
+| Reduction: variance step, integration of (M), assembly to p ≥ 1−m | sympy-exact (finite form) + z3 | machine-checked |
+| Reduction: chain rule, conditioning, max entropy, law of the shared-uniform samples, conditional independence | — | read only |
+| Ceiling (not used by the bound): f′, f″, f‴, f(q*), (E), (C) | sympy-exact + z3 | machine-checked (two log bounds by hand) |
+| Definitions: order of parameters, continuity of a, D, ψ; E′ > 0 | exact + sympy + z3 (+ interval/Arb) | machine-checked (MVT by hand) |
+| Lemma "geometric" (both parts) | sympy-exact + z3 (+ interval cross-check) | machine-checked (MVT, midpoint concavity by hand) |
+| (profile-order) | sympy-exact + z3 + interval/Arb scalars | machine-checked (MVT twice by hand) |
+| Passing from (original-K) to (K) | z3 | machine-checked |
+| (and), (concavity-scaling) | sympy-exact (grouping identity; g″) | machine-checked (entropy ≥ 0, concave-with-zero-ends by hand) |
+| (lower-profile), (P0), (linear-profile) | sympy-exact + z3 + interval/Arb scalar | machine-checked (MVT by hand) |
+| Lower strip, upper strip of (original-K) | sympy + z3 + interval/Arb scalars | machine-checked |
+| Middle coordinate map, coverage of the square | sympy-exact + z3 | machine-checked (IVT by hand) |
+| Bridge on [0, 1/16]; kernel range for the cover | z3 + interval/Arb scalar | machine-checked |
+| Change of variables, (M)/(2xy) = F, boundary xy = 0 | sympy-exact + z3 | machine-checked |
+| G facts, (Gsmall), (Gdeficit) | sympy-exact + z3 (+ interval cross-checks) | machine-checked (Jensen, chord slopes, e^u ≥ 1+u by hand) |
+| (Ptail), D ≥ h, P ≥ CG | sympy + z3 + exact | machine-checked (h ≥ h(x) on [1−x, x] by hand) |
+| Small t ≤ 0.001 | z3 + **exact** scalars | machine-checked (e^{−x} ≥ 1−x, Taylor tail of e by hand) |
+| Large t ≥ 16 | z3 + interval/Arb scalar | machine-checked |
+| (edge1), (edge2), box form, match with our cover code | z3 + source inspection | machine-checked |
+| App. A derivative formulas | sympy-exact | machine-checked |
+| 12 scalar signs | interval (Approach 5) + **Arb** (new) | two independent evaluations |
+| Mean-value acceptance test for piecewise-C¹ functions, hull at joins | — | hand (MVT along axis-parallel segments) |
+
+**No gap or error found in Jiang's argument.** Every step listed above was
+reproduced exactly as stated in the paper. One cosmetic point: (strip-checks)
+lists both C_bP₀ < ½ and 2C_bP₀ < 1, which are the same condition.
+
+Nothing was Lean-verified.
+
 ## Results
 
 | Claim | Evidence level | Where |
@@ -848,7 +1090,8 @@ Lemma 4.4. Nothing was Lean-verified.
 | Costa–Sadhu Thm 1.2 analytic glue: Lemmas 4.1, 4.4, 6.1 (case analysis), W₀ increasing, Lemma 6.2 Cases 1–3 + residual region, Prop. 6.3 arithmetic; Case 1 margin c₁ ≥ 2.89·10⁻⁶ and Case 3 scalar now exact | machine-checked (sympy-exact + Sturm + z3 + interval/Arb), up to listed standard hand steps (MVT, FTC/Tonelli, Taylor bounds, continuity); not Lean | `computations/frankl/analytic_glue.py`, `results/analytic_glue.txt` |
 | c_UC ≥ 0.3828852549667978 (Costa–Sadhu Thm 1.2) | proved in Costa–Sadhu (preprint); all computations re-certified here; analytic glue machine-checked here except the measure-theoretic integration (Prop. 6.3, Lemma 2.1) and Liu's Prop. 3 (read in Liu's own text; restatement faithful) | same + arXiv:2610.02295 |
 | Jiang's 12 scalar signs, bridge, kernel (K) on [1/16,15/16]², mixture (M) on [0.001,16]×[0,1] | certificate-checked independently (own interval code; 1,306 kernel + 4,357 mixture boxes) | `computations/frankl/jiang_checks.py`, `results/jiang.txt` |
-| c_UC ≥ 0.38288525 (Jiang) | proved in Jiang (preprint); analytic steps read here, all computations re-certified here | same + arXiv:2609.08291 |
+| Jiang analytic glue: reduction (finite forms + assembly), ceiling, Lemma "geometric", profile order, passing to (K), (and), strips, coordinate maps, bridge tail, change of variables, G facts, (Gsmall), (Gdeficit), (Ptail), small t (scalars now exact), large t, edge bounds, App. A derivative formulas; 12 scalars re-evaluated in Arb | machine-checked (sympy-exact + z3 with non-vacuity guard + interval/Arb), up to named hand steps (MVT, IVT, Jensen, concavity, Taylor bounds); probability layer read only; not Lean | `computations/frankl/analytic_glue_jiang.py`, `results/analytic_glue_jiang.txt` |
+| c_UC ≥ 0.38288525 (Jiang) | proved in Jiang (preprint); all computations re-certified here; analytic glue machine-checked here except the probability layer of the reduction (read only) | same + arXiv:2609.08291 |
 
 ## Failed or closed routes (do not retry blindly)
 
@@ -873,10 +1116,14 @@ Realistic for the next session (bounded, about 3 hours):
    measure-theoretic layer is left (Prop. 6.3's integration, Lemma 2.1's weak
    limit, and Liu's argument that the induced laws lie in C₃). Liu's
    Prop. 3 itself has been read in Liu's own text and the restatement is
-   faithful (Approach 6). Next:
-   - do the same sympy/z3 treatment for Jiang's analytic pieces (geometric
-     concavity, profile ordering, lower/upper strips, the small-t and large-t
-     tails, the two edge bounds).
+   faithful (Approach 6). Jiang's analytic glue is done (Approach 7); for it
+   only the probability layer of the reduction is left (chain rule,
+   conditioning, the induction for the shared-uniform rule, conditional
+   independence given the shared history). Next:
+   - write the shared probability layer of both reductions (Gilmer chain
+     rule + Liu/Jiang couplings) as one short, explicit finite-probability
+     argument. That is the natural first Lean target once Mathlib is
+     reachable.
 
    Optionally, ask for the Zenodo supplement (record 22727713) and diff its
    covers against ours. For Lean, a session with access to the Mathlib cache

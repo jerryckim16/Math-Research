@@ -11,7 +11,8 @@ What "machine-checked" means here (the labels used in run_all()'s table):
   sturm         exact Sturm-sequence root count of a rational polynomial on an interval.
   z3            an implication between real-arithmetic facts (the "skeleton" of a case
                 analysis) is checked unsatisfiable-when-negated by the z3 SMT solver
-                (nonlinear real arithmetic, exact rationals).  The facts fed in as
+                (nonlinear real arithmetic, exact rationals); the hypotheses are first
+                shown satisfiable (non-vacuity guard).  The facts fed in as
                 hypotheses are themselves proved by the other checks, as listed.
   interval      outward-rounded interval arithmetic (interval.py, own log/exp).
   arb           FLINT/Arb ball arithmetic at 200 bits (python-flint): an independent
@@ -131,10 +132,14 @@ def sturm_roots(p, lo, hi=None):
 
 
 def z3_valid(hyps, goal, vars_):
-    """Check (and hyps) => goal over the reals with z3; True iff the negation is unsat."""
+    """Check (and hyps) => goal over the reals with z3; True iff the negation is unsat.
+    Non-vacuity guard: the hypotheses must first be shown jointly satisfiable (z3 returns a
+    model), so no implication is "proved" from inconsistent hypotheses."""
     s = z3.Solver()
     s.set("timeout", 60000)
     s.add(*hyps)
+    r0 = s.check()
+    assert r0 == z3.sat, f"z3: hypotheses not shown satisfiable ({r0})"
     s.add(z3.Not(goal))
     r = s.check()
     assert r == z3.unsat, f"z3: {r} {s.model() if r == z3.sat else ''}"
