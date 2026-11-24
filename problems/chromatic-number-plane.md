@@ -75,7 +75,7 @@ with c(x) ≠ c(y) whenever |x − y| = 1. Colour classes are arbitrary
 - We fetched the transitive OAI imports of `Five.lean`: 70 modules, 30,336 lines, depending only on Mathlib.
   - The pins are Lean `v4.34.1` and Mathlib `d13f23b723b8a846827a245b89c10fc7d3f11612`.
   - `grep` finds no `sorry`, `admit`, `axiom`, `native_decide`, `implemented_by`, `extern` or `unsafe`.
-- All 70 Lean files on `main` (2026-11-24) are byte-identical to those at the pinned commit `adc7f12`. The concatenation has sha256 `21e567a5…9703`. The toolchain and Mathlib revision are the same at both.
+- All 70 Lean files on `main` (2026-11-24) are byte-identical to those at the pinned commit `adc7f12`. The concatenation in `LC_ALL=C sort` path order has sha256 `171452cc…a14e4b`. The toolchain and Mathlib revision are the same at both.
 - The Lean proof is organised differently from the paper: Borel transfer, then a mesh / graph-map argument.
 - **Map of the Lean sources against the paper** (from imports and statement names; not compiled):
 
@@ -160,7 +160,7 @@ What this does **not** cover:
 - These are tens of pages of ergodic theory and measure-theoretic topology.
 - They were not audited, and a 3-hour budget is not enough for an audit.
 
-### 3. Re-run the published Lean proof (blocked)
+### 3. Re-run the published Lean proof (in progress: from-source Mathlib build)
 
 - **Plan.** Build `OAI.Geometry.PlaneColoring.Five` at the pinned Lean and Mathlib versions, then `#print axioms OAI.EuclideanFiveColor.no_proper_five_coloring`. The comparator setup also checks that the theorem matches the challenge statement.
 - **Blocked.** The Mathlib build cache host `lakecache.blob.core.windows.net` is refused by the network proxy (CONNECT 403), so `lake exe cache get` cannot run. Building Mathlib from source is the fallback (cost below).
@@ -168,7 +168,29 @@ What this does **not** cover:
   - the Lean toolchain release (github.com/leanprover/lean4 releases);
   - the Mathlib git repository;
   - raw.githubusercontent.com, for the OAI sources.
-- **Cost:** see "Lean cost" (to be filled in at the next checkpoint).
+- **Toolchain, obtained through allowed hosts.**
+  - `elan toolchain install` failed: its manifest/self-update lookup got a 403.
+  - The release tarball `lean-4.34.1-linux.tar.zst` (580 MB) downloaded directly from github.com releases (via release-assets.githubusercontent.com).
+  - It was unpacked with the PyPI `zstandard` module (no `zstd` binary here) and linked with `elan toolchain link`.
+  - Mathlib `d13f23b` was fetched with `git fetch --depth 1` (152 MB). Lake cloned the Mathlib dependencies from GitHub.
+  - Everything lives in the scratchpad, outside the repository.
+- **Size.** The OAI files `import Mathlib`, so the whole library is needed: 8,530 Mathlib modules (2,336,169 lines), plus about 300 modules from dependencies.
+- **Measured cost** (4 cores, 15 GB). Slice 1, 23 min wall:
+  - 2,287 Mathlib modules (532,515 lines), 72 min user CPU, about 3.3 cores busy;
+  - 105 lines per CPU-second, from the per-module times Lake reports.
+  - Extrapolated: about 6 CPU-hours for Mathlib, so about 2 h wall here.
+  - Throughput falls in the analysis-heavy layers, so this is a lower estimate.
+  - After slice 2 (47 min wall in total): 3,820 modules, 997,769 lines (43 % of Mathlib by lines), 155 min user CPU, 94.6 lines per CPU-second, no errors. Updated extrapolation: about 7 CPU-hours for Mathlib.
+- **Source hygiene.** The 70 OAI files contain no `set_option` at all, and no `macro`, `syntax`, `elab_rules`, `initialize`, `run_cmd` or `#eval`. Nothing in them can switch off kernel checking.
+  - The 30k-line OAI development comes on top.
+- **Scripted:** `computations/chromatic-plane/lean_recheck/lean_recheck.sh` (text only; no build outputs are kept in the repository).
+- **Lean-specific check prepared:** `lean_recheck/Check.lean`. It restates the theorem from scratch, with no OAI definitions:
+  ```lean
+  theorem plane_not_five_colourable :
+      ¬ ∃ c : ℂ → Fin 5, ∀ x y : ℂ, ‖x - y‖ = 1 → c x ≠ c y :=
+    OAI.EuclideanFiveColor.no_proper_five_coloring
+  #print axioms CNPRecheck.plane_not_five_colourable
+  ```
 
 ### 4. Find a finite 6-chromatic unit-distance graph (not attempted)
 
