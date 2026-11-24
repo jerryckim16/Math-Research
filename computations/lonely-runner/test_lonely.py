@@ -184,6 +184,25 @@ class TestCoverGenAndLiftFree(unittest.TestCase):
             self.assertEqual(sieve.level1_improper_covers(k, p)[0],
                              sieve.level1_improper_c(k, p)[0], (k, p))
 
+    def test_covergen_pruning_preserves_orbits(self):
+        """LRC_PRUNE=1 (Lemma 4.1) and =2 (max-private normalisation) give the
+        same level-one orbit set as the unpruned search."""
+        import os, subprocess
+        b = sieve._covergen_bin()
+        canon = sieve.binary("canon") if hasattr(sieve, "binary") else None
+        from check_gate_full import binary
+        cb = binary("canon")
+        for k, p in ((5, 41), (7, 61), (8, 101), (9, 137), (14, 89)):
+            sets = []
+            for pr in ("0", "1", "2"):
+                env = dict(os.environ, LRC_PRUNE=pr)
+                cov = subprocess.run([b, str(k), str(p)], capture_output=True, text=True, env=env).stdout
+                out = subprocess.run([cb, str(k), str(p), "expand"], input=cov, capture_output=True, text=True).stdout
+                sets.append(sorted(out.splitlines()))
+            self.assertEqual(sets[0], sets[1], (k, p))
+            self.assertEqual(sets[0], sets[2], (k, p))
+        self.assertEqual(len(sets[0]), 687016)   # k = 14, p = 89: certificate orbit count
+
     def test_covergen_sharding(self):
         import os, subprocess
         b = sieve._covergen_bin()
