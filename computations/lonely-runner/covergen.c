@@ -97,6 +97,62 @@ static bs others;   /* union of cov of chosen classes other than class 1 */
  * passes the filter. */
 static int priv1(const bs *O) { int s = 0; for (int i = 0; i < W; i++) s += __builtin_popcountll(cov[1].w[i] & ~O->w[i]); return s; }
 
+/* Irredundance-aware cuts, enabled with LRC_IRR (a bitmask, step 7): bit 1
+ * enables (i)+(ii), bit 2 enables (iii); LRC_IRR=2 is the recommended setting
+ * (measured: (iii) gives nearly all the node saving, (i)+(ii) cost more
+ * time per node than they save).  All of them remove
+ * only nodes/classes that cannot lead to a MINIMAL cover, so the printed set
+ * of minimal covers is exactly the same as without them (tested):
+ *  (i)  if some chosen class has no private time w.r.t. the other chosen
+ *       classes, no minimal cover lies below (adding classes only shrinks
+ *       private sets), so the node is cut;
+ *  (ii) an allowed class c with P_v subset of cov(c) for some chosen v (P_v =
+ *       v's private times) would make v redundant in every cover containing
+ *       c below this node, so c is removed from the allowed set of the subtree;
+ *  (iii) gain bound: the `left` largest gains |cov(c) & U| over allowed c
+ *       must sum to at least |U| (the plain bound uses left * max gain).
+ * irr_cuts returns 0 to cut; otherwise *Aout is the reduced allowed set. */
+static int irr = 0, maxcov = 0;   /* maxcov = max |cov(c)| (gains are <= it) */
+static int irr_cuts(const bs *U, const bs *A, bs *Aout) {
+    *Aout = *A;
+    if (nL >= 2 && (irr & 1)) {
+        bs P[MAXK + 1];
+        for (int i = 0; i < nL; i++) {
+            P[i] = cov[L[i]];
+            for (int j = 0; j < nL; j++) if (j != i)
+                for (int w = 0; w < W; w++) P[i].w[w] &= ~cov[L[j]].w[w];
+            if (isempty(&P[i])) return 0;
+        }
+        /* classes c with P_i subset of cov(c): c covers every a in P_i, and the
+         * coverers of time a are exactly cov[a] (d_p(av) is symmetric in a, v) */
+        for (int i = 0; i < nL; i++) {
+            bs F; int first = 1, any = 1;
+            for (int w = 0; w < W && any; w++) {
+                uint64_t x = P[i].w[w];
+                while (x) {
+                    int a = w * 64 + __builtin_ctzll(x); x &= x - 1;
+                    if (first) { F = cov[a]; first = 0; }
+                    else { any = 0; for (int u = 0; u < W; u++) { F.w[u] &= cov[a].w[u]; if (F.w[u]) any = 1; } }
+                    if (!any) break;
+                }
+            }
+            if (!first && any) for (int u = 0; u < W; u++) Aout->w[u] &= ~F.w[u];
+        }
+    }
+    if ((irr & 2) && !isempty(U)) {
+        int hist[2049]; int mx = 0;
+        memset(hist, 0, (maxcov + 1) * sizeof(int));
+        for (int c = 1; c <= h; c++) if (has(Aout, c)) { int g = popand(&cov[c], U); hist[g]++; if (g > mx) mx = g; }
+        long need = popc(U), got = 0; int left = k - nL;
+        for (int g = mx; g > 0 && left > 0; g--) {
+            int take = hist[g] < left ? hist[g] : left;
+            got += (long)take * g; left -= take;
+        }
+        if (got < need) return 0;
+    }
+    return 1;
+}
+
 static void dfs(const bs *U, const bs *A, int depth) {
     nodes++;
     if (nodecap && nodes >= nodecap) return;
@@ -125,10 +181,14 @@ static void dfs(const bs *U, const bs *A, int depth) {
         return;
     }
     if (nL == k) return;
+    static bs Airr[MAXK + 2];
+    if (irr) { if (!irr_cuts(U, A, &Airr[nL])) return; A = &Airr[nL]; }
     int need = popc(U), left = k - nL, maxg = 0;
-    /* gain bound */
-    for (int c = 1; c <= h; c++) if (has(A, c)) { int g = popand(&cov[c], U); if (g > maxg) maxg = g; }
-    if ((long)left * maxg < need) return;
+    /* gain bound (implied by the sharper bound in irr_cuts when irr & 2) */
+    if (!(irr & 2)) {
+        for (int c = 1; c <= h; c++) if (has(A, c)) { int g = popand(&cov[c], U); if (g > maxg) maxg = g; }
+        if ((long)left * maxg < need) return;
+    }
     if (prune >= 2 && nL > 1) {
         bs reach; memset(&reach, 0, sizeof reach);
         for (int c = 1; c <= h; c++) if (has(A, c)) for (int w = 0; w < W; w++) reach.w[w] |= cov[c].w[w];
@@ -191,6 +251,7 @@ static double probe(bs U, bs A) {
     nL = 1;
     for (;;) {
         if (isempty(&U) || nL == k) return est;
+        if (irr) { bs A3; if (!irr_cuts(&U, &A, &A3)) return est; A = A3; }
         int need = popc(&U), left = k - nL, maxg = 0;
         for (int c = 1; c <= h; c++) if (has(&A, c)) { int g = popand(&cov[c], &U); if (g > maxg) maxg = g; }
         if ((long)left * maxg < need) return est;
@@ -216,6 +277,7 @@ int main(int argc, char **argv) {
     k = atoi(argv[1]); p = atoi(argv[2]);
     if (argc > 3) maxtop = atol(argv[3]);
     if (getenv("LRC_PRUNE")) prune = atoi(getenv("LRC_PRUNE"));
+    if (getenv("LRC_IRR")) irr = atoi(getenv("LRC_IRR"));
     if (getenv("LRC_NSHARDS")) { nshards = atol(getenv("LRC_NSHARDS")); shard = getenv("LRC_SHARD") ? atol(getenv("LRC_SHARD")) : 0; }
     long probes = 0;
     if (argc > 6) { probes = atol(argv[4]); rng ^= (unsigned long long)atol(argv[5]) * 2654435761ULL; nodecap = strtoull(argv[6], 0, 10); maxtop = -1; quiet = 1; }
@@ -227,6 +289,7 @@ int main(int argc, char **argv) {
             if ((long)(k + 1) * d < p) cov[v].w[a >> 6] |= 1ULL << (a & 63);
         }
     mcov = (p - 1) / (k + 1);
+    for (int v = 1; v <= h; v++) { int c = popc(&cov[v]); if (c > maxcov) maxcov = c; }
     qk = qs(k);
     memset(&others, 0, sizeof others);
     bs U, A; memset(&U, 0, sizeof U); memset(&A, 0, sizeof A);
@@ -248,6 +311,6 @@ int main(int argc, char **argv) {
         return 0;
     }
     dfs(&U, &A, 0);
-    fprintf(stderr, "nodes %llu leaves %llu minimal_covers %llu prune %d q_k %d m %d\n", nodes, leaves, printed, prune, qk, mcov);
+    fprintf(stderr, "nodes %llu leaves %llu minimal_covers %llu prune %d q_k %d m %d irr %d\n", nodes, leaves, printed, prune, qk, mcov, irr);
     return 0;
 }

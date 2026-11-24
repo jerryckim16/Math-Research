@@ -1,0 +1,20 @@
+# Step 7: covergen.c LRC_IRR cuts. Knuth estimates of the k = 14 search tree (heuristic estimates, not results).
+# Probe: covergen 14 p -1 PROBES SEED 20000000; the probe applies the same cuts, so it estimates the cut tree.
+# Machine was shared with a 4-process run during these measurements, so nodes/sec is noisy; ratios are measured back to back.
+# Ablation at p = 251 (3000 probes, seed 7): node estimate / nodes per sec
+#   plain                        8.70e10 / 1.85e6
+#   mode 1 (redundancy cuts)     8.60e10 / 7.22e5
+#   mode 2 (sharper gain bound)  4.55e10 / 1.60e6
+#   mode 3 (both)                4.06e10 / 7.42e5
+#   mode 2 + greedy packing bound (not kept) 4.59e10 / 1.46e6
+# Exact node counts, (14,113), full run: plain 268,054,224; redundancy cuts + sharper gain bound (= current LRC_IRR=3) 110,648,176; same 43,763,271 minimal covers.
+p=251 seed=1 LRC_IRR=2: knuth_estimate_nodes 4.833034e+10 stderr 1.166e+09 probes 20000 capped_dfs nodes 20000108 secs 11.707 nodes_per_sec 1.708e+06 
+p=251 seed=2 LRC_IRR=2: knuth_estimate_nodes 5.098396e+10 stderr 1.293e+09 probes 20000 capped_dfs nodes 20000108 secs 12.230 nodes_per_sec 1.635e+06 
+p=251 seed=3 LRC_IRR=2: knuth_estimate_nodes 4.924545e+10 stderr 1.219e+09 probes 20000 capped_dfs nodes 20000108 secs 10.944 nodes_per_sec 1.828e+06 
+p=257 seed=1 LRC_IRR=2: knuth_estimate_nodes 1.144077e+11 stderr 2.861e+09 probes 20000 capped_dfs nodes 20000120 secs 15.509 nodes_per_sec 1.290e+06 
+p=257 seed=2 LRC_IRR=2: knuth_estimate_nodes 1.208888e+11 stderr 3.551e+09 probes 20000 capped_dfs nodes 20000120 secs 16.333 nodes_per_sec 1.225e+06 
+p=257 seed=3 LRC_IRR=2: knuth_estimate_nodes 1.188162e+11 stderr 3.365e+09 probes 20000 capped_dfs nodes 20000120 secs 14.905 nodes_per_sec 1.342e+06 
+p=251 seed=1 LRC_IRR=0: knuth_estimate_nodes 1.002565e+11 stderr 7.329e+09 probes 2000 capped_dfs nodes 20000104 secs 10.565 nodes_per_sec 1.893e+06 
+# Plain estimates at p = 251, 257 (20000 probes x 3 seeds): see knuth_completeness_257.txt: 9.39e10, 2.16e11.
+# LRC_IRR=2: p = 251 4.95e10 (1.90x fewer), p = 257 1.18e11 (1.83x fewer); nodes/sec ratio about 0.91 => net about 1.7x.
+# p = 257 with LRC_IRR=2: about 20.5 / 1.7 = 12 core-hours, i.e. at least about 4 h wall on 3 cores; still over the ~3 h budget.
