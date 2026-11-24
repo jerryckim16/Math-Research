@@ -81,6 +81,11 @@ def _check_str(r):
     return str(check_record(r))
 
 
+def _check_keyed(kr):
+    k, r = kr
+    return k, str(check_record(r))
+
+
 def node_of(branch):
     return tuple(tuple(b) if isinstance(b, list) else (b,) for b in branch)
 
@@ -149,8 +154,8 @@ if __name__ == "__main__":
     todo = sorted([r for r, k in zip(recs, ids) if k not in known], key=lambda r: len(r["allocs"]))
     out = open(vlog, "a") if vlog else None
     import multiprocessing as mp
-    with mp.Pool(workers) as pool:
-        for k, v in zip([rid(r) for r in todo], pool.imap(_check_str, todo, chunksize=1)):
+    with mp.Pool(workers) as pool:   # unordered: each verdict is logged as soon as it is known
+        for k, v in pool.imap_unordered(_check_keyed, [(rid(r), r) for r in todo], chunksize=1):
             known[k] = v
             if out:
                 out.write(f"{k} {v}\n")
