@@ -11,8 +11,8 @@ glue of Thm 1.2 (Lemmas 4.1, 4.4, 6.1, W₀ monotonicity, Lemma 6.2 Cases 1–3
 and the residual region) is now **machine-checked** with sympy (exact) + z3 +
 interval arithmetic, up to listed standard hand steps (Approach 6; no Lean:
 the Mathlib cache is unreachable from here). Its measure-theoretic part
-(Prop. 6.3's integration, Lemma 2.1's limit, Liu's Prop. 3) is still read
-only. The conjecture is **checked
+(Prop. 6.3's integration, Lemma 2.1's limit, Liu's Prop. 3) is read only.
+Liu's Prop. 3 has now been read in Liu's own text. The conjecture is **checked
 exhaustively for universes of size n ≤ 6**: all 75,973,751,474 labeled
 families, reproducing the known labeled counts exactly.
 **Started:** 2026-11-24
@@ -283,7 +283,9 @@ of sets. Here **n = universe size**.
   - Lemmas 5.2–5.5;
   - the reduction (Prop. 3.1);
   - Lemma 2.1;
-  - Liu's Prop. 3. This was read only as Costa–Sadhu restate it.
+  - Liu's Prop. 3. This was read only as Costa–Sadhu restate it. It has
+    since been read in Liu's own text and the restatement is faithful
+    (Approach 6).
 
   We found no error. Label: **c_UC ≥ c_L — proof read, all finite
   computations certificate-checked independently**. (Their record Thm 1.2
@@ -431,7 +433,8 @@ local rectangle, own cover); analytic steps read, not machine-checked.**
   analysis (with Lemmas 4.1 and 4.4), the W₀-monotonicity argument, Cases 1–3
   of Lemma 6.2 and the reduction to the compact region, Prop. 6.3, Lemma 2.1,
   and Liu's Prop. 3 (read only as Costa–Sadhu restate it). **All but the last
-  three are now machine-checked in Approach 6.**
+  three are now machine-checked in Approach 6. Liu's Prop. 3 has been read
+  in Liu's own text (Approach 6).**
 - We found no error. One presentational point: the tails of A.5 live only
   in the Zenodo supplement, not in the paper. We supplied our own.
 
@@ -576,8 +579,9 @@ arXiv:2610.02295 v1 LaTeX, §§2, 4, 6 **[read]**.
       transcendental scalar;
     - our own `interval.py`.
 
-    All are pip-installed. The sympy install downgraded mpmath from 1.4.1 to
-    1.3.0, and the existing tests still pass.
+    The first three are pip-installed (`pip install sympy z3-solver
+    python-flint`). The sympy install downgraded mpmath from 1.4.1 to 1.3.0,
+    and the existing tests still pass.
 - **Labels used below.**
   - **sympy-exact.** The identity reduces to 0 in exact rational-function
     arithmetic (`sympy.cancel`). Every log(·) atom is first replaced by an
@@ -593,7 +597,7 @@ arXiv:2610.02295 v1 LaTeX, §§2, 4, 6 **[read]**.
     Taylor bounds with positive terms; "f(0) = 0 and f′ > 0 ⇒ f > 0" (MVT);
     FTC/Tonelli; Jensen; weak limits; continuity at the boundary.
 - **Code.** `computations/frankl/analytic_glue.py`, output in
-  `results/analytic_glue.txt`: 24 claims, 14 s. Test:
+  `results/analytic_glue.txt`: 26 claims, 15 s. Test:
   `test_frankl.py::test_analytic_glue`. It runs all claims plus negative
   controls showing each tool can fail:
   - a false log identity (G′ = S + x) is rejected;
@@ -777,10 +781,29 @@ Notation as in Approach 4. In addition, S(x) := −log(1−x)/x, x = e^{−u}.
   mixture of Q⊗Q (so ρ ∈ C₃(P)), and on a point mass at e^{−t_c}.
   Negative control: raising 1/m₀ by 10⁻⁷ makes the point-mass instance
   certifiably negative.
-- **Read only.** Integration against P⊗P (Fubini), Lemma 2.1's weak limit,
-  the reflection argument (C₃ is preserved by x ↦ 1−x), and Liu's Prop. 3
-  together with which couplings each protocol induces. These are measure
-  theory or Liu's framework; none of them is a computation.
+- **Liu's Prop. 3, now read in Liu's own text.** Source: arXiv:2306.08824
+  LaTeX, §2 (Def. of protocol, eq. (16), Prop. 3, Def. 2, Examples 4–5,
+  the definition of C₃) **[read]**. Costa–Sadhu's restatement is faithful in
+  three respects:
+  - Weights w_k ≥ 0 sum to 1. There is a fixed C > 1. The condition is
+    imposed for every μ with mean ≤ c, and the inf is over sets C_k(μ)
+    "large enough to contain all couplings … induced by the k-protocol".
+  - The conclusion is "c is a lower bound for the constant".
+  - The only difference is the log base: Liu uses bits, Costa–Sadhu use
+    nats. Both sides of (16) scale by the same factor, so nothing changes.
+
+  Liu's proof is four lines: the chain rule as in Gilmer, plus "uniform
+  maximises entropy". We read it and it is correct. It needs H(Xⁿ) > 0, i.e.
+  |F| ≥ 2, which the definition of c_UC provides.
+
+  Liu's Example 5 is the following protocol: X = 0 with probability
+  s̄ ± f(s̄), the sign set by U ≶ ½. Its formula Π_{s,t}(0,0) = s̄t̄ + f(s̄)f(t̄),
+  the marginal P(X=0) = s̄, and the specialisation to r_ℓ are sympy-exact.
+  Admissibility of f_ℓ for 0 ≤ ℓ ≤ 1 is checked by z3 (claim L.ex5).
+- **Read only.** Integration against P⊗P (Fubini); Lemma 2.1's weak limit;
+  the reflection argument (C₃ is preserved by x ↦ 1−x); Liu's argument that
+  conditionally-iid protocols induce laws in C₃ (X^i, Y^i are conditionally
+  iid given U^i). These are measure theory, not computations.
 
 #### Outcome
 
@@ -798,7 +821,15 @@ Notation as in Approach 4. In addition, S(x) := −log(1−x)/x, x = e^{−u}.
 | Lemma 6.2 Case 3 | sympy (integral, identities) + **exact** scalar + z3 | machine-checked (FTC/Tonelli, two elementary bounds by hand) |
 | Lemma 6.2 residual region → A.6/A.7 | z3 | machine-checked |
 | Prop. 6.3 arithmetic, γ > 1 | exact + z3 | machine-checked |
-| Prop. 6.3 measure theory, Lemma 2.1 limit, Liu's Prop. 3 | — | read only |
+| Liu's Prop. 3 vs Costa–Sadhu's restatement; Liu's Example 5 formula | read in Liu's LaTeX; formula sympy-exact + z3 | restatement faithful; formula machine-checked |
+| Prop. 6.3 measure theory, Lemma 2.1 limit, C₃ membership of induced laws | — | read only |
+
+Also a **statement-level stress test** (claim 6.x; numerical, not a proof).
+In 40-digit mpmath, Lemma 6.1 and Lemma 6.2 were evaluated at 3000 random
+points each. s and σ were drawn log-uniformly in [10⁻¹², 60], so every Case
+region and the residual region is hit, plus near-diagonal and near-contact
+points. The minima are (H(r)² − H(g(x))H(g(y)))/(x−y)² ≥ 9.6·10⁻⁶ and
+F₀/G(s+σ) ≥ 7.85·10⁻⁹ (the latter at the contact point).
 
 **No gap or error found.** The only finding is the harmless wording point in
 Lemma 4.4. Nothing was Lean-verified.
@@ -815,7 +846,7 @@ Lemma 4.4. Nothing was Lean-verified.
 | c_UC ≥ c_L = 0.3827090879187350… | proved in Costa–Sadhu (preprint); analytic steps read here, all computations re-certified here | same + arXiv:2610.02295 |
 | Costa–Sadhu Lemma 6.1 Bernstein certificate (A.4), 1D inequalities (A.5), contact convexity (A.6, F₀ ≥ 1.1386·10⁻⁸), compact cover (A.7) at ℓ₀ = 1409/2000 | certificate-checked independently (own interval code, own tails, own rectangle, own cover of 15,323 boxes) | `computations/frankl/costa_sadhu_thm12.py`, `results/costa_sadhu_thm12.txt` |
 | Costa–Sadhu Thm 1.2 analytic glue: Lemmas 4.1, 4.4, 6.1 (case analysis), W₀ increasing, Lemma 6.2 Cases 1–3 + residual region, Prop. 6.3 arithmetic; Case 1 margin c₁ ≥ 2.89·10⁻⁶ and Case 3 scalar now exact | machine-checked (sympy-exact + Sturm + z3 + interval/Arb), up to listed standard hand steps (MVT, FTC/Tonelli, Taylor bounds, continuity); not Lean | `computations/frankl/analytic_glue.py`, `results/analytic_glue.txt` |
-| c_UC ≥ 0.3828852549667978 (Costa–Sadhu Thm 1.2) | proved in Costa–Sadhu (preprint); all computations re-certified here; analytic glue machine-checked here except the measure-theoretic integration (Prop. 6.3, Lemma 2.1) and Liu's Prop. 3, which were read | same + arXiv:2610.02295 |
+| c_UC ≥ 0.3828852549667978 (Costa–Sadhu Thm 1.2) | proved in Costa–Sadhu (preprint); all computations re-certified here; analytic glue machine-checked here except the measure-theoretic integration (Prop. 6.3, Lemma 2.1) and Liu's Prop. 3 (read in Liu's own text; restatement faithful) | same + arXiv:2610.02295 |
 | Jiang's 12 scalar signs, bridge, kernel (K) on [1/16,15/16]², mixture (M) on [0.001,16]×[0,1] | certificate-checked independently (own interval code; 1,306 kernel + 4,357 mixture boxes) | `computations/frankl/jiang_checks.py`, `results/jiang.txt` |
 | c_UC ≥ 0.38288525 (Jiang) | proved in Jiang (preprint); analytic steps read here, all computations re-certified here | same + arXiv:2609.08291 |
 
@@ -840,9 +871,9 @@ Realistic for the next session (bounded, about 3 hours):
 
 1. **Finish the analytic glue.** For Costa–Sadhu Thm 1.2 only the
    measure-theoretic layer is left (Prop. 6.3's integration, Lemma 2.1's weak
-   limit, Liu's Prop. 3 and which couplings the protocols induce). Next:
-   - check Liu's Prop. 3 against Liu's own text (arXiv:2306.08824), not the
-     restatement;
+   limit, and Liu's argument that the induced laws lie in C₃). Liu's
+   Prop. 3 itself has been read in Liu's own text and the restatement is
+   faithful (Approach 6). Next:
    - do the same sympy/z3 treatment for Jiang's analytic pieces (geometric
      concavity, profile ordering, lower/upper strips, the small-t and large-t
      tails, the two edge bounds).
