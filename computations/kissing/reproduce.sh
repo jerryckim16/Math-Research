@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Reproduce the exact pairwise checks of the 2026 kissing-number lower bounds
 # (Yang et al., arXiv:2609.35051v1 "Qiushi Engine"; Q. Lin, arXiv:2611.03682v1;
-# A. Kravatskiy's repository records in 25-31D; 11D 604, arXiv:2606.10402v2;
+# A. Kravatskiy's repository records in 25-33D; 11D 604, arXiv:2606.10402v2;
 # 12D 841, arXiv:2606.18984v2). See problems/kissing-numbers.md.
 #
 # Needs: gcc with OpenMP, python3 with numpy, network access to github.com
@@ -124,6 +124,20 @@ for v in keepowner dupsmall; do
   if python3 "$here/kiss_check_field.py" "$work/neg/k25_${v}_bulk.i8" "$work/neg/k25_${v}_field.json" --mode float \
       > "$work/neg/k25_$v.txt"; then echo "NEGATIVE CONTROL k25 $v WAS ACCEPTED"; exit 1; fi
 done
+
+# 7b. Kravatskiy 32D and 33D, rebuilt from his compact witnesses
+python3 -I "$here/build_kravatskiy32.py" "$K/krav32_certificate.json" "$K/krav32.i8"
+python3 -I "$here/build_kravatskiy33.py" "$K/krav33_witness.npz" "$K/krav33.i8"
+for d in 32 33; do
+  "$CHK" "$K/krav$d.i8" "$d" | tee "$K/check$d.txt" | grep -E "^rows|^pairs|contacts|RESULT"
+  python3 "$here/kiss_check_np.py" "$K/krav$d.i8" "$d" | grep -E "contacts|RESULT"
+done
+# negative controls: the mirrored support reading of the 33D witness, and a
+# duplicated row in 32D, must FAIL
+python3 -I "$here/build_kravatskiy33.py" "$K/krav33_witness.npz" "$work/neg/k33_msb.i8" --support-order msb
+if "$CHK" "$work/neg/k33_msb.i8" 33 > "$work/neg/k33_msb.txt"; then echo "NEGATIVE CONTROL k33 msb WAS ACCEPTED"; exit 1; fi
+python3 "$here/perturb.py" "$K/krav32.i8" 32 dup "$work/neg/k32_dup.i8"
+if "$CHK" "$work/neg/k32_dup.i8" 32 > "$work/neg/k32_dup.txt"; then echo "NEGATIVE CONTROL k32 dup WAS ACCEPTED"; exit 1; fi
 
 # 8. 11D: 604 points from the EinsteinArena appendix (arXiv:2606.10402v2), our build
 python3 -I "$here/build_einstein11.py" "$work/small/e11"
