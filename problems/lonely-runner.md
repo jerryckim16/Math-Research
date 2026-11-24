@@ -426,7 +426,7 @@ Scope: J. Allikvere's computer-assisted proofs of LRC(13) and LRC(14), i.e. 14 a
 - **Level-15 kill records.** In full at the 52 "J empty" gates (one persistent orbit, (1..14), each). At the near-gcd gates, on seeded samples of the same sizes. Every record checked is reproduced exactly: level-3/5 witness-free lifts, CRT candidates, level-15 grid, gcd clause, and the few-exception shift Lemma 3.12. Improper after Lemma 3.12 is 0 everywhere, and improper after the gcd clause is 0 at the "J empty" gates. At the stream-checked gates, the number of kill files equals the certificate's persistent-orbit count.
 - **Level-one completeness at 2 gates.** At p = 89 (near-gcd) and p = 239 ("J empty"), an independent, unpruned minimal-cover enumeration reproduces exactly the certificate's set of level-one orbits: 687,016 and 1,441,284 orbits.
 - **Constants.** The flag-bound constants K_14, A_14, the log bound 414.779365 and the target 401.984506 were re-derived exactly. The 71 gates' Σ ln p = 408.8233 exceeds the target, recomputed from the gate list.
-- **LRC(13).** At 64 of 111 gate primes (in progress), the terminal level-14 kill of both persistent orbits was recomputed and matches, and the kill files' SHA-256 match the gate manifests.
+- **LRC(13).** At 66 of 111 gate primes (in progress), the terminal level-14 kill of both persistent orbits was recomputed and matches, and the kill files' SHA-256 match the gate manifests.
 - **No discrepancy with any certificate was found.**
 
 **What remains unverified here:**
