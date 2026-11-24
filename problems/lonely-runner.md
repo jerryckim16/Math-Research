@@ -417,6 +417,25 @@ Per-gate JSON files are in `results/lrc14_gates/`.
 - The large gain is in output: 5–7× fewer covers to expand and canonicalise.
 - **Failed route (kept):** these rules do **not** reproduce Allikvere's roughly 14× smaller tree (Approach 4). His engine also uses a two-branch search (irredundant k-class covers and extensions of smaller covers) with irredundance-aware bounds, which we have not implemented.
 
+### 9. Sharper bounds in the minimal-cover search (step 7)
+
+Goal: a faster level-one generator, as the precondition for completeness at more gates. `covergen.c` with `LRC_IRR` (a bitmask; the output is unchanged by construction):
+
+- **Bit 2, sharper gain bound.** At a node with r = k − |L| classes still to choose, the r largest gains |cov(c) ∩ U| over allowed classes c must sum to at least |U|. The plain bound uses r · max gain. Any completion adds at most r classes, and each covers at most its gain of the uncovered times, so the cut removes only nodes with no cover below.
+- **Bit 1, redundancy cuts.**
+  - If a chosen class has no private time relative to the other chosen classes, the node is cut: private sets only shrink as classes are added, so no minimal cover lies below.
+  - An allowed class c that covers all private times P_v of some chosen class v is forbidden in the subtree, because v would be redundant in any cover containing c.
+  - By the symmetry of d_p(av) in a and v, the coverers of a time a are exactly cov(a). So these classes are found as the intersection of cov(a) over a ∈ P_v.
+- **Validation** (`test_covergen_irr_same_minimal_covers`). For (k, p) = (5,41), (7,61), (8,101), (9,137), (10,127), (14,89), `LRC_IRR` = 1, 2 and 3 print **exactly the same set of minimal covers** as the plain search, also under 3-way sharding. Combined with `LRC_PRUNE=2`, the (14, 89) orbit set is unchanged: 687,016 orbits (`test_covergen_pruning_preserves_orbits`).
+- **Measured** (`results/knuth_irr_k14.txt`; Knuth estimates are heuristic):
+  - Ablation at p = 251: the sharper gain bound gives nearly all of the node saving (8.70·10¹⁰ → 4.55·10¹⁰) at about 90% of the node rate.
+  - The redundancy cuts remove few extra nodes and more than halve the node rate, so `LRC_IRR=2` is the recommended setting.
+  - A greedy packing bound (times with disjoint coverer sets) gave nothing and was dropped (failed route, kept).
+  - Exact count at (14, 113): 268M plain vs 111M nodes with both bits, giving the same 43,763,271 minimal covers.
+  - With `LRC_IRR=2`, the tree has 1.90× fewer nodes at p = 251 and 1.83× fewer at p = 257, for a net speed-up of about 1.7×.
+  - So completeness at p = 257 would still take about 12 core-hours (at least about 4 h of wall time on 3 cores). It was not run.
+- **Still short of Allikvere's tree** (about 14× smaller than our plain search, Approach 4). The remaining gap is not explained by the bounds tried here.
+
 ## Independent re-check summary
 
 Scope: J. Allikvere's computer-assisted proofs of LRC(13) and LRC(14), i.e. 14 and 15 runners (arXiv:2609.02604v2). Certificates: Zenodo 10.5281/zenodo.22066772 and 10.5281/zenodo.22667683. All checks use our own code (C and Python, in `computations/lonely-runner/`), written from the definitions in the paper and in arXiv:2604.23906. The archives were read as data only; none of the author's programs were executed.
@@ -487,7 +506,7 @@ Our code is tested against brute force, but not formally verified. These reprodu
    - near-gcd gates 163 and 173;
    - the 13 near-gcd archives over 60 MB (0.1–1.6 GB; kills about 0.5 s per orbit, and p = 181 has 8.2M orbits);
    - full rather than sampled cascade and kill at the 4 sampled near-gcd gates;
-   - level-one completeness at more gates. Unpruned, p = 239 took about 4.4 core-hours; with `LRC_PRUNE=2`, p = 251 took about 8.4 core-hours (8.93·10¹⁰ nodes). The pruning gives only a modest node saving at these primes (Approach 8), so cost grows quickly with p. The next "J empty" gate, p = 257, is estimated (Knuth probes calibrated on the 239 and 251 runs, `results/knuth_completeness_257.txt`; heuristic) at 2.16·10¹¹ nodes, about 20 core-hours. It was not run. A faster generator (Allikvere's two-branch search, Approach 8's failed route) is the precondition for many more completeness gates.
-6. **LRC(10) (11 runners)** was not reproduced, to stay within the budget. Our chain would need an ×11 lift of the tight orbit (11¹⁰ lifts) or Sungkawichai–Trakulthongchai's Prop. 1.2. `liftfree.c` with branch and bound should make the ×11 lift cheap; try it first.
+   - level-one completeness at more gates. Unpruned, p = 239 took about 4.4 core-hours; with `LRC_PRUNE=2`, p = 251 took about 8.4 core-hours (8.93·10¹⁰ nodes). The pruning gives only a modest node saving at these primes (Approach 8), so cost grows quickly with p. The next "J empty" gate, p = 257, is estimated (Knuth probes calibrated on the 239 and 251 runs, `results/knuth_completeness_257.txt`; heuristic) at 2.16·10¹¹ nodes, about 20 core-hours. It was not run. A faster generator is the precondition for many more completeness gates. Approach 9's sharper gain bound gives about 1.7×, which brings p = 257 to about 12 core-hours; that is still not enough.
+6. **LRC(10) (11 runners): in progress (step 7).** Chain ×2 ×2 ×2, projection, ×11, with the ×11 lift done by `liftfree.c` (`sieve.lift_c`, tested equal to the Python `lift`). Gates are being recorded in `results/lrc_k10.jsonl`. This differs from Sungkawichai–Trakulthongchai, who avoid the ×11 lift via their Prop. (corlarge, p > k² + k). Their P_10 is all 61 primes from 127 to 467 (Σ ln p > 342 > ln B_10 ≈ 337.63; read in the arXiv:2604.23906v2 source, Table 2).
 7. **Independent replay of 15 runners.** With the faster generator from step 2, rerun a handful of small k = 14 gates in full, including level-one completeness. This would upgrade the spot check.
 8. **Do not** present any of this as a proof until every gate has stored, re-checkable output and the bound is proved.
