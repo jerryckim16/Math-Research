@@ -15,15 +15,31 @@ for line in open(os.path.join(R, "lrc14_sha256_check.txt")):
     if ":" in line:
         name, st = line.rsplit(":", 1)
         sha[name.strip()] = st.strip()
-chk = {}
+chk = {}   # p -> list of records (step 8: several records per gate are merged)
 for f in glob.glob(os.path.join(R, "lrc14_gates", "gate_*.json")):
     try:
         d = json.load(open(f))
     except Exception:
         continue
-    old = chk.get(d["p"])
-    if old is None or (old.get("sample") and not d.get("sample") and d.get("mode") != "stream"):
-        chk[d["p"]] = d
+    chk.setdefault(d["p"], []).append(d)
+
+
+def coverage(d):
+    """(cascade_full, cascade_text, kills_checked, kills_total, kill_text) for one record."""
+    if d.get("mode") == "stream":
+        full_cas = d["C1_ir_rows_sampled"] >= d["rows_ir"] and d["C2_ext_lines_sampled"] >= d["C2_ext_survivor_lines_total"]
+        cas = "full" if full_cas else "sampled (%d ir rows + %d ext survivor lines)" % (d["C1_ir_rows_sampled"], d["C2_ext_lines_sampled"])
+        return full_cas, cas, d["D_kills_sampled"], d["kill_files"]
+    full_cas = not d.get("sample")
+    cas = "full" if full_cas else "sampled (%d)" % d["sample"]
+    total = d.get("kill_files", d.get("persistent_orbits_cert"))
+    if d.get("kill_skipped"):
+        return full_cas, cas, 0, total
+    if "kill_files" not in d and d.get("sample"):
+        total = None   # older sampled records did not store the kill-file count
+    return full_cas, cas, d["kill_orbits"], total
+
+
 comp = {}
 for f in glob.glob(os.path.join(R, "lrc14_gates", "completeness_*.json")):
     try:
@@ -38,26 +54,26 @@ for p in sorted(int(x) for x in gates):
     typ = "J empty" if g["variant"].startswith("decomposition") else "near-gcd"
     h = sha.get("evidence_%d_s0.tgz" % p)
     hs = "OK" if h == "OK" else ("FAIL" if h else "not downloaded")
-    d = chk.get(p)
-    if d and d.get("mode") == "stream":
+    ds = chk.get(p, [])
+    if ds:
         n_any += 1
-        S = d["sample"]
-        full_cas = d["C1_ir_rows_sampled"] >= d["rows_ir"] and d["C2_ext_lines_sampled"] >= d["C2_ext_survivor_lines_total"]
-        full_kill = d["D_kills_sampled"] >= d["kill_files"]
-        rws = "full (%d rows)" % d["rows_ir"]
-        cas = "full" if full_cas else "sampled (%d ir rows + %d ext survivor lines)" % (d["C1_ir_rows_sampled"], d["C2_ext_lines_sampled"])
-        kil = "full (%d)" % d["kill_files"] if full_kill else "sampled (%d of %d)" % (d["D_kills_sampled"], d["kill_files"])
-        if full_cas and full_kill:
+        covs = [coverage(d) for d in ds]
+        best_cas = max(covs, key=lambda c: (c[0], 0))
+        best_kill = max(covs, key=lambda c: c[2])
+        totals = [c[3] for c in covs if c[3]]
+        ktot = max(totals) if totals else None
+        rws = "full (%d rows)" % ds[0]["rows_ir"] if any(d.get("mode") == "stream" for d in ds) else "full"
+        cas = best_cas[1]
+        if ktot is not None and best_kill[2] >= ktot:
+            kil = "full (%d)" % ktot if any(d.get("mode") == "stream" or d.get("kill_files") for d in ds) else "full"
+        elif ktot is not None:
+            kil = "sampled (%d of %d)" % (best_kill[2], ktot)
+        else:
+            kil = "sampled (%d)" % best_kill[2]
+        full_kill = ktot is not None and best_kill[2] >= ktot
+        if best_cas[0] and full_kill:
             n_full += 1
-        verdict = "PASS" if d["pass"] else "**FAIL**"
-    elif d:
-        n_any += 1
-        mode = "sampled (%d)" % d["sample"] if d.get("sample") else "full"
-        if not d.get("sample"):
-            n_full += 1
-        rws = "full"
-        cas = kil = mode
-        verdict = "PASS" if d["pass"] else "**FAIL**"
+        verdict = "PASS" if all(d["pass"] for d in ds) else "**FAIL**"
     else:
         rws = cas = kil = "not checked"
         verdict = "—"
@@ -67,7 +83,7 @@ for p in sorted(int(x) for x in gates):
 print("| p | type | archive SHA-256 | rows improper | cascade | kill | level-one completeness | result |")
 print("| --- | --- | --- | --- | --- | --- | --- | --- |")
 print("\n".join(rows))
-ok = all(d["pass"] for d in chk.values()) and all(c["equal"] for c in comp.values())
+ok = all(d["pass"] for ds in chk.values() for d in ds) and all(c["equal"] for c in comp.values())
 print()
 print("**Verdict:** independent re-check of %d/71 LRC(14) gates (%d in full, %d sampled); "
       "level-one completeness at p = %s; %s." % (
