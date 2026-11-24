@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Reproduce the exact pairwise checks of the 2026 kissing-number lower bounds
-# in dimensions 32-39 (Yang et al., arXiv:2609.35051v1 "Qiushi Engine";
-# Q. Lin, arXiv:2611.03682v1). See problems/kissing-numbers.md.
+# (Yang et al., arXiv:2609.35051v1 "Qiushi Engine"; Q. Lin, arXiv:2611.03682v1;
+# A. Kravatskiy's repository records in 25-31D; 11D 604, arXiv:2606.10402v2;
+# 12D 841, arXiv:2606.18984v2). See problems/kissing-numbers.md.
 #
 # Needs: gcc with OpenMP, python3 with numpy, network access to github.com
-# release assets, raw.githubusercontent.com and zenodo.org. About 40 min wall
+# release assets, raw.githubusercontent.com and zenodo.org. About 60 min wall
 # on 4 cores; peak RAM < 1 GB (25D/27D field checks: < 2 GB).
 # Usage: reproduce.sh [WORKDIR] [--with-43]   (downloads and logs go to WORKDIR)
 # --with-43 adds the Qiushi 43D export (2,553,792 points; about 75 min more).
@@ -12,7 +13,8 @@ set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 work=${1:-$(mktemp -d)}
 with43=${2:-}
-mkdir -p "$work"/bin "$work"/known "$work"/qiushi "$work"/lin "$work"/linbuild "$work"/neg "$work"/q2527
+mkdir -p "$work"/bin "$work"/known "$work"/qiushi "$work"/lin "$work"/linbuild "$work"/neg "$work"/q2527 \
+  "$work"/krav "$work"/small
 gcc -O3 -march=native -fopenmp -Wall "$here/kiss_check.c" -o "$work/bin/kiss_check"
 CHK="$work/bin/kiss_check"
 
@@ -79,6 +81,66 @@ for v in q25_extra q25_norepair q27_owner q27_label; do
     echo "NEGATIVE CONTROL $v WAS ACCEPTED"; exit 1
   else
     grep -E "violations|RESULT" "$work/neg/$v.txt"
+  fi
+done
+# 7. Kravatskiy's 25-31D configurations (repository alexlegeartis/KissingNumbers
+#    @ 907f9b1f, sha256-pinned): five coordinate files, 25D rebuilt from its
+#    witness, 29D from parent + trade; integer pairs by kiss_check.c and
+#    kiss_check_np.py, pairs with irrational rows by kiss_check_field.py
+python3 -I "$here/fetch_kravatskiy.py" "$work/krav"
+K="$work/krav"
+for x in 26:201188 27:209884 28:223528 30:248506 31:251524; do
+  python3 -I "$here/load_kravatskiy.py" "$K/krav${x%%:*}_${x##*:}.npz" "$K/krav${x%%:*}" "${x##*:}" "${x%%:*}"
+done
+python3 -I "$here/build_kravatskiy29.py" "$K/krav29_parent_232154.npz" "$K/krav29_trade.npz" "$K/krav29.i8"
+python3 -I "$here/build_kravatskiy25.py" "$K/krav25_certificate25.json" "$K/krav25"
+mv "$K/krav25_bulk.i8" "$K/krav25.i8"
+for d in 25 26 27 28 29 30 31; do
+  "$CHK" "$K/krav$d.i8" "$d" | tee "$K/check$d.txt" | grep -E "^rows|^pairs|contacts|RESULT"
+  [ "$d" = 25 ] || python3 "$here/kiss_check_np.py" "$K/krav$d.i8" "$d" | grep -E "contacts|RESULT"
+done
+for d in 25 26; do
+  for m in float interval; do
+    python3 "$here/kiss_check_field.py" "$K/krav$d.i8" "$K/krav${d}_field.json" --mode $m \
+      | tee "$K/field${d}_$m.txt" | grep -E "pairs_checked|contacts|RESULT"
+  done
+done
+# negative controls: each must FAIL
+for d in 27 31; do
+  for m in dup merge; do
+    python3 "$here/perturb.py" "$K/krav$d.i8" "$d" "$m" "$work/neg/k${d}_$m.i8"
+    if "$CHK" "$work/neg/k${d}_$m.i8" "$d" > "$work/neg/k${d}_$m.txt"; then
+      echo "NEGATIVE CONTROL k$d $m WAS ACCEPTED"; exit 1
+    fi
+  done
+done
+for v in dupfield conjfield; do
+  python3 -I "$here/load_kravatskiy.py" "$K/krav26_201188.npz" "$work/neg/k26_$v" 201188 26 --variant $v
+  if python3 "$here/kiss_check_field.py" "$work/neg/k26_$v.i8" "$work/neg/k26_${v}_field.json" --mode float \
+      > "$work/neg/k26_$v.txt"; then echo "NEGATIVE CONTROL k26 $v WAS ACCEPTED"; exit 1; fi
+done
+for v in keepowner dupsmall; do
+  python3 -I "$here/build_kravatskiy25.py" "$K/krav25_certificate25.json" "$work/neg/k25_$v" --variant $v
+  if python3 "$here/kiss_check_field.py" "$work/neg/k25_${v}_bulk.i8" "$work/neg/k25_${v}_field.json" --mode float \
+      > "$work/neg/k25_$v.txt"; then echo "NEGATIVE CONTROL k25 $v WAS ACCEPTED"; exit 1; fi
+done
+
+# 8. 11D: 604 points from the EinsteinArena appendix (arXiv:2606.10402v2), our build
+python3 -I "$here/build_einstein11.py" "$work/small/e11"
+"$CHK" "$work/small/e11.i8" 11 | grep -E "^pairs|contacts|RESULT"
+for m in float interval; do
+  python3 "$here/kiss_check_field.py" "$work/small/e11.i8" "$work/small/e11_field.json" --mode $m \
+    | grep -E "pairs_checked|contacts|RESULT"
+done
+# (its negative variants are run by test_kissing.py, section 1 above)
+
+# 9. 12D: the published 841 decimal coordinates (arXiv:2606.18984v2), read exactly
+python3 -I "$here/fetch_small.py" "$work/small"
+python3 -I "$here/check_decimal.py" "$work/small/tay12_841.txt" 12
+for c in "dup 0 0" "merge 413 756" "nudge 413 756"; do
+  # shellcheck disable=SC2086
+  if python3 -I "$here/check_decimal.py" "$work/small/tay12_841.txt" 12 --control $c > "$work/neg/t12.txt"; then
+    echo "NEGATIVE CONTROL 12D $c WAS ACCEPTED"; exit 1
   fi
 done
 echo "ALL DONE"

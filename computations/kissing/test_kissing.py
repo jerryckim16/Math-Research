@@ -16,7 +16,13 @@ kiss_check binary; scratch files are written there too).
    cuboctahedron tails of the 27D construction (entries in Z[sqrt2]) pass
    with 24 contacts; adding a bad irrational row fails. Contact counts are
    compared with a pure-Python exact reference.
+6. check_decimal.py: E8 written as decimal text, every row scaled by a
+   different exact decimal factor (some in e-notation), passes with 6720
+   contacts; moving one row by 1e-15 towards a contact partner fails.
+   build_einstein11.py: the 604-point 11D configuration passes with
+   17088 + 2616 = 19704 contacts; both negative variants fail.
 """
+
 import os
 import random
 import re
@@ -138,6 +144,8 @@ def main():
         assert allpass == ok == (bv[0] == 0), (tag, out, small)
         print(f"ok  check_mixed {tag:16s} big-pairs {res}, small-pairs {sres}")
     field_tests(E8)
+    decimal_tests(E8)
+    einstein11_tests()
     print("ALL TESTS PASSED")
 
 
@@ -199,6 +207,66 @@ def field_tests(E8):
     v, c, res = run([(0, 0, 0, 1)], tails + [[[0, 0, 1, 0], [0] * 4, [0] * 4, [0] * 4]], 4, "tailsbad")
     assert res == "FAIL" and v == 4, (v, c)
     print(f"ok  field tails + (0,0,1)                     violations={v} FAIL (expected)")
+
+
+def run_out(args):
+    r = subprocess.run(args, capture_output=True, text=True)
+    return r.returncode, r.stdout
+
+
+def decimal_tests(E8):
+    from decimal import Decimal
+    rng = random.Random(7)
+    path = os.path.join(BUILD, "t_e8.txt")
+
+    def write(rows):
+        with open(path, "w") as f:
+            for r in rows:
+                f.write(" ".join(r) + "\n")
+
+    rows = []
+    for k, r in enumerate(E8):
+        c = Decimal(rng.randint(1, 10**6)) / Decimal(10**rng.randint(0, 9))
+        if k % 3 == 0:   # exact e-notation: (value * 10^5) followed by e-5
+            rows.append([format((Decimal(x) * c).scaleb(5), "f") + "e-5" for x in r])
+        else:
+            rows.append([str(Decimal(x) * c) for x in r])
+    write(rows)
+    code, out = run_out([sys.executable, os.path.join(HERE, "check_decimal.py"), path, "8"])
+    con = int(re.search(r"contacts=(\d+)", out).group(1))
+    assert code == 0 and "RESULT: PASS" in out and con == 6720, out
+    print(f"ok  check_decimal E8 (rescaled decimal rows)    contacts={con} PASS")
+    # nudge row 0 by 1e-15 of a contact partner
+    a = E8[0]
+    j = next(i for i, b in enumerate(E8) if 2 * sum(x * y for x, y in zip(a, b)) == sum(x * x for x in a))
+    bad = [[str(Decimal(x)) for x in r] for r in E8]
+    bad[0] = [str(Decimal(x) + Decimal(y) * Decimal("1e-15")) for x, y in zip(a, E8[j])]
+    write(bad)
+    code, out = run_out([sys.executable, os.path.join(HERE, "check_decimal.py"), path, "8"])
+    assert code == 1 and "RESULT: FAIL" in out, out
+    print("ok  check_decimal E8 row nudged by 1e-15        FAIL (expected)")
+
+
+def einstein11_tests():
+    pre = os.path.join(BUILD, "t_e11")
+    for variant, ok in ((None, True), ("repeat", False), ("pairmix", False)):
+        args = [sys.executable, "-I", os.path.join(HERE, "build_einstein11.py"), pre]
+        if variant:
+            args += ["--variant", variant]
+        subprocess.run(args, check=True, capture_output=True)
+        c_out = subprocess.run([CBIN, pre + ".i8", "11"], capture_output=True, text=True).stdout
+        bv, bc, bres = parse(c_out)
+        f_out = subprocess.run([sys.executable, os.path.join(HERE, "kiss_check_field.py"), pre + ".i8",
+                                pre + "_field.json", "--mode", "float", "--workers", "1"],
+                               capture_output=True, text=True).stdout
+        fv = int(re.search(r"violations (\d+)", f_out).group(1))
+        fc = int(re.search(r"contacts_60deg (\d+)", f_out).group(1))
+        if ok:
+            assert bres == "PASS" and fv == 0 and (bc, fc) == (17088, 2616), (bc, fc, c_out, f_out)
+            print(f"ok  11D EinsteinArena 604                       contacts={bc}+{fc} PASS")
+        else:
+            assert bv + fv > 0, (variant, c_out, f_out)
+            print(f"ok  11D variant {variant:8s}                      violations={bv + fv} FAIL (expected)")
 
 
 if __name__ == "__main__":
