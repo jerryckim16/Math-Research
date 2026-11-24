@@ -341,7 +341,12 @@ The files are in `computations/andrews-curtis/lean/`. They use plain Lean 4 core
 
 - Hence there is **no undirected GS path below energy 30** joining two of AK(3), P1, P2. This is computed, exhaustive, one implementation (two engines sharing the predecessor code) and relative to the graph.
 - Each undirected sublevel set is only 3–4% larger than the directed one, but a state costs about 3× more to expand. A multi-source cap-30 run would need about 360M states and over 2 h on 4 threads; the single-source runs avoid this.
-- **Scope.** This is a statement about the GS graph, not about AC distance. A zig-zag path in the graph would still have given an AC certificate. No such path exists below 27.
+- **Scope.** This is a statement about the GS graph, not about AC distance. A zig-zag path in the graph would still have given an AC certificate. No such path exists below 30.
+- **Pitfall (found and fixed here; no reported result affected).** `ac_search_par` stored a state as a 56-bit key: (letters in mixed radix) × 512 + a code for the two lengths.
+  - At total length 30 that overflows: 16·3²⁸·512 ≈ 2^57.4. So the engine was exact only for caps ≤ 30. At total length ≤ 29 the largest key is 6.2·10¹⁶ < 2⁵⁶.
+  - Every run reported above, directed and undirected, used cap ≤ 30. A first undirected cap-31 attempt was stopped and discarded.
+  - The key is now an exact ranking: an offset for the two lengths plus the mixed radix. It fits in 56 bits up to total length 31, and the engine refuses CAP > 32.
+  - `test_ac.py` checks the encode/decode round trip at all total lengths ≤ 31. The rebuilt engine reproduces the directed cap-25 count (1,836,928) and the undirected cap-26 count (6,373,628) exactly.
 
 **Observation, local only: one-way edges near the sources.** Computed with scratch scripts that are not kept in the repo.
 - Take the undirected closure of {AK(3), P1, P2} below energy 20. Each of its 588 one-way junction edges S → T has a reverse T → S that is a single product step r_i ← cyclic_reduce(rot(r_i^{±1})·rot(r_j^{±1})) *without* the junction condition. So, near the sources, the directedness comes from the junction condition alone.
@@ -384,7 +389,7 @@ The files are in `computations/andrews-curtis/lean/`. They use plain Lean 4 core
 - **Undirected cap 31** (in progress, via single-source P1/P2 components, §5): extend "no undirected GS path below 30". P1 is about 70M states; P2 may be about 200M states and more than 1 h. A meeting would come with a path from `ac_search_compact --undirected` (parents kept), which `ac_path.py` expands and `gen_lean.py --extra` Lean-verifies.
 - **Next concrete step:** a bounded attack on the open edges, P1 or P2 → AK(3), the two remaining uncertified claims of Shehper et al.
   - Cap 30 is done (no meeting, §3).
-  - Cap 31 with `ac_search_par`: growth from cap 29 to cap 30 was ×3.96 in states, so cap 31 might need about 1.4 billion states, about 12 GB of table at 8 B per slot and 90% load, and several hours. It is out of reach on this machine.
+  - Cap 31 with `ac_search_par`: growth from cap 29 to cap 30 was ×3.96 in states, so cap 31 might need about 1.4 billion states, about 12 GB of table at 8 B per slot and 90% load, and several hours. It is out of reach on this machine. (It also needed the key fix of §5. The single-source runs of §5 avoid the AK(3) component, and they work for the directed search too, with `--passive`.)
   - A meeting would need parent recovery: rerun `ac_search_compact --passive` from each side toward the meeting state. Then `ac_path.py` expands the path, and `gen_lean.py --extra` Lean-verifies it.
   - Alternatively, try the non-junction edges, which our search supports and the paper's graph excludes.
 - Done: the Lean port (§4).

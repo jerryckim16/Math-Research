@@ -300,6 +300,31 @@ def test_undirected_search():
         raise AssertionError("non-edge accepted")
 
 
+def test_par_key_encoding():
+    """ac_search_par's 56-bit key: exact round trip for total lengths up to 31
+    (the earlier rank*512+code key overflowed at total length 30, cap 31)."""
+    tmp = tempfile.mkdtemp()
+    src = os.path.join(tmp, "rt.cpp")
+    open(src, "w").write(
+        '#define main par_main\n#include "%s"\n#undef main\n#include <random>\n'
+        'int main() { init_offsets(); mt19937_64 rng(1); long bad = 0;\n'
+        ' for (int s = 2; s <= 31; s++) for (int na = 0; na <= s; na++) { int nb = s - na;\n'
+        '  if (na > 29 || nb > 29) continue;\n'
+        '  for (int t = 0; t < 300; t++) { W a, b; a.n = na; b.n = nb;\n'
+        '   for (W* w : {&a, &b}) for (int i = 0; i < w->n; i++) { int c;\n'
+        '     do c = rng() %% 4; while (i && c == (w->a[i-1] ^ 2)); w->a[i] = c; }\n'
+        '   uint64_t k = encode(pack(a.a, a.n), pack(b.a, b.n)); W x, y; decode(k, x, y);\n'
+        '   if (!k || k > KEYMASK || wstr(x) != wstr(a) || wstr(y) != wstr(b)) bad++; } }\n'
+        ' printf("bad %%ld\\n", bad); return bad != 0; }\n' % os.path.join(HERE, "ac_search_par.cpp"))
+    exe = os.path.join(tmp, "rt")
+    subprocess.run(["g++", "-O2", "-std=c++17", "-pthread", "-o", exe, src], check=True)
+    r = subprocess.run([exe], capture_output=True, text=True)
+    assert r.returncode == 0 and r.stdout.strip() == "bad 0", r.stdout
+    par = os.path.join(tmp, "par")
+    subprocess.run(["g++", "-O2", "-std=c++17", "-pthread", "-o", par, os.path.join(HERE, "ac_search_par.cpp")], check=True)
+    assert "CAP must be at most 32" in subprocess.run([par, "33", "x/y"], capture_output=True, text=True).stdout
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_"):
