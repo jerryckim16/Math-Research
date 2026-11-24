@@ -419,6 +419,7 @@ CEGAR timings were taken with 5–6 processes on 4 cores, so they are up to
 | CEGAR speed-ups on the full m = 7 corpus: Z3 `smt.arith.solver=2` + AFM Lemma M items 2–3 give 347 → 77 CPU-s (4.5×); C0′, seeding and extra points do not help (Approach 4a) | measured; every run 84/84 unsat with full-clause re-solve | `data/speedups_n4.jsonl` |
 | Lemma C0′ (agent 0 has the largest top-two sum) is a sound extra normalisation | proved (Approach 4a) + brute-force test of the canonicalisation map | `test_efx.py::test_c0_canonicalisation` |
 | m = 10 distinct-favourites sample (arith 2 + Lemma M, 300 s): branches (1,2,3) and (2,5,8) time out (263 / 299 Z3 calls); cube (1,0),(2,0),(3,0) times out; cube (1,4),(2,4),(3,4) unsat in 136 s, but its full-clause Z3 re-solve hit the 300 s limit (`unknown`), so it is **not** counted as closed | measured; nothing closed | `data/cegar_m10_distinct_sample.jsonl` |
+| m = 9 cost sample (arith 2 + Lemma M): 26/26 one-shared-pair cubes closed (median 11 s); 2/2 two-pair cubes closed; 8/9 three-shared-top cubes closed (26–623 s), 1 timeout at 1,200 s whose 6 sampled tri-subs (of 196) closed; cvc5 ≈ 3.8·10⁻³ a² s. Projected two-solver cost ≈ 3·10³–6·10³ CPU-h at the lower end (timeouts counted at their limit), ≈ 1.6–3.7·10⁴ CPU-h (Knuth): not feasible here | measured (43 regions, all closed regions unsat in Z3 full-clause re-solve; 13 cvc5 checks unsat); projection heuristic | `data/m9_probe_n4.jsonl`, `data/m9_cvc5_times.jsonl` |
 | **n = 4, m = 8: EFX always exists** — every instance has an EFX₀ allocation. This is an independent reproduction of AFM's m = 8, the first case beyond Mahara's m ≤ n+3 | **certificate-checked by two solvers (Z3, cvc5)**. Coverage: 120/120 argmax branches. 111 closed at branch level; the 9 diagonal branches (0,0,0), (0,0,1) and (k,k,k) for k = 1…7 closed through **all** their cubes (868 cubes; none needed a deeper layer). 979 unsat certificates, 167,112 allocations (max 1,364 per region). Every leaf is unsat in both solvers: (i) Z3 from-scratch re-solve with full clauses, 979/979; (ii) cvc5 with the independent encoding of `recheck_cvc5.py` (full clauses, QF_LRA logic), 979/979, 0 not unsat. Tree coverage was re-derived by `recheck_cvc5.py --tree` from the cvc5-verified leaves only: 120/120 branches, none uncovered. Modulo the soundness of the two solvers and of the symmetry reductions (Approach 4); no proof objects. SHA-256 below the table | `data/m8_tree_certs.jsonl.gz`, `data/m8_cvc5_verdicts.txt`, `data/m8_run_summary.txt` |
 
 **No counterexample candidate arose in any run** (`summarize.py` scans all
@@ -499,30 +500,126 @@ logs for the `COUNTEREXAMPLE_CANDIDATE` flag; count 0).
   the run log). Every Z3 model had an EFX allocation, confirmed by the exact
   C checker and `efx.verify`.
 
-### m = 9 cost sample (fourth session; in progress, checkpoint 1)
+### m = 9 cost sample (fourth session; arith 2 + Lemma M, Z3 5.4.1, cvc5 1.4.2)
 
-Random cubes (fixed seeds) at m = 9, arith 2 + Lemma M, 1,200 s limit,
-`probe_regions.py` (records in `data/m9_probe_n4.jsonl`, cvc5 timings in
-`data/m9_cvc5_times.jsonl`). Up to 6 processes on 4 cores at times, so times
-can be up to ≈ 1.5× pessimistic. Preliminary, from the first 22 regions
-(the data file may already hold later ones):
+**Question.** Is an independent two-solver (Z3 + cvc5) reproduction of AFM's
+m = 9 feasible here (≈ 30 CPU-h)? **Answer: no, by two to three orders of
+magnitude** (estimate below). No full run was started.
 
-- **One-shared-pair cubes (branches (2,2,6), (0,1,6), (4,4,5), (1,1,6)):
-  19/19 closed** at cube level, CEGAR 1–327 s (median ≈ 10 s), 53–669
-  allocations; Z3 full-clause re-solve 5–373 s (≈ 1–2.5× the CEGAR time).
-- **Diagonal (7,7,7): 2 of 3 cubes closed** (207 s and 217 s, ≈ 455
-  allocations); cube (7,0),(7,5),(7,5) **timed out at 1,200 s** (1,359
-  allocations found). Its first sampled tri-sub (of 196) closed in 402 s
-  with 665 allocations (Z3 re-solve 554 s).
-- **cvc5 at m = 9 is 5–8× the m = 8 rule:** 23–26 s at a = 90, 80–100 s at
-  a = 138–154, 431 s at a = 251, 1,351 s at a = 455; a = 492 and 546 did
-  not finish in 1,240 s and 956 s. All finished verdicts unsat.
-- No counterexample candidate; every Z3 re-solve unsat.
+**Design.** The 165 argmax branches of m = 9 fall into strata by how many of
+the four agents share a top good (agent 0's top is good 0):
 
-Preliminary reading: the one-shared-pair stratum alone (30,464 of the 36,152
-cubes) projects to ≈ 2·10³–5·10³ CPU-h including both re-checks, and the
-diagonal strata are larger by an order of magnitude or more. A two-solver
-m = 9 run is far beyond 30 CPU-h. Final numbers below once the sample ends.
+| stratum | branches | cubes | treatment |
+| --- | --- | --- | --- |
+| L1: b_i distinct, nonzero | 56 | (28,672) | AFM hand Lemma L1 (proof checked here); no computation |
+| S2: exactly one shared pair | 84 | 30,464 | computed |
+| S22: two shared pairs, (0,b,b) | 8 | 2,304 | computed |
+| S3: three share, (0,0,b) or (k,k,k) | 16 | 3,264 | computed |
+| S4: (0,0,0) | 1 | 120 | computed |
+
+The 109 computed branches have 36,152 canonical cubes (`cegar_branches.refine`),
+exactly AFM's count. At m = 9 every computed branch goes straight to cubes
+(the probes (2,2,6) and (0,1,6) of the third session time out at branch
+level). A random sample of cubes (fixed seeds) was run with a 1,200 s limit;
+for the one cube that timed out, a random sample of its tri-subs (next layer)
+was run with a 600 s limit. Script `probe_regions.py`; records (with
+allocations, Z3 re-solve time and wall time) in `data/m9_probe_n4.jsonl`;
+cvc5 timings in `data/m9_cvc5_times.jsonl`. 1–7 processes on 4 cores
+(mostly 4; up to 7 for ≈ 10 min), so single timings can be up to ≈ 1.5×
+pessimistic: two cubes accidentally run twice took 7.5/12.3 s and 90/118 s.
+
+**Measurements (43 distinct regions: 37 cubes + 6 tri-subs; 42 closed).**
+
+- **S2, 26 cubes** of branches (2,2,6), (0,1,6) (10 each), (4,4,5), (1,1,6)
+  (3 each): **26/26 closed at cube level.** CEGAR 1–327 s (median 11 s,
+  mean 65 s; 6 of 26 above 100 s), 53–669 allocations (median 152). Z3
+  full-clause re-solve 5–373 s, in total 1.25× the CEGAR time. Three of
+  the (2,2,6) cubes also exist at m = 8, where they took 0.1 s with 17–47
+  allocations: at m = 9 they cost ≈ 100–400× more and need 3–8× more
+  allocations.
+- **S22, 2 cubes of (0,3,3):** closed in 192 s and 296 s (359, 505
+  allocations).
+- **S3, 9 cubes:** (0,0,7): 26 s, 65 s (209, 280 allocations); (1,1,1):
+  217 s, 425 s, 623 s (416, 651, 1,032 allocations); (7,7,7): 207 s, 217 s,
+  599 s (452–665 allocations) and **one timeout at 1,200 s**, cube
+  (7,0),(7,5),(7,5), with 1,359 allocations found.
+- **Tri-subs of that cube: 6 of its 196, all closed**, 22–464 s (mean
+  211 s), 256–815 allocations (mean 488), Z3 re-solve 60–554 s.
+- **cvc5 at m = 9 (13 records, a = 90–539, all unsat):** 23 s at a = 91,
+  80–100 s at a ≈ 150, 343 s at a = 383, 804 s at a = 539, 1,351 s at
+  a = 455 (under the heaviest load). Least-squares t ≈ 3.8·10⁻³ a² s,
+  **4.9× the m = 8 rule** 7.8·10⁻⁴ a² (per-record ratio 2.3–6.8·10⁻³, the
+  high end under load). Checks at a = 492, 546 and 665 were stopped without a verdict after
+  869–1,240 s (lower bounds in the timing file).
+- **Soundness side:** every closed region re-solved unsat in Z3 with full
+  clauses; every finished cvc5 verdict unsat; no counterexample candidate,
+  no solver disagreement.
+
+**Estimate (`estimate_tree.py`; CPU-hours; one core = one Z3/cvc5 process).**
+Per stratum: (number of cubes) × (mean cost of a sampled cube). S4 is
+assumed to cost like S3 (no S4 sample; 120 cubes, small weight).
+Reproduce: `python3 estimate_tree.py data/m9_probe_n4.jsonl
+--map=S2=226,016,445,116 --map=S3=777,111,007 --map=S22=033
+--map=S4=777,111,007 --cvc5-times=data/m9_cvc5_times.jsonl [--no-knuth]`.
+
+| scenario | CEGAR | Z3 re-solve | cvc5 (m = 8 rule / m = 9 fit) | total |
+| --- | --- | --- | --- | --- |
+| lower end: the timed-out cube counted at 1,200 s, nothing below it | 1.1·10³ | 1.1·10³ | 0.8·10³ / 3.8·10³ | **2.9·10³ – 5.9·10³** |
+| Knuth: the timed-out cube = 1,200 s + 196 × (mean of its 6 sampled tri-subs) | 5.4·10³ | 5.8·10³ | 5.3·10³ / 2.6·10⁴ | **1.6·10⁴ – 3.7·10⁴** |
+
+- These are sample-mean projections, not bounds. The lower-end row only
+  drops what is known to be missing (the subtree of the timed-out cube).
+- At the lower end, S2 dominates (CEGAR 547, Z3 683, cvc5 460 CPU-h:
+  ≈ 65 s + 81 s + 54 s per cube over 30,464 cubes). Even CEGAR alone,
+  ≈ 1.1·10³ CPU-h, is ≈ 35× the 30 CPU-h budget.
+- In the Knuth estimate the diagonal stratum S3 dominates: one timed-out
+  cube in nine, each costing ≈ 196 × 211 s ≈ 11 CPU-h of CEGAR, plus as much
+  again for each re-check. With 1 timeout in 9 the timeout rate is
+  uncertain (binomial 95 % interval ≈ 0.3–48 %), so the S3 term could be
+  ≈ 4× larger, or much smaller (down to the lower-end row). Deeper layers (timed-out
+  tri-subs) would add to it; none was seen in 6.
+- The Knuth figure agrees in order of magnitude with AFM's ≈ 4·10⁴ vCPU-h
+  for their m = 9 corpus (122,553 certificates; their 141,878,161
+  per-clause checks suggest ≈ 1,160 allocations per certificate, if a
+  check is one allocation of one certificate).
+- **Assumptions:** the sampled branches represent their strata (4 random
+  S2 branches; 3 S3 branches; one S22 branch); S22 rests on 2 cubes, S4 on
+  none; Z3 re-solve time as measured; cvc5 time c·a² (measured at
+  a ≤ 539; larger certificates may be worse); timings on this machine
+  with ≤ 1.5× load inflation; no speed-up beyond arith 2 + Lemma M.
+
+**Speed ideas tried (cheap, failed or small).**
+
+1. *cvc5 on Lemma-M-reduced clauses* instead of full clauses (m = 8
+   records with known times, then one m = 9 record):
+
+   | record | a | full | reduced (Lemma M) |
+   | --- | --- | --- | --- |
+   | m = 8 cube (0,1),(0,4),(1,5) | 223 | 47.7 s | 10.7 s |
+   | m = 8 branch (2,2,6) | 274 | 63.4 s | 23.2 s |
+   | m = 8 branch (0,0,7) | 666 | 361 s (third session) | 182 s |
+   | m = 8 cube (0,1)³ | 1,364 | ≈ 1,450 s (rule; "< 24 min") | 241 s |
+   | m = 9 cube (0,2),(1,4),(6,5) | 91 | 23–25 s | 4.3 s |
+
+   A 2–6× gain on the cvc5 pass. But the cvc5 verdict then depends on Lemma
+   M (proved, brute-force tested) and, as tried, on `cegar.reduced_disjuncts`,
+   shared code. An independent re-implementation would be needed. It
+   does not change the verdict: with ideas 1 and 2 together the lower
+   end is still > 1.2·10³ CPU-h (CEGAR alone is 1.1·10³).
+2. *Dropping the Z3 from-scratch re-solve* (keeping CEGAR's own Z3 verdict
+   plus the cvc5 full-clause check as the two solvers) saves ≈ 1/3. This is
+   a policy choice, not a speed-up, and also not enough.
+3. *Single-agent split instead of cubes* for a timed-out diagonal region
+   (extend only agent 3's chain: 7 children instead of 84–196; covered by
+   the `"k"` rule of `recheck_cvc5.py --tree`). Tested at m = 8 on branches
+   (6,6,6) and (3,3,3), whose 84 cubes each took 316 s and 359 s of CEGAR
+   in total. Of the 7 children, 6 took 64–85 s (resp. 47–84 s), and the
+   child whose new good is 0 timed out at 300 s in both. So ≥ 760 s and
+   ≥ 690 s: **≥ 1.9–2.4× worse**, with fewer but bigger certificates
+   (455–627 allocations each). Not pursued.
+   Data: `data/m8_single_agent_split.jsonl`.
+4. Not tried: Yices as the second solver. Installing it was not permitted
+   in this session.
 
 ### m = 8 cost probe (first session; naive pipeline, Z3 5.4.1, single thread)
 
@@ -564,8 +661,32 @@ m = 9 run is far beyond 30 CPU-h. Final numbers below once the sample ends.
    subsection). Possible extras, not needed for the label: a third
    solver, or proof objects (e.g. cvc5 proofs checked by an external
    checker).
-2. **(Fourth session: cost sample in progress; see "m = 9 cost sample".
-   Preliminary: not feasible in ~30 CPU-h.) m = 9 reproduction (AFM's main claim).** At m = 8 the whole run took
+2. **m = 9 two-solver reproduction (AFM's main claim): NO-GO here
+   (fourth session, measured).** The cost sample (Results, "m = 9 cost
+   sample") puts a full Z3 + cvc5 run at **≈ 3·10³–6·10³ CPU-h at the lower
+   end (timeouts counted only at their limit) and ≈ 1.6–3.7·10⁴ CPU-h by
+   Knuth extrapolation** (sample-based projections, not bounds). That is 100–1,000×
+   the ≈ 30 CPU-h a few sessions on 4 cores can give. Even CEGAR alone
+   projects to ≈ 1.1·10³ CPU-h. No full run was started. What would make it feasible:
+   - **compute:** ~10³ cores for a few hours to two days (AFM used ≈ 4·10⁴
+     vCPU-h); the run is embarrassingly parallel per cube, and
+     `run_tree.py` is resumable;
+   - **a cheaper second check:** cvc5 at m = 9 costs ≈ 3.8·10⁻³ a² s, and
+     the diagonal certificates have 450–1,400 allocations. Checking
+     Lemma-M-reduced clauses is 2–6× faster (with an independent
+     re-implementation of Lemma M). A faster QF_LRA checker (e.g. Yices) or
+     proof objects (Farkas certificates checked exactly) were not tried;
+   - **new hand lemmas:** the one-shared-pair stratum S2 is 84 % of the
+     36,152 cubes (≈ 2·10³ CPU-h with re-checks). The diagonal S3 is the
+     Knuth-dominant term, so a structural lemma for the common-top
+     diagonal would pay most.
+   - **A bounded step that fits:** close **one** S2 branch completely at
+     m = 9 with both solvers, e.g. (2,2,6): 288 cubes, ≈ 10–30 CPU-h by
+     this sample. It would give ground truth for one stratum member and
+     calibrate the estimate. It is not a proof of anything beyond that
+     branch.
+
+   Earlier notes (second and third sessions), kept for the record: At m = 8 the whole run took
    2.6 CPU-h of CEGAR plus a Z3 re-solve (5.2 CPU-h wall-clock on 4 cores).
    From m = 7 to m = 8 the CEGAR cost grew by ≈ 90–120× (77 s → 6,800 s of
    successful regions).
@@ -593,7 +714,10 @@ m = 9 run is far beyond 30 CPU-h. Final numbers below once the sample ends.
      guess**, likely too low; AFM spent ≈ 4·10⁴ vCPU-h. A real projection
      needs a sample of cube and tri-sub costs at m = 9 with longer
      limits (e.g. 20 random cubes of (2,2,6) and (0,1,6), 1,200 s each;
-     about 2 h on 4 cores). Do that before committing to a full run. Also,
+     about 2 h on 4 cores). Do that before committing to a full run.
+     *(Done in the fourth session. Most one-shared-pair cubes in fact
+     close at cube level, in 1–327 s; the cube (2,0),(2,0),(6,0) above is a
+     slow one.)* Also,
      cvc5 re-checking is quadratic in the allocation count, so m = 9
      certificates of ≳ 800 allocations would cost ≳ 8 min each in cvc5.
 3. **m = 10, distinct-favourites subclass** (84 branches; AFM's hand lemma
