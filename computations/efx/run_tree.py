@@ -10,6 +10,10 @@ independently by `recheck_cvc5.py --tree`.
 
 Usage: python3 run_tree.py --m 8 --out RUN.jsonl --budget 1440 --workers 4 \\
            --timeouts 300,300,300 --c0 --lemma-m [--multi K] [--seed-points P]
+           [--only 0,0,2 ...] [--split-roots]
+
+--split-roots skips the root (branch-level) regions and starts from their
+cubes; used to re-close large branch-level certificates as small cubes.
 """
 import argparse
 import concurrent.futures as cf
@@ -29,6 +33,8 @@ p.add_argument("--workers", type=int, default=4)
 p.add_argument("--timeouts", default="300", help="per depth (max chain length 1, 2, ...); last value repeats")
 p.add_argument("--max-depth", type=int, default=4)
 p.add_argument("--only", nargs="*", default=None, help="restrict roots, e.g. 0,0,0")
+p.add_argument("--split-roots", action="store_true",
+               help="do not run the roots themselves: start from their children (cubes)")
 cb.add_opt_args(p)
 a = p.parse_args()
 touts = [float(x) for x in a.timeouts.split(",")]
@@ -50,6 +56,8 @@ roots = [tuple((b,) for b in br) for br in
 def todo(node):
     """Regions still to run below node (parents before children; breadth-first overall)."""
     st = recs.get(key(node))
+    if a.split_roots and depth(node) == 1:
+        st = "timeout"                     # treated as split, whatever its own record says
     if st is None:
         return [node]
     if st == "timeout" and depth(node) < a.max_depth:
