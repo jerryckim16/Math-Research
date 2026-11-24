@@ -948,16 +948,11 @@ def check_SC():
 
 
 # ============================================================ stress test of the statements
-def statement_stress(n=2000, seed=5, dps=40):
-    """Sanity test (not a proof): (K) and (M) at random points of [0,1]^2 in 40-digit mpmath, with extra points
-    near (x*, x*), near y = 1, near the strips and near the breakpoints.  Returns (min K - psi psi,
-    min [(M) gap]/(xy) on xy > 0)."""
-    import random
+def mp_model(dps=40):
+    """40-digit mpmath model of Jiang's construction (written from the paper, independent of jiang_checks)."""
     import mpmath as mp
     mp.mp.dps = dps
-    rnd = random.Random(seed)
     F_ = lambda fr: mp.mpf(Fr(fr).numerator) / Fr(fr).denominator
-    m, w0, w4 = F_(jc.M), F_(jc.W0), F_(jc.W4)
     A, B, z, sig, xs = F_(jc.A_), F_(jc.B_), F_(jc.Z_), F_(jc.SIG), F_(jc.XS)
     h = lambda w: mp.mpf(0) if w in (0, 1) else -w * mp.log(w) - (1 - w) * mp.log1p(-w)
     hp = lambda w: mp.log((1 - w) / w)
@@ -970,6 +965,18 @@ def statement_stress(n=2000, seed=5, dps=40):
                                            (1 - (w - A) / (B - A)) * phi(w) + (w - A) / (B - A) * s(w))
     a = lambda w: 1 if w <= 0.5 else (mp.sqrt((1 - 2 * w * w) / (2 * w * (1 - w))) if w < 1 / mp.sqrt(2) else 0)
     r = lambda X, Y: X * Y + a(X) * a(Y) * (min(X, Y) - X * Y)
+    return mp, dict(m=F_(jc.M), w0=F_(jc.W0), w4=F_(jc.W4), A=A, B=B, z=z, xs=xs, h=h, psi=psi, r=r)
+
+
+def statement_stress(n=2000, seed=5, dps=40):
+    """Sanity test (not a proof): (K) and (M) at random points of [0,1]^2 in 40-digit mpmath, with extra points
+    near (x*, x*), near y = 1, near the strips and near the breakpoints.  Returns (min K - psi psi,
+    min [(M) gap]/(xy) on xy > 0)."""
+    import random
+    mp, md = mp_model(dps)
+    rnd = random.Random(seed)
+    m, w0, w4, A, B, z, xs = (md[k] for k in ("m", "w0", "w4", "A", "B", "z", "xs"))
+    h, psi, r = md["h"], md["psi"], md["r"]
     mK, mM = mp.inf, mp.inf
     for i in range(n):
         mode = rnd.random()
@@ -990,6 +997,133 @@ def statement_stress(n=2000, seed=5, dps=40):
     return float(mK), float(mM)
 
 
+def reduction_instance(fam, n, m_override=None, dps=30):
+    """Exact-law evaluation (mpmath) of the two couplings of Prop. 'Entropy reduction' on the uniform law
+    of a finite family `fam` (list of distinct bitmasks over n coordinates; bit i = 1 means i in the set;
+    X_i = 0 means i not in the set).  Shared-uniform rule: averaging the fresh U_i gives the pair kernel
+    P(00) = r(S,T), P(0.) = S, P(.0) = T at each coordinate (R.1), so the joint law is a finite sum.
+    Returns (lhs, rhs, per-coordinate minima, p, H(Z0), H(Z4), ln N) with
+      lhs = w0 H(Z0) + w4 H(Z4),  rhs = (1-p)/m H(X),  p = max_i p_i,
+      per-coordinate: min_i [H((Z0)_i | (Z0)_<i) - E_{PxP} h(ST)], min_i [H((Z4)_i|(Z4)_<i) - E K(S,T)],
+                      min_i [E K(S,T) - (E_{P_i} psi)^2]."""
+    mp, md = mp_model(dps)
+    h, psi, r = md["h"], md["psi"], md["r"]
+    m = md["m"] if m_override is None else m_override
+    w0, w4 = md["w0"], md["w4"]
+    N = len(fam)
+    bit = lambda A_, i: (A_ >> i) & 1
+    pref = lambda A_, i: A_ & ((1 << i) - 1)
+
+    def ent(dist):
+        return -mp.fsum(pv * mp.log(pv) for pv in dist.values() if pv > 0)
+
+    def cond_ent_coord(law):
+        """sum_i H(Z_i | Z_<i) for a law on bitmasks, returned per coordinate."""
+        out = []
+        for i in range(n):
+            joint, marg = {}, {}
+            for zz, pv in law.items():
+                k1, k0 = pref(zz, i + 1), pref(zz, i)
+                joint[k1] = joint.get(k1, 0) + pv
+                marg[k0] = marg.get(k0, 0) + pv
+            out.append(ent(joint) - ent(marg))
+        return out
+    # native conditional zero-probabilities x_i(alpha)
+    xi_ = {}
+    for i in range(n):
+        cnt = {}
+        for A_ in fam:
+            c0, c1 = cnt.get(pref(A_, i), (0, 0))
+            cnt[pref(A_, i)] = (c0 + (1 - bit(A_, i)), c1 + bit(A_, i))
+        for k, (c0, c1) in cnt.items():
+            xi_[(i, k)] = mp.mpf(c0) / (c0 + c1)
+    w = mp.mpf(1) / N
+    HX = mp.log(N)
+    p_i = [mp.mpf(sum(bit(A_, i) for A_ in fam)) / N for i in range(n)]
+    p = max(p_i)
+    # independent rule
+    Z0 = {}
+    for A_ in fam:
+        for B_ in fam:
+            Z0[A_ | B_] = Z0.get(A_ | B_, 0) + w * w
+    # shared-uniform rule: pair process with the averaged kernel
+    pairs = {(0, 0): mp.mpf(1)}
+    tiny = mp.mpf(10) ** (-dps + 8)
+    EK, Epsi2, Eh = [], [], []
+    for i in range(n):
+        new, ek, eh = {}, mp.mpf(0), mp.mpf(0)
+        for (al_, be_), pv in pairs.items():
+            S, T = xi_[(i, al_)], xi_[(i, be_)]
+            rr = r(S, T)
+            ek += pv * h(rr)
+            for bx, by, q_ in ((0, 0, rr), (0, 1, S - rr), (1, 0, T - rr), (1, 1, 1 - S - T + rr)):
+                assert q_ > -tiny, q_                    # r in [max(0, S+T-1), min(S,T)] (R.2)
+                if q_ > tiny:                            # drop rounding-level phantom transitions
+                    key = (al_ | (bx << i), be_ | (by << i))
+                    new[key] = new.get(key, 0) + pv * q_
+        # E_{P_i} psi and E_{P x P} h(ST): P_i = law of x_i(X_<i) under the uniform family law
+        Pi = {}
+        for A_ in fam:
+            Pi[xi_[(i, pref(A_, i))]] = Pi.get(xi_[(i, pref(A_, i))], 0) + w
+        Epsi2.append(mp.fsum(pv * psi(xx) for xx, pv in Pi.items()) ** 2)
+        Eh.append(mp.fsum(pa * pb * h(xa * xb) for xa, pa in Pi.items() for xb, pb in Pi.items()))
+        EK.append(ek)
+        pairs = new
+    Z4 = {}
+    for (al_, be_), pv in pairs.items():
+        Z4[al_ | be_] = Z4.get(al_ | be_, 0) + pv
+    # the marginal of each coordinate of the shared rule is the native law (checked)
+    for side in (0, 1):
+        marg = {}
+        for k, pv in pairs.items():
+            marg[k[side]] = marg.get(k[side], 0) + pv
+        assert all(abs(marg.get(A_, 0) - w) < mp.mpf(10) ** (-dps + 10) for A_ in fam) and len(marg) == N
+    c0, c4 = cond_ent_coord(Z0), cond_ent_coord(Z4)
+    H0, H4 = mp.fsum(c0), mp.fsum(c4)
+    lhs = w0 * H0 + w4 * H4
+    rhs = (1 - p) / m * HX
+    per = (min(c0[i] - Eh[i] for i in range(n)), min(c4[i] - EK[i] for i in range(n)),
+           min(EK[i] - Epsi2[i] for i in range(n)))
+    return lhs, rhs, per, p, H0, H4, HX
+
+
+def random_families(count, seed=3, union_closed=False):
+    import random
+    rnd = random.Random(seed)
+    out = []
+    while len(out) < count:
+        n = rnd.randint(1, 4)
+        k = rnd.randint(1, min(8, 2**n))
+        fam = set(rnd.sample(range(2**n), k))
+        if union_closed:
+            fam.add(0)
+            changed = True
+            while changed:
+                changed = False
+                for A_ in list(fam):
+                    for B_ in list(fam):
+                        if A_ | B_ not in fam:
+                            fam.add(A_ | B_)
+                            changed = True
+        if len(fam) >= 2:
+            out.append((sorted(fam), n))
+    return out
+
+
+@claim("R.x", "sanity test (not a proof) of the READ-ONLY probability layer of the reduction: on 150 random families "
+       "(n <= 4; 75 arbitrary, 75 union-closed) the exact laws of both couplings satisfy, per coordinate, "
+       "H((Z0)_i|.) >= E h(ST), H((Z4)_i|.) >= E K(S,T) >= (E psi)^2, the marginals of the shared rule are "
+       "uniform on F, w0 H(Z0) + w4 H(Z4) >= (1-p)/m H(X), and for union-closed F: H(Z0), H(Z4) <= ln N, p >= 1-m",
+       "numerical (mpmath, exact finite laws)")
+def check_reduction_instances():
+    for uc in (False, True):
+        for fam, n in random_families(75, seed=3 + uc, union_closed=uc):
+            lhs, rhs, per, p, H0, H4, HX = reduction_instance(fam, n)
+            assert lhs >= rhs - 1e-25 and min(per) >= -1e-25, (fam, n, lhs, rhs, per)
+            if uc:
+                assert H0 <= HX + 1e-25 and H4 <= HX + 1e-25 and p >= 1 - float(jc.M)
+
+
 @claim("x", "sanity test (not a proof) of the STATEMENTS (K) and (M) at 2000 random points each (40-digit mpmath; "
        "extra points near (x*,x*), y -> 1, x -> 0 and the breakpoints)", "numerical (mpmath)")
 def check_stress():
@@ -1006,7 +1140,7 @@ ALL = [check_R1, check_R2, check_R3, check_R4,
        check_T1,
        check_S1, check_S2, check_S3, check_S4, check_S5, check_S6,
        check_M1, check_M2, check_M3, check_M4, check_M5, check_M6, check_M7, check_M8, check_M9,
-       check_SC, check_stress]
+       check_SC, check_stress, check_reduction_instances]
 
 
 def run_all(verbose=True, only=None):

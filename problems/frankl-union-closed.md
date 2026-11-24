@@ -869,7 +869,7 @@ arXiv:2609.08291 v1 LaTeX (`frankl_038288525_proof.tex`), §§2–7 and App. A
 
   Sturm sequences were not needed: no polynomial sign condition comes up.
 - **Code.** `computations/frankl/analytic_glue_jiang.py`, output in
-  `results/analytic_glue_jiang.txt`: 30 claims, 5 s. Test:
+  `results/analytic_glue_jiang.txt`: 31 claims, 5 s. Test:
   `test_frankl.py::test_analytic_glue_jiang`. The test runs all claims plus
   negative controls:
   - sympy rejects two false identities: the AND-grouping identity with
@@ -888,6 +888,8 @@ arXiv:2609.08291 v1 LaTeX (`frankl_038288525_proof.tex`), §§2–7 and App. A
     T = 1/10 in the small-t bracket, 8 in place of 16 at large t, and
     σ raised by 1% in s(A) − φ(A). interval.py also certifies the
     T = 1/10 bracket negative.
+  - The reduction-instance test (R.x below) shows that the family
+    {∅, {1}} violates the chain at m = 0.55.
 
 #### Reduction (Prop. "Entropy reduction", §3)
 
@@ -910,6 +912,18 @@ arXiv:2609.08291 v1 LaTeX (`frankl_038288525_proof.tex`), §§2–7 and App. A
   the shared history. These are probability, not computation. They are the
   same kind of step as Approach 6's measure-theory layer, and simpler,
   because everything here is finite.
+- **R.x (numerical sanity test of that read-only layer; not a proof).** Since
+  U_i is fresh, averaging it gives a finite pair kernel at each coordinate:
+  P(00) = r(S,T), P(0·) = S, P(·0) = T. So the exact laws of both couplings
+  are finite sums.
+  - These laws were computed in 30-digit mpmath for 150 random families with
+    n ≤ 4 and at most 8 sets (75 arbitrary, 75 union-closed).
+  - Per coordinate they satisfy H((Z₀)ᵢ|·) ≥ E h(ST) and
+    H((Z₄)ᵢ|·) ≥ E K(S,T) ≥ (E ψ)².
+  - Both marginals of the shared rule are uniform on F.
+  - w₀H(Z₀) + w₄H(Z₄) ≥ (1−p)H(X)/m. The minimum slack, over families
+    with p < 1, is 0.037·ln N.
+  - For union-closed F, H(Z₀), H(Z₄) ≤ ln N and p ≥ 1 − m.
 
 #### Ceiling (Prop. "Limitation", §4; not on the proof path of the bound)
 
@@ -1049,7 +1063,7 @@ arXiv:2609.08291 v1 LaTeX (`frankl_038288525_proof.tex`), §§2–7 and App. A
 | --- | --- | --- |
 | Reduction: E_U Q = x, E QQ = r, Q ∈ [0,1], r range | sympy-exact + z3 | machine-checked |
 | Reduction: variance step, integration of (M), assembly to p ≥ 1−m | sympy-exact (finite form) + z3 | machine-checked |
-| Reduction: chain rule, conditioning, max entropy, law of the shared-uniform samples, conditional independence | — | read only |
+| Reduction: chain rule, conditioning, max entropy, law of the shared-uniform samples, conditional independence | exact finite laws on 150 random families (numerical sanity test) | read only; instances consistent |
 | Ceiling (not used by the bound): f′, f″, f‴, f(q*), (E), (C) | sympy-exact + z3 | machine-checked (two log bounds by hand) |
 | Definitions: order of parameters, continuity of a, D, ψ; E′ > 0 | exact + sympy + z3 (+ interval/Arb) | machine-checked (MVT by hand) |
 | Lemma "geometric" (both parts) | sympy-exact + z3 (+ interval cross-check) | machine-checked (MVT, midpoint concavity by hand) |
@@ -1090,7 +1104,7 @@ Nothing was Lean-verified.
 | Costa–Sadhu Thm 1.2 analytic glue: Lemmas 4.1, 4.4, 6.1 (case analysis), W₀ increasing, Lemma 6.2 Cases 1–3 + residual region, Prop. 6.3 arithmetic; Case 1 margin c₁ ≥ 2.89·10⁻⁶ and Case 3 scalar now exact | machine-checked (sympy-exact + Sturm + z3 + interval/Arb), up to listed standard hand steps (MVT, FTC/Tonelli, Taylor bounds, continuity); not Lean | `computations/frankl/analytic_glue.py`, `results/analytic_glue.txt` |
 | c_UC ≥ 0.3828852549667978 (Costa–Sadhu Thm 1.2) | proved in Costa–Sadhu (preprint); all computations re-certified here; analytic glue machine-checked here except the measure-theoretic integration (Prop. 6.3, Lemma 2.1) and Liu's Prop. 3 (read in Liu's own text; restatement faithful) | same + arXiv:2610.02295 |
 | Jiang's 12 scalar signs, bridge, kernel (K) on [1/16,15/16]², mixture (M) on [0.001,16]×[0,1] | certificate-checked independently (own interval code; 1,306 kernel + 4,357 mixture boxes) | `computations/frankl/jiang_checks.py`, `results/jiang.txt` |
-| Jiang analytic glue: reduction (finite forms + assembly), ceiling, Lemma "geometric", profile order, passing to (K), (and), strips, coordinate maps, bridge tail, change of variables, G facts, (Gsmall), (Gdeficit), (Ptail), small t (scalars now exact), large t, edge bounds, App. A derivative formulas; 12 scalars re-evaluated in Arb | machine-checked (sympy-exact + z3 with non-vacuity guard + interval/Arb), up to named hand steps (MVT, IVT, Jensen, concavity, Taylor bounds); probability layer read only; not Lean | `computations/frankl/analytic_glue_jiang.py`, `results/analytic_glue_jiang.txt` |
+| Jiang analytic glue: reduction (finite forms + assembly), ceiling, Lemma "geometric", profile order, passing to (K), (and), strips, coordinate maps, bridge tail, change of variables, G facts, (Gsmall), (Gdeficit), (Ptail), small t (scalars now exact), large t, edge bounds, App. A derivative formulas; 12 scalars re-evaluated in Arb | machine-checked (sympy-exact + z3 with non-vacuity guard + interval/Arb), up to named hand steps (MVT, IVT, Jensen, concavity, Taylor bounds); probability layer read only (sanity-tested on exact finite laws of 150 random families); not Lean | `computations/frankl/analytic_glue_jiang.py`, `results/analytic_glue_jiang.txt` |
 | c_UC ≥ 0.38288525 (Jiang) | proved in Jiang (preprint); all computations re-certified here; analytic glue machine-checked here except the probability layer of the reduction (read only) | same + arXiv:2609.08291 |
 
 ## Failed or closed routes (do not retry blindly)
