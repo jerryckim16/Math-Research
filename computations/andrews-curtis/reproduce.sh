@@ -20,4 +20,6 @@ done
 if [ "${AC_HEAVY:-0}" = 1 ]; then
   "$W/ac_search" 26 --junction $AK3 + $P1 + $P2 | tail -2   # 6,212,968 states (5431780 356836 424352), no meeting; 5.5 min
   "$W/ac_search" 27 --junction $AK3 + $P1 + $P2 | tail -2   # 13,504,944 states (10118636 851836 2534472), no meeting; 14 min, 3.0 GB
+  g++ -O2 -std=c++17 -o "$W/ac_compact" "$here/ac_search_compact.cpp"
+  "$W/ac_compact" 28 --maxstates 95000000 $AK3 + $P1 + $P2 | tail -2  # 47,544,780 states (36700896 2323596 8520288), no meeting; 18 min, 1.7 GB
 fi
