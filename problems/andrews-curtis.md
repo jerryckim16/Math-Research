@@ -7,7 +7,9 @@
 - **Theorem 6** (computer-assisted) is re-derived with our own implementation:
   - the exact bottleneck 19;
   - all exhaustive state counts at energy caps 25, 26 and 27, matching the paper exactly, including the 13,504,944 states behind the "≥ 27" lower bounds.
-- **New, beyond the paper:** the cap-28 exhaustion finishes (47,544,780 states, no meeting). So the GS bottleneck from either MS(2) representative to AK(3), and between them, is ≥ 28. This is graph-relative and not an AC-distance bound.
+- **New, beyond the paper:** the cap-28 and cap-29 exhaustions finish, with 47,544,780 and 88,628,824 states and no meeting.
+  - So the GS bottleneck from either MS(2) representative to AK(3), and between them, is **≥ 29** (the paper has ≥ 27).
+  - This is graph-relative and not an AC-distance bound.
 - AK(3) and the conjecture itself remain open.
 
 **Started:** 2026-11-24
@@ -131,6 +133,7 @@ Not checked: the §6 analysis of the Two-Hump classification table, the 214-pair
   - |det| of the abelianized exponent matrix is invariant under random move sequences;
   - 125 single-move corruptions of the five certificates are all rejected;
   - a wrong target and wrong named endpoints are rejected.
+- No code from the author's artifact was executed here: not `ac_verify.py`, `selftest_ac.py`, `ak_bottleneck.py` or `bn.cpp`. One attempt to run `ac_verify.py` as a cross-check was refused by the session's permission policy and was not pursued. All checks above use our own code only.
 - The four Two-Hump trivialization certificates in the artifact (`cert_u066`, `cert_twohump_u066`, `cert_u102`, `cert_twohump_u102`) also replay to ⟨x, y | x, y⟩ under our checker. This was a side check; it is not a claim of the paper's theorems.
 
 ### 2. Are P3 and P4 the presentations Shehper et al. meant? (checked; one pitfall)
@@ -143,14 +146,14 @@ Not checked: the §6 analysis of the Two-Hump classification table, the 214-pair
   - So P4 ≡ MS(3, yxyx⁻¹) and P3 ≡ MS(3, x⁻¹y⁻¹xy⁻¹) up to rotation and inversion, with the ± signs crossed. This is checked in `test_named_presentations`.
 - **Conclusion.** Theorems 3–4 do concern the two MS(3) presentations of the released benchmark. The "first public certificates" wording is the author's; we did not audit novelty.
 
-### 3. Our own search: rediscovery and Theorem 6 (worked so far)
+### 3. Our own search: rediscovery, Theorem 6, and its extension to caps 28–29 (worked)
 
 - **Search.** `ac_search.cpp` was written here.
   - It does a multi-source minimax search over pairs of cyclically reduced words, taken up to swap, inversion and rotation.
   - Edges: r_i ← cyclic_reduce(rot(r_i)·rot(r_j)^{±1}). With `--junction`, only products whose junction cancels are used. This is our reading of the GS-substitution graph.
   - States are settled in nondecreasing bottleneck. A state of total length ≥ cap is never entered.
 - **Path expansion.** `ac_path.py` turns a path of canonical states into elementary moves: rotations, a possible inversion, one mul, conjugations to cyclically reduce, and a final orbit bridge. `ac_check` then checks the result. So nothing in the search has to be trusted for positive claims.
-- **Pipeline check.** AK(2) → ⟨x, y | x, y⟩ found at bottleneck 13; the 34-move certificate passes. AK(3) and the trivial presentation do not meet below total length 14, consistent with Havas–Ramsay.
+- **Pipeline check.** AK(2) → ⟨x, y | x, y⟩ found at bottleneck 13; the 34-move certificate passes. As a negative control, AK(3) and the trivial presentation do not meet below total length 14.
 - **Rediscovery of Theorems 3–4.**
   - P3 → AK(3) and P4 → AK(3) are each found in under 1 s.
   - They expand to certificates of 149 and 45 elementary moves (peak total 29 and 33). `ac_check` accepts both, and they are saved in `certs_ours/`.
@@ -178,7 +181,12 @@ Not checked: the §6 analysis of the Two-Hump classification table, the 214-pair
   - Per source: 36,700,896 (AK(3)), 2,323,596 (P1), 8,520,288 (P2).
   - So **d_GS(P1, AK(3)), d_GS(P2, AK(3)) and d_GS(P1, P2) are all ≥ 28.**
   - This extends the paper's Theorem 6. The paper's cap-28 run stopped at its 40M budget while processing barrier 27, with partial counts 1,987,856 (P1) and 5,640,276 (P2), below our full counts as they must be.
-  - Caveat: at cap 28 this comes from one implementation. Our second engine needs about 10 GB here and was not run. The graph-relative scope noted below applies in full.
+- **Cap 29 (beyond the paper).** Same engine and sources, exclusive cap 29.
+  - **Result: 88,628,824 states settled, no meeting.** It took 2,028 s on one core at 3.05 GB peak RSS.
+  - Per source: 68,481,208 (AK(3)), 5,374,816 (P1), 14,772,800 (P2).
+  - So **d_GS(P1, AK(3)), d_GS(P2, AK(3)) and d_GS(P1, P2) are all ≥ 29.**
+  - In the same run, the levels below 28 again gave exactly the cap-28 counts (47,544,780; 36,700,896 / 2,323,596 / 8,520,288).
+- Caveat for caps 28 and 29: the result comes from one implementation. Our second engine (`ac_search.cpp`) needs about 10 GB at cap 28, so it was not run. The engine does match the paper exactly at caps 25–27. The graph-relative scope noted below applies in full.
 - **The full graph** (all rotations, not only cancelling junctions) is barely larger but about 20× slower in our implementation.
   - Cap 21: 41,306 states against 40,078 with `--junction`. Cap 23: 285,760 against 274,430. No meeting in either.
   - It was not pushed further.
@@ -206,11 +214,14 @@ Not checked: the §6 analysis of the Two-Hump classification table, the 214-pair
 | Sublevel count at exclusive cap 26: 6,212,968 (5,431,780 / 356,836 / 424,352), no meeting, so d_GS(P1, AK(3)), d_GS(P2, AK(3)), d_GS(P1, P2) ≥ 26 | computed; reproduces the paper's numbers exactly | `AC_HEAVY=1 reproduce.sh` |
 | Sublevel count at exclusive cap 27: 13,504,944 (10,118,636 / 851,836 / 2,534,472), no meeting, so d_GS(P1, AK(3)), d_GS(P2, AK(3)), d_GS(P1, P2) ≥ 27 (Thm 6) | computed (exhaustive, our implementation; relative to the graph); reproduces the paper's numbers exactly | same |
 | **New:** sublevel count at exclusive cap 28: 47,544,780 (36,700,896 / 2,323,596 / 8,520,288), no meeting, so d_GS(P1, AK(3)), d_GS(P2, AK(3)), d_GS(P1, P2) ≥ 28 | computed (exhaustive; one implementation, which matches the paper exactly at caps 25–27; relative to the graph) | `ac_search_compact.cpp` |
+| **New:** sublevel count at exclusive cap 29: 88,628,824 (68,481,208 / 5,374,816 / 14,772,800), no meeting, so d_GS(P1, AK(3)), d_GS(P2, AK(3)), d_GS(P1, P2) ≥ 29 | computed (exhaustive; one implementation; relative to the graph) | `ac_search_compact.cpp` |
 | AK(3) AC-trivial? Andrews–Curtis conjecture | open | — |
 
 ## Next steps
 
 - **Next concrete step:** a bounded attack on the open edges, P1 or P2 → AK(3), the two remaining uncertified claims of Shehper et al.
-  - Cap 29 with the compact engine is under way (budget 190M states, about 5.8 GB).
+  - Cap 30 with the compact engine: estimated at about 165M states (growth ×1.86 from cap 28 to 29), about 5 GB with `--maxstates 190000000`, and about 70 min.
+  - A meeting at bottleneck 29 would expand, through `ac_path.py`, to a new certificate for one of the two uncertified claims of Shehper et al.
+  - Exhaustion would give ≥ 30.
   - Alternatively, try the non-junction edges, which our search supports and the paper's graph excludes.
 - Formal check: port `ac_check` to Lean (word reduction plus move replay by `decide`) to turn the certificate checks into Lean-verified statements.
