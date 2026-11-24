@@ -138,6 +138,10 @@ python3 -I "$here/build_kravatskiy33.py" "$K/krav33_witness.npz" "$work/neg/k33_
 if "$CHK" "$work/neg/k33_msb.i8" 33 > "$work/neg/k33_msb.txt"; then echo "NEGATIVE CONTROL k33 msb WAS ACCEPTED"; exit 1; fi
 python3 "$here/perturb.py" "$K/krav32.i8" 32 dup "$work/neg/k32_dup.i8"
 if "$CHK" "$work/neg/k32_dup.i8" 32 > "$work/neg/k32_dup.txt"; then echo "NEGATIVE CONTROL k32 dup WAS ACCEPTED"; exit 1; fi
+# relation to Lin's 32D/33D (bookkeeping; L32, L33 from section 4)
+for d in 32 33; do
+  python3 -I "$here/compare_rows.py" "$K/krav$d.i8" "LIN$d:$L32:$L33" "$d" --mirror-lin-octads
+done
 
 # 8. 11D: 604 points from the EinsteinArena appendix (arXiv:2606.10402v2), our build
 python3 -I "$here/build_einstein11.py" "$work/small/e11"

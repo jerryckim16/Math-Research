@@ -228,7 +228,9 @@ def interval_decide(P, A, Bv, idx_fn):
         pos = P[k] >= 0
         lo = lo + np.where(pos, P[k] * r[k], P[k] * (r[k] + 1))
         hi = hi + np.where(pos, P[k] * (r[k] + 1), P[k] * r[k])
-    tlo = np.array([math.isqrt(A * int(b) << (2 * S - 2)) for b in Bv], dtype=object)
+    # floor(sqrt(A B) 2^S / 2), computed once per distinct partner norm B
+    ub, inv = np.unique(np.asarray(Bv, dtype=object), return_inverse=True)
+    tlo = np.array([math.isqrt(A * int(b) << (2 * S - 2)) for b in ub], dtype=object)[inv]
     if not obj:
         tlo = tlo.astype(np.int64)
     sure = (hi <= 0) | (hi < tlo)    # strict: exact contacts go to exact_interval
