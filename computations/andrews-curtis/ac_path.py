@@ -17,6 +17,7 @@ import json
 import sys
 
 import ac_check as A
+import ac_graph as G
 
 L2I = {"x": 1, "X": -1, "y": 2, "Y": -2}
 
@@ -91,43 +92,48 @@ def inverse_moves(state, moves):
     return [m for b in reversed(blocks) for m in b]
 
 
-def step_moves(state, target_key):
-    """Moves from `state` to a state with key target_key along one edge used
-    forwards, or else backwards; returns (moves, new_state, direction)."""
-    mv, s = forward_step_moves(state, target_key)
-    if mv is not None:
-        return mv, s, "fwd"
+def backward_step_moves(state, target_key):
+    """Moves from `state` to a representative of target_key, for an edge
+    target -> state used backwards: the forward step from the target is found
+    and inverted move by move, after an orbit bridge to its end."""
     trep = tuple(w(t) for t in target_key)      # a representative of the target
     mv, s = forward_step_moves(trep, canon_key(state))
     if mv is None:
-        return None, None, None
+        return None, None
     br = A.bridge(state, s)                      # state -> s (same orbit)
     assert br is not None
     back = br + inverse_moves(trep, mv)
     s2 = A.replay(state, back)[0]
     assert s2 == trep, "backward step did not return to the target"
-    return back, s2, "back"
+    return back, s2
 
 
 def main(out_path, start, end, json_out):
     lines = open(out_path).read().split("\n")
     p = lines[lines.index("PATH") + 1: lines.index("END")]
+    gk = [G.key(*(G.cycred(G.parse(t)) for t in l.split("|"))) for l in p]   # GS-graph keys
     keys = [canon_key(tuple(w(t) for t in l.split("|"))) for l in p]
     S = tuple(w(t) for t in start.split("/"))
     E = tuple(w(t) for t in end.split("/"))
     if keys[0] != canon_key(S):
-        keys.reverse()
+        keys.reverse(); gk.reverse()
     assert keys[0] == canon_key(S), "path does not start at START"
     assert keys[-1] == canon_key(E), "path does not end at END"
     state = S
     moves = []
     nback = 0
-    for k in keys[1:]:
-        mv, state, d = step_moves(state, k)
+    for a, b, k in zip(gk, gk[1:], keys[1:]):
+        # classify the step in the GS graph (Python reference, ac_graph)
+        if b in G.forward(a, 10 ** 6):
+            mv, state = forward_step_moves(state, k)
+        elif a in G.forward(b, 10 ** 6):
+            mv, state = backward_step_moves(state, k)
+            nback += 1
+        else:
+            raise AssertionError(f"not an edge of the GS graph: {p}")
         assert mv is not None, f"no single edge to {k}"
-        nback += d == "back"
         moves += mv
-    print(f"path: {len(keys) - 1} edges, {nback} used backwards")
+    print(f"path: {len(keys) - 1} GS edges, {nback} used backwards")
     br = A.bridge(state, E)
     assert br is not None
     moves += br
