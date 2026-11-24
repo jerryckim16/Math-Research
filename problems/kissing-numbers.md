@@ -1,11 +1,11 @@
-# Kissing numbers: 2026 lower bounds in dimensions 32–39
+# Kissing numbers: 2026 lower bounds in dimensions 25, 27 and 32–39
 
 **Area:** discrete geometry / spherical codes
 **Status:** in progress. We are checking two recent, unrefereed, computer-assisted lower-bound claims independently, by an exact pairwise check of every point pair:
-- S. Yang et al. ("Qiushi Engine", an autonomous multi-agent AI system), arXiv:2609.35051v1 (28 Sep 2026): new bounds in 19 dimensions. Scope here: dims 32–39 and 43 (all done), from the authors' complete integer exports. Their own release notes say the exports were **not** checked pair by pair.
+- S. Yang et al. ("Qiushi Engine", an autonomous multi-agent AI system), arXiv:2609.35051v1 (28 Sep 2026): new bounds in 19 dimensions. Scope here: dims 32–39 and 43 (all done), from the authors' complete integer exports. Their own release notes say the exports were **not** checked pair by pair. Also dims 25 and 27 (done), which have no complete export: we rebuilt them from the repository data with our own code.
 - Q. Lin, arXiv:2611.03682v1 (22 Oct 2026): larger bounds in dims 32–35 and 37–39. Scope here: all seven configurations, rebuilt from his certificate files with our own builder and checked pair by pair (all seven done).
 
-Results so far: see §Results. No violation was found in any of the 16 configurations checked (Qiushi 32–39 and 43, Lin 32–35 and 37–39). The exact kissing numbers in these dimensions remain open; these are lower bounds only.
+Results so far: see §Results. No violation was found in any of the 18 configurations checked (Qiushi 25, 27, 32–39 and 43; Lin 32–35 and 37–39). The exact kissing numbers in these dimensions remain open; these are lower bounds only.
 
 **Started:** 2026-11-24
 **ProofAtlas:** rank 98, "Exact Kissing Numbers in Higher Dimensions", `open_with_solved_subcases` (Top-500 edition 2026-11-12). Its status note (reviewed 12 Nov 2026) cites only Salmon's arXiv:2610.21263 (asymptotics of the Delsarte bound) and the open 40 ≤ τ₅ ≤ 44 gap, and says: "no local proof audit, certificate replay, Lean execution or refereeing confirmation." Its only kissing workspace, "Five-dimensional kissing number" (status checked 26 Aug 2026), cites Cohn–Rajagopal (2026) and Szöllősi (2023). Neither page mentions arXiv:2609.35051 or arXiv:2611.03682, so ProofAtlas has not checked either claim.
@@ -48,7 +48,14 @@ Claims checked (`research/results.md` of the repository; abstract of the paper):
 
 Full hashes are pinned in `computations/kissing/fetch_qiushi.py`. They equal the sha256 values in the authors' release JSON (the 38D JSON lists none). The 38D export embeds ℝ³⁸ = ℝ²⁴ ⊕ ℝ¹⁴ isometrically into ℝ⁵² as (x, y/√2, y/√2), which keeps the 1932 "rotated axis" rows integral at the cost of entries up to 3.7·10¹⁷.
 
-Not checked here: dims 25, 27 (no complete export; the vectors must be built by the authors' code), 45 (a 7.4M-point export exists; see Next steps). The 43D export (release `section-vectors-2026-10-11`, 2,553,792 × 48 int8, raw sha256 101491f3…bf4bd, which equals the authors' `section43-verification.json`, also marked `pairwise_inner_products_checked: false`) is checked here too and 49–55 (≈5.2·10⁷ points each; brute force is out of reach).
+**Dims 25 and 27** (checked here, §Approaches 2). They have no complete export, so the configurations are defined by repository data plus the paper's construction text. We fetch the six data files from the repository at commit 39911e4b and pin them by sha256 in `fetch_qiushi.py --with-25-27`. These hashes equal those in the authors' `constructions/d25/verification.json` and `constructions/d27/verification.json`. The files are `d25/baseline-heads.json` (b6b1dff1…15d6), `d25/repair-points.json` (daeabf4a…3677) and `d27/data/heads27_{Y,side,layer2_u,layer2_line}.npy` (e137a6e3…4bd1, b0e1457e…9fb2, 7d7a4bcd…ca2, f7b01851…7fb95). The previous records, taken from the paper's own Table 1 and **not re-derived here**, are 197,579 for d = 25 (credited there to A. Kravatskiy's KissingNumbers repository, revision cf14c5e) and 201,566 for d = 27 (credited to B. Lindow, KissingNumbers pull request no. 1, revision 277c2970). Each claim is +1.
+
+| n | claimed τ_n ≥ | previous (paper's Table 1) | construction (paper §motion, §"two-layer configuration") |
+|---:|---:|---:|---|
+| 25 | 197,580 | 197,579 | 197579 − 552 − 2 + 552 + 2 + 1: move the 552 retained shell points w with w·g = 24 to (r + a n, b), add Q = (√3 n, −1), replace two caps by 2k/√1007176 and 2ℓ/√10209 |
+| 27 | 201,567 | 201,566 | 196560 − 2090 − 311 + 3·2258 + 2·311 + 12: first-layer caps (y/3, 4v/√3), second-layer caps (√3u/2, ±√8 e_ℓ), 12 pure tails (0, 4Rv) |
+
+Not checked here: dim 45 (a 7.4M-point export exists; see Next steps). The 43D export (release `section-vectors-2026-10-11`, 2,553,792 × 48 int8, raw sha256 101491f3…bf4bd, which equals the authors' `section43-verification.json`, also marked `pairwise_inner_products_checked: false`) is checked here too and 49–55 (≈5.2·10⁷ points each; brute force is out of reach).
 
 **Source 2: Lin.** Q. Lin, *New lower bounds for kissing numbers in dimensions 32–35 and 37–39*, arXiv:2611.03682v1 (22 Oct 2026), unrefereed. Data: Zenodo 10.5281/zenodo.23552484 (dim 32, v1.1.0, archive sha256 683fc500…ab659) and 10.5281/zenodo.23554809 (dims 33–39, v1.0.0, archive sha256 1a1368fe…f21f5). The per-file sha256s are pinned in `computations/kissing/fetch_lin.py`. Construction: Edel–Rains–Sloane three layers (dense code layer, ±2 on weight-8 supports, ±4e_i ± 4e_j) with new constant-weight codes A(n,8,8). In dim 38 it is Kravatskiy's 591,612-point configuration plus 6,855 antipodal pairs of norm-48 Leech vectors on the empty equator.
 
@@ -89,6 +96,27 @@ Lin also lists Qiushi's 32, 35, 37, 38, 39 values as the previous records. For 3
   - On real data, Qiushi's 32D file with row 0 duplicated, or replaced by the sum of itself and a 60° neighbour, must fail (`perturb.py`).
 - **Outcome:** see §Results.
 
+### 2. Qiushi 25D and 27D: rebuild from repository data, exact check over Q(√2, √3) (worked)
+
+- **Rebuild** (`build_qiushi2527.py`, our own code). It follows the paper's construction text and reads only the six pinned data files; none of the authors' code is run. The Leech shell is our own (`known.py`, the same Golay generator polynomial as the authors'; a coordinate-convention mismatch would show up as owners missing from the shell). The builder re-derives and asserts the structural facts the counts depend on.
+  - 25D: all 1,016 head owners lie in our shell and are distinct. The layer {w : w·g = 24} has exactly 552 points, and it equals {u + g : u·g = −24}, whose members u are all owners.
+  - 27D: each first-layer head has at most one shell vector with y·z > 48, giving 2,090 distinct owners. The 311 second-layer owners lie in the shell and are disjoint from the 2,090.
+  - The point counts come out as 197,580 and 201,567, equal to the claims.
+- **Coordinates are not integral.** 25D needs √2, √3, √6 (the moved block and Q's plane) and 44 rational heads with denominators up to about 3.5·10¹⁸. 27D needs √2 and √3. Each point is therefore stored, up to a positive factor (which does not change angles), as x = C₀ + C₁√2 + C₂√3 + C₃√6 with integer vectors C_k. The configuration splits into two parts:
+  - a pure-integer "bulk" (int8, norm ≤ 32767): 25D has 194,992 unmoved shell rows plus P₀ ∝ (−g, 0), the poles, Q ∝ (g, −4) and R₋ ∝ ℓ, 194,997 rows in all; 27D has the 194,159 remaining shell rows;
+  - "field" rows: 2,583 in 25D and 7,408 in 27D.
+- **Checks.**
+  - Bulk × bulk pairs go through the existing `kiss_check.c` and `kiss_check_np.py`.
+  - Every pair involving a field row goes through the new `kiss_check_field.py`. It computes every squared norm exactly and requires it to be a positive integer. It has two independent decision modes:
+    - *float*: a float64 cosine screen with margin 10⁻⁹, with a rigorous rounding bound below 10⁻¹¹ (conditioning checked per row). Undecided pairs get an exact sign of a + b√2 + c√3 + d√6 by repeated squaring in Python integers.
+    - *interval*: exact integer P₀…P₃ via float64 GEMM on 24-bit limbs, exact because every partial sum is below 2⁵³ (checked). Then come integer interval bounds at scale 2¹², refinement up to 2¹⁰²⁴, and an exact equality test for contacts.
+  - The checker asserts that it covered exactly n_T·n_S + C(n_T, 2) pairs, so bulk and field pairs together are all pairs.
+- **Validation** (`test_kissing.py` §5).
+  - E₈ with rows multiplied by √2, √3, √6 or 7·10¹⁸+1 passes with 6720 contacts in total.
+  - The 12 rotated cuboctahedron tails of the 27D construction pass with 24 contacts.
+  - Bad rows are caught.
+  - Both modes agree with a pure-Python exact reference.
+
 ## Results
 
 | Claim | Evidence level | Where |
@@ -111,6 +139,9 @@ Lin also lists Qiushi's 32, 35, 37, 38, 39 values as the previous records. For 3
 | **Lin 39D: 768,916 points, τ₃₉ ≥ 768,916**. All 295,615,523,070 pairs pass. Norm classes 39 (327,680 rows) and 32 (441,236 rows); max inner products 19/19, 16/17, 16/16; 323,661,000 contacts | certificate-checked | `kiss_check.c` |
 | **Qiushi 43D: 2,553,792 points, τ₄₃ ≥ 2,553,792**. All 3,260,925,512,736 pairs pass. Squared norm 576 throughout; max inner product 288 = threshold; 4,467,331,098 contacts. The rows (48 integer columns) span exactly 43 dimensions: the rank mod 2⁶¹−1 of a sample is 43, and 5 exact integer kernel vectors are orthogonal to every row | certificate-checked | `span_check.py` + `kiss_check.c` (3,971 s, 4 cores) |
 | Second implementation: `kiss_check_np.py` (float32 GEMM, a different code path) agrees exactly with the C checker on two full files. Qiushi 32D: 0 violations, max 16/16, the same 358,430,976 contacts (134 s, 4 processes). Lin 32D: 0 violations, max 16/16, the same 366,910,976 contacts (278 s, 3 processes, run alongside the 43D job) | certificate-checked (second implementation) | `kiss_check_np.py` |
+| **Qiushi 25D: 197,580 points, τ₂₅ ≥ 197,580** (rebuilt by `build_qiushi2527.py`). All 19,518,829,410 pairs pass. Bulk (194,997 integer rows): 19,011,817,506 pairs, 0 violations, 445,096,391 contacts, with `kiss_check.c` and `kiss_check_np.py` agreeing exactly. Field (2,583 rows in Q(√2,√3), including 86 rational caps with about 19-digit entries and R₊): 507,011,904 pairs, 0 violations, 978,414 exact contacts, identical in both modes of `kiss_check_field.py` | certificate-checked (exact, all pairs; built from pinned data by our own code) | `build_qiushi2527.py` + `kiss_check.c` / `kiss_check_np.py` + `kiss_check_field.py` |
+| **Qiushi 27D: 201,567 points, τ₂₇ ≥ 201,567** (rebuilt). All 20,314,526,961 pairs pass. Bulk (194,159 shell rows): 18,848,761,561 pairs, 0 violations, 441,324,134 contacts (C and numpy agree). Field (6,774 first-layer caps, 622 second-layer caps, 12 pure tails): 1,465,765,400 pairs, 0 violations, 2,815,546 exact contacts, identical in both modes | certificate-checked (exact, all pairs) | same |
+| Negative controls for 25D/27D, each rejected (float mode). `q25_extra`, adding (√3 n, +1), the mirror of Q: 553 violations. `q25_norepair`, keeping the two old caps instead of R₊ and R₋ (so the repair is needed): 9 violations. `q27_owner`, putting back the equatorial point of one second-layer owner: 2 violations. `q27_label`, moving owner 0 onto the line of owner 107 (u·u′ = 16): 8 violations | computed (exact) | `build_qiushi2527.py --variant` + `kiss_check_field.py` |
 | Real-data negative controls: Qiushi 32D with row 0 replaced by a copy of row 1 is rejected (1 violation, pair (0,1), max inner product 32). With row 0 replaced by row 0 + row 1 (a 60° neighbour) it is rejected with 1,047 violations | computed (exact) | `perturb.py` + `kiss_check.c` |
 
 Our pair counts match the counts in Lin's README: 6.85·10¹⁰, 7.64·10¹⁰, 8.62·10¹⁰, 1.25·10¹¹ and 2.96·10¹¹ for 33, 34, 35, 37 and 39D, and 1.83·10¹¹ for 38D.
@@ -119,10 +150,12 @@ Costs (wall time on 4 cores, `kiss_check.c`):
 - Qiushi: 32D 64 s, 33D 89 s, 34D 99 s, 35D 91 s, 36D 145 s, 37D 132 s, 38D norm-48 rows 402 s, 39D 353 s.
 - Lin: 32D 125 s, 33D 139 s, 34D 154 s, 35D 174 s, 37D 246 s, 38D norm-48 rows 426 s, 39D 680 s. Lin's dense layer has no zero coordinates, so our zero-skipping does not help.
 - 38D huge-row pairs: 186 s and 191 s on one core (`check_mixed.py`).
+- 25D/27D: build 13 s for both. Bulk `kiss_check.c` 26 s / 33 s, `kiss_check_np.py` 178 s (4 processes) / 86 s (2 processes). `kiss_check_field.py` float mode 14 s / 51 s, interval mode 206 s / 449 s (2 processes, run alongside other jobs).
 - Peak RAM < 1 GB.
 
 ## Next steps
 
-- Qiushi 25D and 27D are the most interesting remaining claims, since each is +1 over the previous record and a single bad point would sink it. They come with no complete export, so rebuild the vectors from the repository data (`constructions/d25`, `constructions/d27`) with our own code, then run `kiss_check.c`. Each is about 2·10¹⁰ pairs, so seconds once built.
+- Done 2026-11-24: Qiushi 25D and 27D rebuilt and checked (above). Our check is of the configuration as built from the pinned data and the paper's text. It does not confirm that the 197,579 and 201,566 inputs are the cited earlier records; we did not open the KissingNumbers repository.
+- Optional cross-check: export the authors' numerical 25D array with their `export.py` in a sandbox, and compare it with ours up to row order and scaling. Not done, because it means running downloaded code.
 - Qiushi 45D (7,380,090 points, 2.7·10¹³ pairs): about 9 h at the measured 43D rate (8.2·10⁸ pairs/s on 4 cores). That is feasible as a long background job, and using antipodality would halve it.
 - Kamenetsky's dims 49–61 (arXiv:2611.01906v1) and Qiushi's 49–55: ≈5.2·10⁷ points each. An exact check needs the structure (the P₄₈p shell is a lattice shell, so only the lifted layers need pairwise work).

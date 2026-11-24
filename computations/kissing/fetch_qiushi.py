@@ -7,10 +7,15 @@ https://github.com/Oxelra-AI/Qiushi-Engine-Kissing-Number-Research
 against the sha256 pinned below (which also equals the sha256 the authors
 publish in the release's configurationN.json) before it is decompressed.
 
-Usage: python3 -I fetch_qiushi.py OUTDIR [--with-43]
+Usage: python3 -I fetch_qiushi.py OUTDIR [--with-43] [--with-25-27]
 --with-43 also fetches the 43D export (release `section-vectors-2026-10-11`,
 2,553,792 x 48 int8, 55 MB compressed) and checks the sha256 of the raw
 file against the value in the authors' section43-verification.json.
+--with-25-27 also fetches the six repository data files from which
+build_qiushi2527.py rebuilds the 25D and 27D configurations (no complete
+export of those exists), from raw.githubusercontent.com at the pinned commit,
+into OUTDIR/src2527/. Their sha256 equal the values in the authors'
+constructions/d25/verification.json and constructions/d27/verification.json.
 Writes OUTDIR/configurationN.json, OUTDIR/configurationN.i8.gz (or .i64.gz)
 and the decompressed raw files OUTDIR/qiushiN.i8 (OUTDIR/qiushi38.i64).
 """
@@ -68,7 +73,32 @@ def fetch43(out):
     print(f"43 {GZ43[0]} sha256 OK (gz and raw) rows=2553792 cols=48 -> {raw}")
 
 
-def main(out, with43=False):
+COMMIT = "39911e4b38c01c4631e06b12a3e0b23a84e403f8"
+RAW = ("https://raw.githubusercontent.com/Oxelra-AI/Qiushi-Engine-Kissing-Number-Research/"
+       + COMMIT + "/constructions/")
+SRC2527 = [
+    ("d25/baseline-heads.json", "b6b1dff1172ca723595c19bc4daf49448f0e8d04d506033786a8e96afbf515d6"),
+    ("d25/repair-points.json", "daeabf4a2614779749bf9a5c30f55d502c830e45a88ef2b52fdbbc7f87703677"),
+    ("d27/data/heads27_Y.npy", "e137a6e3b11e6f70a0bc631b474f4ea340078f453893c56d5452513da5264bd1"),
+    ("d27/data/heads27_side.npy", "b0e1457e2793db1ddd2fcc23a9110f8f956757ee08e017fac99200cae5199fb2"),
+    ("d27/data/heads27_layer2_u.npy", "7d7a4bcd341d9104bad1dc17ac2f6e4daec71c0b2a9ab4b98e1766c12235bca2"),
+    ("d27/data/heads27_layer2_line.npy", "f7b018510118faeda6d4d73b28a86ca0c6162bbf0d88da1244262b2c39b95fb7"),
+]
+
+
+def fetch2527(out):
+    d = os.path.join(out, "src2527")
+    os.makedirs(d, exist_ok=True)
+    for rel, digest in SRC2527:
+        path = os.path.join(d, os.path.basename(rel))
+        if not os.path.exists(path) or sha256(path) != digest:
+            urllib.request.urlretrieve(RAW + rel, path)
+        if sha256(path) != digest:
+            raise SystemExit(f"{rel}: sha256 mismatch")
+        print(f"25/27 {rel} sha256 OK -> {path}")
+
+
+def main(out, with43=False, with2527=False):
     os.makedirs(out, exist_ok=True)
     for dim, name, digest, rows, cols, dt in FILES:
         gz = os.path.join(out, name)
@@ -91,7 +121,9 @@ def main(out, with43=False):
         print(f"{dim} {name} sha256 OK rows={rows} cols={cols} -> {raw}")
     if with43:
         fetch43(out)
+    if with2527:
+        fetch2527(out)
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], "--with-43" in sys.argv[2:])
+    main(sys.argv[1], "--with-43" in sys.argv[2:], "--with-25-27" in sys.argv[2:])
