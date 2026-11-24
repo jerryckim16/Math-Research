@@ -1,0 +1,18 @@
+{"corpus": "n4_m7_all84", "row": {"name": "base", "opts": {}, "wall": 121.2, "cegar_seconds": 347.2, "max_seconds": 45.3, "allocs": 7090, "iters": 7174, "status": {"unsat": 84}, "recheck_bad": []}}
+{"corpus": "n4_m7_all84", "row": {"name": "lemmaM", "opts": {"lemma_m": true}, "wall": 104.2, "cegar_seconds": 247.4, "max_seconds": 32.8, "allocs": 6585, "iters": 6669, "status": {"unsat": 84}, "recheck_bad": []}}
+{"corpus": "n4_m7_all84", "row": {"name": "c0", "opts": {"c0": true}, "wall": 213.1, "cegar_seconds": 581.3, "max_seconds": 64.4, "allocs": 7249, "iters": 7333, "status": {"unsat": 84}, "recheck_bad": []}}
+{"corpus": "n4_m7_all84", "row": {"name": "arith2", "opts": {"arith": 2}, "wall": 45.9, "cegar_seconds": 106.3, "max_seconds": 11.4, "allocs": 6489, "iters": 6573, "status": {"unsat": 84}, "recheck_bad": []}}
+{"corpus": "n4_m7_all84", "row": {"name": "multi8", "opts": {"multi": 8}, "wall": 134.5, "cegar_seconds": 366.9, "max_seconds": 42.1, "allocs": 6782, "iters": 6208, "status": {"unsat": 84}, "recheck_bad": []}}
+{"corpus": "n4_m7_all84", "row": {"name": "seed300", "opts": {"seed_points": 300}, "wall": 128.8, "cegar_seconds": 330.7, "max_seconds": 44.8, "allocs": 6524, "iters": 5860, "status": {"unsat": 84}, "recheck_bad": []}}
+{"corpus": "n4_m7_all84", "row": {"name": "a2M", "opts": {"arith": 2, "lemma_m": true}, "wall": 33.5, "cegar_seconds": 77.3, "max_seconds": 8.9, "allocs": 6727, "iters": 6811, "status": {"unsat": 84}, "recheck_bad": []}}
+{"corpus": "n4_m7_all84", "row": {"name": "a2Mseed", "opts": {"arith": 2, "lemma_m": true, "seed_points": 300}, "wall": 43.7, "cegar_seconds": 88.5, "max_seconds": 10.0, "allocs": 6306, "iters": 5642, "status": {"unsat": 84}, "recheck_bad": []}}
+{"corpus": "n4_m7_all84", "row": {"name": "a2Mc0", "opts": {"arith": 2, "lemma_m": true, "c0": true}, "wall": 67.4, "cegar_seconds": 133.0, "max_seconds": 18.9, "allocs": 6563, "iters": 6647, "status": {"unsat": 84}, "recheck_bad": []}}
+{"corpus": "n4_m7_all84", "row": {"name": "a2Mmulti", "opts": {"arith": 2, "lemma_m": true, "multi": 8}, "wall": 44.2, "cegar_seconds": 94.3, "max_seconds": 9.8, "allocs": 6399, "iters": 5981, "status": {"unsat": 84}, "recheck_bad": []}}
+{"corpus": "n4_m8_four_regions", "row": {"opts": {"arith": 2, "lemma_m": true}, "branch": [0, 3, 3], "status": "unsat", "s": 167.5, "iters": 856, "seeded": 0}}
+{"corpus": "n4_m8_four_regions", "row": {"opts": {"arith": 2, "lemma_m": true}, "branch": [6, 6, 6], "status": "timeout", "s": 300.0, "iters": 1163, "seeded": 0}}
+{"corpus": "n4_m8_four_regions", "row": {"opts": {"arith": 2, "lemma_m": true}, "branch": [[0, 1], [0, 1], [0, 4]], "status": "unsat", "s": 13.7, "iters": 342, "seeded": 0}}
+{"corpus": "n4_m8_four_regions", "row": {"opts": {"arith": 2, "lemma_m": true}, "branch": [[0, 1], [0, 1], [0, 1]], "status": "unsat", "s": 220.2, "iters": 1365, "seeded": 0}}
+{"corpus": "n4_m8_four_regions", "row": {"opts": {"arith": 2, "lemma_m": true, "c0": true}, "branch": [0, 3, 3], "status": "unsat", "s": 257.8, "iters": 810, "seeded": 0}}
+{"corpus": "n4_m8_four_regions", "row": {"opts": {"arith": 2, "lemma_m": true, "c0": true}, "branch": [6, 6, 6], "status": "timeout", "s": 300.0, "iters": 903, "seeded": 0}}
+{"corpus": "n4_m8_four_regions", "row": {"opts": {"arith": 2, "lemma_m": true, "c0": true}, "branch": [[0, 1], [0, 1], [0, 4]], "status": "unsat", "s": 18.1, "iters": 353, "seeded": 0}}
+{"corpus": "n4_m8_four_regions", "row": {"opts": {"arith": 2, "lemma_m": true, "c0": true}, "branch": [[0, 1], [0, 1], [0, 1]], "status": "unsat", "s": 222.0, "iters": 1401, "seeded": 0}}

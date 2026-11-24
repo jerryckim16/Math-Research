@@ -1,0 +1,17 @@
+n=4, m=8 refinement-tree run (run_tree.py --m 8 --timeouts 300 --arith 2 --lemma-m --workers 4), Z3 5.4.1, cvc5 1.4.2, 2026-11-24
+chunk 1: records by status: {'unsat': 64, 'timeout': 4} elapsed 1400s
+chunk 2: records by status: {'unsat': 405, 'timeout': 4} elapsed 1275s
+chunk 3: records by status: {'unsat': 728, 'timeout': 9} elapsed 1389s
+chunk 4: records by status: {'unsat': 979, 'timeout': 9} elapsed 600s
+records: 988 (979 unsat, 9 timeout); branch level: 111 unsat + 9 timeout [(0,0,0),(0,0,1),(k,k,k) k=1..7]; cube level: 868 unsat, 0 timeout
+Z3 full-clause from-scratch re-solve: 979/979 unsat
+tree coverage (recheck_cvc5.tree_coverage over Z3-verified records): 120/120 branches
+CEGAR seconds: 9532 total (2700 in the 9 branch-level timeouts); cubes median 0.9 s, mean 4.8 s, max 217.7 s; 167112 allocations, max 1364 per region
+COUNTEREXAMPLE_CANDIDATE flags in run log: 0
+cvc5 re-check (recheck_cvc5.py --tree --workers=4 --log, QF_LRA logic, smallest records first, 23 min x 4 workers):
+verdicts: Counter({'unsat': 722})
+records 979 cvc5 unsat 722 not unsat [] pending 257
+allocs in verified records 67526 max 222
+tree coverage with cvc5-verified records only: 50/120 branches; uncovered: the other 70 (all with a pending record somewhere below)
+Counter({'cube': 672, 'branch': 50})
+pending: 257 records (61 branch-level, 196 cubes), 99586 allocations, 223-1364 per record

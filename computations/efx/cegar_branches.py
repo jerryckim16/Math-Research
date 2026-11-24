@@ -46,15 +46,37 @@ def refine(chains, m):
 
 
 def one(args):
-    n, m, br, timeout = args
+    n, m, br, timeout = args[:4]
+    opts = dict(args[4]) if len(args) > 4 else {}
+    arith = opts.pop("arith", None)
+    if arith is not None:
+        opts["z3opts"] = {"smt.arith.solver": arith}
     br = [list(b) if isinstance(b, (tuple, list)) else b for b in br]
-    res = cegar.cegar(n, m, list(br), timeout)
+    st = {}
+    res = cegar.cegar(n, m, list(br), timeout, stats=st, **opts)
     out = {k: res[k] for k in res if k != "allocs"}
-    out.update({"n": n, "m": m, "branch": list(br), "num_allocs": len(res.get("allocs", []))})
+    out.update({"n": n, "m": m, "branch": list(br), "num_allocs": len(res.get("allocs", [])),
+                "c0": bool(opts.get("c0")), "opts": {**{k: v for k, v in opts.items() if k != "z3opts"},
+                                                     "arith": arith},
+                "seeded": st.get("seeded", 0)})
     if res["status"] == "unsat":
-        out["recheck_full_clauses"] = cegar.recheck(n, m, list(br), res["allocs"], timeout=timeout)
+        out["recheck_full_clauses"] = cegar.recheck(n, m, list(br), res["allocs"], timeout=timeout,
+                                                    c0=bool(opts.get("c0")))
         out["allocs"] = res["allocs"]
     return out
+
+
+def add_opt_args(p):
+    p.add_argument("--c0", action="store_true", help="Lemma C0': agent 0 has the max top-two sum")
+    p.add_argument("--lemma-m", action="store_true", help="AFM Lemma M items 2-3 deletions")
+    p.add_argument("--multi", type=int, default=0, help="extra random points per Z3 model")
+    p.add_argument("--seed-points", type=int, default=0, help="random region points seeded first")
+    p.add_argument("--arith", type=int, default=None, help="Z3 smt.arith.solver")
+
+
+def opts_of(a):
+    return {"c0": a.c0, "lemma_m": a.lemma_m, "multi": a.multi,
+            "seed_points": a.seed_points, "arith": a.arith}
 
 
 if __name__ == "__main__":
@@ -68,6 +90,7 @@ if __name__ == "__main__":
     p.add_argument("--refine", default=None,
                    help='JSON chains of a parent region, e.g. "[[0,1],[0,1],[0,1]]": run its children')
     p.add_argument("--out", required=True)
+    add_opt_args(p)
     a = p.parse_args()
     done = set()
     if os.path.exists(a.out):
@@ -84,7 +107,7 @@ if __name__ == "__main__":
     if a.refine:
         brs = refine(json.loads(a.refine), a.m)
     norm = lambda br: json.dumps([list(b) if isinstance(b, (tuple, list)) else b for b in br])
-    todo = [(a.n, a.m, br, a.timeout) for br in brs if norm(br) not in done]
+    todo = [(a.n, a.m, br, a.timeout, opts_of(a)) for br in brs if norm(br) not in done]
     print(len(todo), "regions to do", flush=True)
     with mp.Pool(a.workers) as pool, open(a.out, "a") as f:
         for r in pool.imap_unordered(one, todo):
