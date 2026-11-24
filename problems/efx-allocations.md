@@ -242,6 +242,126 @@ open-problem page was found by search but could not be fetched (host blocked).
   - At m = 10, even the "distinct favourites" branch (1,2,3) did not close in
     500 s (245 allocations).
 
+### 4a. Speed-ups for the CEGAR certifier (second session, 2026-11-24)
+
+Each option was added to `cegar.py` (off by default, so the old corpus is
+reproducible) and measured on the **whole m = 7 corpus** (84 branches, 4
+workers, 300 s timeout, Z3 5.4.1; time = CEGAR seconds summed over branches,
+excluding the re-checks). Every run closed 84/84 branches, and every branch
+re-solved unsat with full clauses. Raw summaries: `data/speedups_n4.jsonl`.
+
+| configuration | CEGAR s | Z3 calls | allocations | slowest branch |
+| --- | --- | --- | --- | --- |
+| baseline (re-measured; 491 s in the first session, with 5–6 processes) | 347 | 7,174 | 7,090 | 45.3 s |
+| + Lemma M items 2–3 (`--lemma-m`) | 247 | 6,669 | 6,585 | 32.8 s |
+| + Lemma C0′ (`--c0`) | 581 | 7,333 | 7,249 | 64.4 s |
+| + `smt.arith.solver=2` (`--arith 2`) | 106 | 6,573 | 6,489 | 11.4 s |
+| + 8 extra points per model (`--multi 8`) | 367 | 6,208 | 6,782 | 42.1 s |
+| + 300 seed points (`--seed-points 300`) | 331 | 5,860 | 6,524 | 44.8 s |
+| **arith 2 + Lemma M** (used for m = 8) | **77** | 6,811 | 6,727 | 8.9 s |
+| arith 2 + Lemma M + seed 300 | 89 | 5,642 | 6,306 | 10.0 s |
+| arith 2 + Lemma M + C0′ | 133 | 6,647 | 6,563 | 18.9 s |
+| arith 2 + Lemma M + multi 8 | 94 | 5,981 | 6,399 | 9.8 s |
+
+The same comparison on four hard m = 8 regions (300 s each; the old naive
+pipeline is from the first session's probe, 240 s timeout):
+
+| m = 8 region | old pipeline | arith 2 + M | arith 2 + M + C0′ |
+| --- | --- | --- | --- |
+| branch (0,3,3) | timeout (240 s) | unsat, 168 s | unsat, 258 s |
+| branch (6,6,6) | timeout (240 s) | timeout (300 s) | timeout (300 s) |
+| cube (0,1),(0,1),(0,4) | unsat, 188 s | unsat, 13.7 s | unsat, 18.1 s |
+| cube (0,1)³ | timeout (240 s); 1 of its tri-subs also timed out | **unsat, 220 s** | unsat, 222 s |
+
+What helped and what did not:
+
+- **`smt.arith.solver=2` (the solver AFM used): 3.3×.** The single largest
+  gain. It is only a Z3 option; certificates are unchanged in form.
+- **Lemma M items 2–3: 1.4× alone, and still 1.4× on top of arith 2**
+  (106 → 77 s). The clause is shorter; the certificate (the allocation
+  list) has the same meaning, and both re-checks use full clauses.
+- **Seeding and extra points per model: no gain** (−15 to −20 % Z3 calls,
+  but each call is slower with more clauses). The added points
+  (convex combinations of the Z3 model with random region points, uniform
+  and near-diagonal) were mostly already covered: the uncovered set is a
+  union of thin slivers along the boundaries of the allocations' cones, and
+  random points rarely hit it. Kept in the code (`--multi`, `--seed-points`),
+  not used.
+- **Lemma C0′ (agent sorting by top-two sum): a slow-down** (1.7× at m = 7,
+  1.0–1.5× at m = 8). It adds 3(m−1) inequalities per region and did not
+  reduce the number of Z3 calls, even on the diagonal branch (0,0,0)
+  (358 vs 355 at m = 7). AFM say C0 "does not reduce the number of cubes";
+  at our depths it does not pay. Kept (proof and test below), not used.
+- **MILP / LP back-end: not tried.** With ≈ 10 literals per allocation and
+  ≈ 10³ allocations the big-M relaxation is very weak, and the final unsat
+  proof would still need an exact solver. The Z3 gain above made it a low
+  priority.
+
+**Lemma M items 2–3 (as implemented in `cegar.reduced_disjuncts`).** Fix an
+envier i and the known order of i's goods (agent 0: the full sort; agent
+i ≥ 1: its chain p₀ ≥ p₁ ≥ … ≥ p_k ≥ every other good). Write T ⪯ U if there is
+an injective φ: T → U with v_i(x) ≤ v_i(φ(x)) known for all x; then
+v_i(T) ≤ v_i(U) on the region, since v ≥ 0. (2) If the trimmed target T =
+A_j∖g satisfies T ⪯ T′ = A_k∖h for another disjunct that is still present,
+the disjunct own < v_i(T) implies own < v_i(T′) and is deleted. Deletions
+are sequential, so every deleted disjunct implies one that is kept in the
+end. (3) If T ⪯ A_i (the own bundle), the disjunct is false on the region and
+is deleted. So on the region the reduced clause is equivalent to the full one.
+This matches AFM Lemma M. Brute-force test `test_lemma_m_equivalence`:
+reduced, old and full clauses have the same truth value at 600 exact points
+with many ties × 15 allocations. The certificates do not depend on it: both
+re-checks use full clauses.
+
+**Lemma C0′ (global form of AFM's Lemma C0).** Let T(w) be the sum of the two
+largest entries of a row w. Every instance is EFX-equivalent to one in which,
+in addition to the usual normalisations (rows sum to 1, agent 0 sorted,
+argmax branch b₁ ≤ b₂ ≤ b₃, deeper chains sorted among agents with equal
+chains), **agent 0 has the largest normalised top-two sum**:
+v₀(0) + v₀(1) ≥ v_i(x) + v_i(y) for all i ≥ 1 and all goods x ≠ y.
+
+*Proof.*
+1. Normalise each row; replace an all-zero row by any positive row. The
+   zero agent has no EFX constraint, so an EFX allocation of the new
+   instance is EFX for the old one.
+2. Pick an agent a* maximising T and rename it agent 0. Relabel the goods
+   so that its row is non-increasing. Then T(v₀) = v₀(0) + v₀(1).
+3. Choose argmax goods and sort agents 1..3 (and deeper chains within
+   classes of equal chains) exactly as without C0′.
+
+None of these steps changes the multiset of values of a row, so T(v_i) is
+unchanged and stays ≤ T(v₀). Renaming agents or goods and scaling rows are
+EFX-preserving bijections.
+
+The constraint is invariant under permuting agents 1..3, so the
+symmetry-sorted splits ("equal chains, non-decreasing next goods") stay
+sound with it. It is a single fixed set intersected with every region, so a
+whole run must use it everywhere or nowhere: this is the AFM "exclusivity
+hazard". `recheck_cvc5.py --tree` refuses records that disagree on the
+flag.
+
+Encoding: `cegar.py` uses the chain to shorten the constraint (pair
+(p₀, p₁) if the chain has length ≥ 2, else (p₀, g) for all g). The cvc5
+re-check writes all pairs x < y independently.
+
+Brute-force test `test_c0_canonicalisation` (300 random instances with ties,
+zeros and near-identical rows):
+- the map of the proof lands in the C0′-constrained branch **and** cube
+  region, as encoded by `cegar.region`;
+- the exact number of EFX allocations is preserved;
+- negative control: making a strictly non-maximal agent agent 0 violates
+  the region, while the same point satisfies the region without C0′.
+
+**Refinement driver (`run_tree.py`).** It runs all argmax branches with a
+time limit. Each timeout is split with `cegar_branches.refine`: every agent's
+next favourite, and among agents with identical chains the new goods are
+non-decreasing. Branch → cube → tri-sub → … . Every finished region is
+appended to the output file and flushed immediately; on restart, closed
+regions are skipped and timed-out ones are expanded, so a restart loses only
+the ≤ 4 regions in flight. `recheck_cvc5.py --tree` re-derives coverage
+independently, through any number of levels: a node is covered if it has a
+cvc5-verified unsat record, or if all its children are covered under either
+the symmetric all-agents rule or a single-agent rule.
+
 ### 5. Local exhaustive boxes around the hardest points (`box_runs.py`)
 
 - **Idea.** Take the m = 10 profiles with the smallest score found by
