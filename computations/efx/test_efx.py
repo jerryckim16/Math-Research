@@ -20,6 +20,8 @@
 7. AFM Lemma M items 1-3 as implemented in cegar.clause(lemma_m=True): the
    reduced clause has the same truth value as the full clause at random exact
    points of chain regions with many ties.
+8. recheck_cvc5.tree_coverage: a split branch is covered by all its cubes,
+   not by all but one, and records with mixed C0 flags are refused.
 """
 import random
 
@@ -239,6 +241,31 @@ def test_lemma_m_equivalence():
                 old = z3.is_true(z3.simplify(z3.substitute(cegar.clause(V, a, n, m, chains), *sub)))
                 full = not efx.verify(w, a)
                 assert red == full == old, (w, a, chains)
+
+
+def test_tree_coverage():
+    """recheck_cvc5.tree_coverage: a branch replaced by all its cubes (from
+    cegar_branches.refine) is covered; dropping one cube uncovers it; mixing
+    c0 flags is refused."""
+    import itertools
+    import cegar_branches as cb
+    import recheck_cvc5 as rc
+    m = 5
+    rec = lambda br, c0=False: {"n": 4, "m": m, "branch": br, "c0": c0}
+    roots = [list(b) for b in itertools.combinations_with_replacement(range(m), 3)]
+    split = [0, 0, 0]
+    cubes = [[list(c) for c in node] for node in cb.refine([[0], [0], [0]], m)]
+    recs = [rec(b) for b in roots if b != split] + [rec(c) for c in cubes]
+    assert rc.tree_coverage(recs)[4] == []
+    missing = rc.tree_coverage(recs[:-1])[4]
+    assert missing == [((0,), (0,), (0,))], missing
+    deep = [[list(c) for c in node] for node in cb.refine(cubes[-1], m)]
+    assert rc.tree_coverage(recs[:-1] + [rec(d) for d in deep])[4] == []
+    try:
+        rc.tree_coverage(recs[:-1] + [rec(cubes[-1], c0=True)])
+        assert False, "mixed c0 flags must be refused"
+    except AssertionError as e:
+        assert "disagree" in str(e)
 
 
 if __name__ == "__main__":

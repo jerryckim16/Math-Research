@@ -30,19 +30,19 @@ the rules below are covered:
 All records used for coverage must agree on n, m and the c0 flag (mixing
 regions with and without C0 could leave instances without a representative).
 
-Usage: python3 recheck_cvc5.py FILE.jsonl [FILE2.jsonl ...] [--cover] [--tree] [--workers=4]
+Usage: python3 recheck_cvc5.py FILE.jsonl [FILE2.jsonl ...] [--cover] [--tree] [--workers=4] [--log=VERDICTS.txt]
 """
 import itertools
 import json
 import sys
 
-from cvc5.pythonic import And, Or, Real, RealVal, Solver, Sum, sat, unsat
+from cvc5.pythonic import And, Or, Real, RealVal, SolverFor, Sum, sat, unsat
 
 
 def check_record(r):
     n, m = r["n"], r["m"]
     V = [[Real(f"x{i}_{g}") for g in range(m)] for i in range(n)]
-    s = Solver()
+    s = SolverFor("QF_LRA")      # 3x faster than the default logic (measured on m = 8 records)
     for i in range(n):
         for g in range(m):
             s.add(V[i][g] >= 0)
@@ -134,12 +134,28 @@ if __name__ == "__main__":
             for l in (gzip.open(path, "rt") if path.endswith(".gz") else open(path))]
     recs = [r for r in recs if r.get("allocs") is not None and r["status"] == "unsat"]
     workers = int(next((a.split("=")[1] for a in sys.argv if a.startswith("--workers=")), "1"))
-    if workers > 1:
-        import multiprocessing as mp
-        with mp.Pool(workers) as pool:
-            verdicts = pool.map(_check_str, recs, chunksize=1)
-    else:
-        verdicts = [_check_str(r) for r in recs]
+    vlog = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--log=")), None)
+    import hashlib
+    rid = lambda r: hashlib.sha256(json.dumps([r["n"], r["m"], r["branch"], bool(r.get("c0")),
+                                               r["allocs"]]).encode()).hexdigest()
+    known = {}
+    if vlog:   # resumable: verdicts already computed for identical records are reused
+        import os
+        if os.path.exists(vlog):
+            for l in open(vlog):
+                k, v = l.split()
+                known[k] = v
+    ids = [rid(r) for r in recs]
+    todo = sorted([r for r, k in zip(recs, ids) if k not in known], key=lambda r: len(r["allocs"]))
+    out = open(vlog, "a") if vlog else None
+    import multiprocessing as mp
+    with mp.Pool(workers) as pool:
+        for k, v in zip([rid(r) for r in todo], pool.imap(_check_str, todo, chunksize=1)):
+            known[k] = v
+            if out:
+                out.write(f"{k} {v}\n")
+                out.flush()
+    verdicts = [known[k] for k in ids]
     bad, good = [], []
     for r, res in zip(recs, verdicts):
         if res != "unsat":
