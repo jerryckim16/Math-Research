@@ -10,9 +10,8 @@
 //
 // Storage: one 64-bit table entry per state, no parent pointers, no queue.
 //   bits  0..55  key: the canonical pair (k1 <= k2 as in ac_search_compact)
-//                written in mixed radix (first letter base 4, later letters
-//                base 3 = "not the inverse of the previous letter"), times 512,
-//                plus a code for the two lengths (never 0);
+//                ranked exactly: an offset for the two lengths plus the
+//                letters in mixed radix (see encode; never 0; CAP <= 32);
 //   bits 56..60  level (bottleneck at which the state is settled);
 //   bits 61..62  group of the source that reached it first;
 //   bit  63      settled.
@@ -84,7 +83,27 @@ static void unpack(uint64_t v, W& w) {
     for (int i = 0; i < w.n; i++) w.a[i] = (bits >> (2 * (28 - i))) & 3;
 }
 // --- compact 56-bit key ---
+// key = 1 + OFF[a.n][b.n] + rank, where rank is the pair's letters in mixed
+// radix (first letter of each word base 4, later letters base 3 = "not the
+// inverse of the previous letter") and OFF enumerates the length pairs by
+// total length, then a.n.  This is a bijection onto [1, total]; total < 2^56
+// for a.n + b.n <= 31.  (Until 2026-11-24 the key was rank * 512 + a length
+// code, which overflows 56 bits when a.n + b.n = 30, i.e. for CAP >= 31;
+// every run before then used CAP <= 30.)
 static const uint64_t KEYMASK = (1ULL << 56) - 1;
+static const int MAXS = 31;
+static uint64_t OFF[MAXS + 1][MAXS + 1];
+static uint64_t OFFS[(MAXS + 1) * (MAXS + 2) / 2]; static int OFFA[(MAXS + 1) * (MAXS + 2) / 2], NOFF;
+static uint64_t cnt(int n) { uint64_t c = n ? 4 : 1; for (int i = 1; i < n; i++) c *= 3; return c; }
+static void init_offsets() {
+    uint64_t o = 0; NOFF = 0;
+    for (int s = 0; s <= MAXS; s++)
+        for (int a = 0; a <= s; a++) {
+            OFF[a][s - a] = o; OFFS[NOFF] = o; OFFA[NOFF++] = a * 64 + (s - a);
+            o += cnt(a) * cnt(s - a);
+        }
+    if (o >= KEYMASK) { printf("key space overflow\n"); exit(2); }
+}
 static uint64_t encode(uint64_t c1, uint64_t c2) {  // c1 <= c2 packed canonical words
     W a, b; unpack(c1, a); unpack(c2, b);
     uint64_t v = 0;
@@ -94,14 +113,14 @@ static uint64_t encode(uint64_t c1, uint64_t c2) {  // c1 <= c2 packed canonical
             if (i == 0) v = v * 4 + c;
             else { int p = w->a[i - 1] ^ 2; v = v * 3 + (c - (c > p ? 1 : 0)); }
         }
-    int s = a.n + b.n;
-    uint64_t lc = (uint64_t)(s * (s + 1) / 2 + a.n);  // 1..464 for s <= 29
-    return v * 512 + lc;
+    return 1 + OFF[a.n][b.n] + v;
 }
 static void decode(uint64_t key, W& a, W& b) {
-    int lc = key % 512; uint64_t v = key / 512;
-    int s = 0; while ((s + 1) * (s + 2) / 2 <= lc) s++;
-    a.n = lc - s * (s + 1) / 2; b.n = s - a.n;
+    uint64_t r = key - 1;
+    int lo = 0, hi = NOFF - 1;  // last offset <= r (empty length pairs never occur: cnt >= 1)
+    while (lo < hi) { int mid = (lo + hi + 1) / 2; if (OFFS[mid] <= r) lo = mid; else hi = mid - 1; }
+    a.n = OFFA[lo] / 64; b.n = OFFA[lo] % 64;
+    uint64_t v = r - OFFS[lo];
     for (W* w : {&b, &a})  // undo in reverse order
         for (int i = w->n - 1; i >= 0; i--) {
             if (i == 0) { w->a[0] = v % 4; v /= 4; }
@@ -316,6 +335,8 @@ static string wstr(const W& w) { string s; for (int i = 0; i < w.n; i++) s += LE
 
 int main(int argc, char** argv) {
     CAP = atoi(argv[1]);
+    if (CAP < 1 || CAP > MAXS + 1) { printf("CAP must be at most %d (key space, 5-bit level)\n", MAXS + 1); return 2; }
+    init_offsets();
     nslots = 400000000ULL; int T = 4;
     vector<pair<W, W>> srcs; vector<int> group; vector<bool> passive; int g = 0; bool pas = false;
     for (int i = 2; i < argc; i++) {
