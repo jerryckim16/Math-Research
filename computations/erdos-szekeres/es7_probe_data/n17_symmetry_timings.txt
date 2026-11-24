@@ -1,0 +1,17 @@
+N=17 k=6 timings (CaDiCaL 1.7.3, 1 core each, 4 jobs in parallel); columns: file status process_s conflicts
+log_base.txt s UNSATISFIABLE 162.27 1173226
+log_ear.txt s UNSATISFIABLE 196.30 1305545
+log_lrat_rs.txt s UNSATISFIABLE 38.05 359436
+log_rf.txt s UNSATISFIABLE 72.49 581282
+log_rf_ear.txt s UNSATISFIABLE 76.75 611253
+log_rs.txt s UNSATISFIABLE 78.15 610570
+log_rs_ear.txt s UNSATISFIABLE 77.88 627100
+log2_base_hs.txt s UNSATISFIABLE 116.75 810109
+log2_rf_hs.txt s UNSATISFIABLE 42.14 349979
+log2_rf_seed2.txt s UNSATISFIABLE 74.13 607194
+log2_rs_hs.txt s UNSATISFIABLE 43.36 385442
+log3_rf_hs_ph1.txt s UNSATISFIABLE 34.99 310169
+log3_rf_icnf.txt s UNSATISFIABLE 26.18 220808
+log3_rs_hs_seed2.txt s UNSATISFIABLE 42.68 385442
+log3_rs_icnf.txt s UNSATISFIABLE 24.44 220298
+log3_rs_ph1.txt s UNSATISFIABLE 35.73 359436

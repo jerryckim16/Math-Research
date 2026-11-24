@@ -17,3 +17,10 @@ if [ "${COMPACT:-0}" = 1 ]; then
   cadical -q --lrat=true --binary=false "$work/es_17_6_compact.cnf" "$work/es_17_6_compact.lrat" || [ $? -eq 20 ]
   python3 "$here/lrat_check.py" "$work/es_17_6_compact.cnf" "$work/es_17_6_compact.lrat"
 fi
+# Optional third certificate: compact encoding + reflection lex-leader (Approach 5), tuned CaDiCaL (REFLECT=1 ./reproduce.sh).
+if [ "${REFLECT:-0}" = 1 ]; then
+  python3 "$here/encode_compact.py" 17 6 "$work/es_17_6_rs.cnf" --reflect short
+  sha256sum "$work/es_17_6_rs.cnf"   # expected e81aee682d2cca525797e654c286b1788640cfea634e306879692006fd5a2dba
+  cadical -q --sat --reducetarget=10 --forcephase --phase=1 --lrat=true --binary=false "$work/es_17_6_rs.cnf" "$work/es_17_6_rs.lrat" || [ $? -eq 20 ]
+  python3 "$here/lrat_check.py" "$work/es_17_6_rs.cnf" "$work/es_17_6_rs.lrat"
+fi
