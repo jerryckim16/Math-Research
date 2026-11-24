@@ -13,7 +13,7 @@
   - **Caveat found here: the GS graph is directed** (§3, "Directedness"). "No meeting" therefore gives the bound only for *directed* paths (and for paths S → X ← T). It does not give the bound for paths that may use edges backwards. The paper's d_GS does not say which reading it means. So we no longer write "d_GS ≥ c" without the word "directed".
   - All of this is graph-relative and not an AC-distance bound.
 - **New: the undirected reading (§5).** We enumerate predecessors in the GS graph exactly. The derivation is in `ac_graph.py`, and the edge sets are checked exhaustively in both directions. We then searched the graph with edges usable both ways.
-  - There is **no undirected GS path below energy 30** between any two of AK(3), P1, P2. This is computed, exhaustive and relative to the graph. It matches the directed cap-30 result, so the undirected reading now goes as far as the directed one.
+  - There is **no undirected GS path below energy 30** between any two of AK(3), P1, P2, and none below 31 from P1. This is computed, exhaustive and relative to the graph. The undirected reading now goes as far as the directed one, and a little further for P1.
   - So **Theorem 6's lower bounds (d_GS ≥ 27) hold in the undirected reading too**, and the possible gap is closed at the paper's own level.
   - The bottleneck 19 for P3, P4 vs AK(3) also holds undirected.
 - AK(3) and the conjecture itself remain open.
@@ -336,10 +336,11 @@ The files are in `computations/andrews-curtis/lean/`. They use plain Lean 4 core
   | 28 | 2,376,948 (2,323,596), 48 s | 8,780,944 (8,520,288), 178 s | no |
   | 29 | 5,493,468 (5,374,816), 154 s | 15,211,400 (14,772,800), 321 s | no |
   | 30 | 18,141,004 (17,796,820), 409 s, 0.4 GB | 50,655,984 (49,415,224), 1,180 s, 0.8 GB | no |
+  | 31 | 42,794,280 (not run directed), 916 s, 1.0 GB | in progress | P1: no |
 
   Times are wall-clock on 4 threads. Each "directed count" is the per-source count of the forward search at the same cap (§3).
 
-- Hence there is **no undirected GS path below energy 30** joining two of AK(3), P1, P2. This is computed, exhaustive, one implementation (two engines sharing the predecessor code) and relative to the graph.
+- Hence there is **no undirected GS path below energy 30** joining two of AK(3), P1, P2. Also, there is **none below 31 from P1** to AK(3) or to P2. The cap-31 run uses the corrected key (see "Pitfall" below); inside it, the count after level 29 is again exactly 18,141,004. This is computed, exhaustive, one implementation (two engines sharing the predecessor code) and relative to the graph.
 - Each undirected sublevel set is only 3–4% larger than the directed one, but a state costs about 3× more to expand. A multi-source cap-30 run would need about 360M states and over 2 h on 4 threads; the single-source runs avoid this.
 - **Scope.** This is a statement about the GS graph, not about AC distance. A zig-zag path in the graph would still have given an AC certificate. No such path exists below 30.
 - **Pitfall (found and fixed here; no reported result affected).** `ac_search_par` stored a state as a 56-bit key: (letters in mixed radix) × 512 + a code for the two lengths.
@@ -386,7 +387,7 @@ The files are in `computations/andrews-curtis/lean/`. They use plain Lean 4 core
 
 ## Next steps
 
-- **Undirected cap 31** (in progress, via single-source P1/P2 components, §5): extend "no undirected GS path below 30". P1 is about 70M states; P2 may be about 200M states and more than 1 h. A meeting would come with a path from `ac_search_compact --undirected` (parents kept), which `ac_path.py` expands and `gen_lean.py --extra` Lean-verifies.
+- **Undirected cap 31**: P1 is done (42.8M states, no other source). P2 is in progress, at about 120M states projected. Cap 32 would need roughly 2–3× more per component; the key now allows it (CAP ≤ 32). A meeting would come with a path from `ac_search_compact --undirected` (parents kept), which `ac_path.py` expands and `gen_lean.py --extra` Lean-verifies.
 - **Next concrete step:** a bounded attack on the open edges, P1 or P2 → AK(3), the two remaining uncertified claims of Shehper et al.
   - Cap 30 is done (no meeting, §3).
   - Cap 31 with `ac_search_par`: growth from cap 29 to cap 30 was ×3.96 in states, so cap 31 might need about 1.4 billion states, about 12 GB of table at 8 B per slot and 90% load, and several hours. It is out of reach on this machine. (It also needed the key fix of §5. The single-source runs of §5 avoid the AK(3) component, and they work for the directed search too, with `--passive`.)
