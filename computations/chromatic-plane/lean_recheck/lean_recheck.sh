@@ -24,7 +24,7 @@ fi
 (cd mathlib && lake build Mathlib)
 # 3. the 70 OAI modules (fetched by following imports from Five.lean), plus our statement check
 mkdir -p oaicheck && cd oaicheck
-cp "$here/lakefile.lean" "$here/Check.lean" . && cp ../mathlib/lean-toolchain .
+cp "$here/Check.lean" .
 B=https://raw.githubusercontent.com/openai/math/$PIN/lean
 queue=(OAI.Geometry.PlaneColoring.Five); declare -A seen
 while [ ${#queue[@]} -gt 0 ]; do
@@ -33,5 +33,7 @@ while [ ${#queue[@]} -gt 0 ]; do
   for i in $(grep -E '^import OAI\.' "$p" | awk '{print $2}'); do queue+=("$i"); done
 done
 find OAI -name "*.lean" | LC_ALL=C sort | xargs cat | sha256sum   # expect 171452cc...a14e4b (70 files)
-lake build OAI.Geometry.PlaneColoring.Five
-lake env lean Check.lean   # expect: axioms [propext, Classical.choice, Quot.sound]
+# compile in dependency order with plain `lean -o` against the Mathlib build (4 parallel jobs)
+python3 "$here/compile_oai.py" . ../mathlib          # expect: done 70/70 failed []
+LEAN_PATH=$(cd ../mathlib && lake env printenv LEAN_PATH):$PWD/build lean Check.lean
+# expect: 'CNPRecheck.plane_not_five_colourable' depends on axioms: [propext, Classical.choice, Quot.sound]

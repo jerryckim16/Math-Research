@@ -3,7 +3,14 @@
 **Area:** combinatorial geometry
 **Status:** in progress. Done so far:
 - χ ≥ 5 is reproduced end to end with our own pipeline: exact unit edges, our own CNF, and an LRAT proof checked by our own checker.
-- The claimed χ ≥ 6 (OpenAI preprint, Sept 2026) is located and mapped. It is an analytic proof with no finite graph. Its one finite certificate (Lemma 8.9) is re-checked exactly here. Its Lean formalization has not yet been re-run here, because the Mathlib cache host is blocked.
+- The claimed χ ≥ 6 (OpenAI preprint, Sept 2026) is located and mapped. It is an analytic proof with no finite graph. Its one finite certificate (Lemma 8.9) is re-checked exactly here.
+- **Its published Lean proof was re-run here from source.**
+  - Mathlib was built from scratch, because the cache host is blocked.
+  - All 70 OAI modules compile.
+  - A from-scratch restatement of "no proper 5-colouring of R²" is proved by the OAI theorem and depends only on [propext, Classical.choice, Quot.sound].
+  - So χ ≥ 6 is **Lean-verified (re-run here)**, modulo trust in the Lean 4.34.1 kernel and the faithfulness of the restated statement.
+  - The paper's analytic argument itself was not audited by a human.
+  - The SAT-style verification criteria (exact edges, LRAT-checked non-5-colourability) **do not apply and are not met**, because no finite 6-chromatic graph exists in the source. The evidence for χ ≥ 6 is the re-run formal proof, not a certificate.
 
 **Started:** 2026-11-24
 **ProofAtlas:** rank 206, "open". Its 2026-10-07 note: the OpenAI release "narrows the answer to six or seven … proofs not independently audited … Lean artifacts not executed".
@@ -160,7 +167,7 @@ What this does **not** cover:
 - These are tens of pages of ergodic theory and measure-theoretic topology.
 - They were not audited, and a 3-hour budget is not enough for an audit.
 
-### 3. Re-run the published Lean proof (in progress: from-source Mathlib build)
+### 3. Re-run the published Lean proof (worked)
 
 - **Plan.** Build `OAI.Geometry.PlaneColoring.Five` at the pinned Lean and Mathlib versions, then `#print axioms OAI.EuclideanFiveColor.no_proper_five_coloring`. The comparator setup also checks that the theorem matches the challenge statement.
 - **Blocked.** The Mathlib build cache host `lakecache.blob.core.windows.net` is refused by the network proxy (CONNECT 403), so `lake exe cache get` cannot run. Building Mathlib from source is the fallback (cost below).
@@ -181,17 +188,29 @@ What this does **not** cover:
   - Extrapolated: about 6 CPU-hours for Mathlib, so about 2 h wall here.
   - Throughput falls in the analysis-heavy layers, so this is a lower estimate.
   - After slice 2 (47 min wall in total): 3,820 modules, 997,769 lines (43 % of Mathlib by lines), 155 min user CPU, 94.6 lines per CPU-second, no errors. Updated extrapolation: about 7 CPU-hours for Mathlib.
-- **Source hygiene.** The 70 OAI files contain no `set_option` at all, and no `macro`, `syntax`, `elab_rules`, `initialize`, `run_cmd` or `#eval`. Nothing in them can switch off kernel checking.
-  - The 30k-line OAI development comes on top.
+  - After slice 4 (94 min wall in total): 6,575 modules, 1,705,584 lines (73 %), about 330 min user CPU, 79.3 lines per CPU-second, no errors. Extrapolation: about 8.2 CPU-hours for all of Mathlib, about 2.5 h wall on 4 cores.
+  - **Mathlib build complete** after 7 slices (14:05 UTC): `lake build Mathlib` exited 0 with no errors. That took 2 h 28 min wall and about 8.5 CPU-hours (sum of `user` times).
+- **Source hygiene.**
+  - The 70 OAI files contain no `set_option` at all, and no `macro`, `syntax`, `elab_rules`, `initialize`, `run_cmd` or `#eval`. Nothing in them can switch off kernel checking.
+  - All 108 `instance` declarations are on OAI's own types (type synonyms such as `DiscreteE`, the character space `D`, measures and kernels), or are `Decidable` instances.
+  - No instance or notation touches `Norm ℂ`, `ℂ` or `Fin 5`, so the restated statement below means what it says.
+- **OAI compile (14:05–14:11 UTC).**
+  - The 70 modules were compiled in dependency order with plain `lean -o` against the fresh Mathlib build (`lean_recheck/compile_oai.py`): **70/70 OK, 362 s wall, no errors, no `sorry` warnings.**
+  - The compiled sources are the files with sha256 `171452cc…`, which equal the pinned commit.
 - **Scripted:** `computations/chromatic-plane/lean_recheck/lean_recheck.sh` (text only; no build outputs are kept in the repository).
-- **Lean-specific check prepared:** `lean_recheck/Check.lean`. It restates the theorem from scratch, with no OAI definitions:
+- **Statement and axiom check** (`lean_recheck/Check.lean`, sha256 `614d6a48…`). It restates the theorem from scratch, with no OAI definitions:
   ```lean
   theorem plane_not_five_colourable :
       ¬ ∃ c : ℂ → Fin 5, ∀ x y : ℂ, ‖x - y‖ = 1 → c x ≠ c y :=
     OAI.EuclideanFiveColor.no_proper_five_coloring
   #print axioms CNPRecheck.plane_not_five_colourable
   ```
-
+  - Output: `'CNPRecheck.plane_not_five_colourable' depends on axioms: [propext, Classical.choice, Quot.sound]`. The same holds for `OAI.EuclideanFiveColor.no_proper_five_coloring`.
+  - The statement is exactly Theorem 1.1, with ℂ = R² and the complex norm equal to the Euclidean distance.
+  - Negative control: a `sorry`-proved theorem in the same environment reports `[sorryAx]`.
+- **Trust base.** The Lean 4.34.1 kernel and elaborator (official release binary), Mathlib `d13f23b`, and our 5-line restatement.
+  - Not done: an independent kernel replay (`leanchecker` / lean4checker) of the `.olean` files.
+  - Not done: a human audit of the paper's §§2–7.
 ### 4. Find a finite 6-chromatic unit-distance graph (not attempted)
 
 - Theorem 1.1 plus compactness implies one exists, but the proof is non-constructive.
@@ -206,7 +225,8 @@ What this does **not** cover:
   - The web tree page github.com/openai/math/tree/… returned 403.
   - Public files were read instead via raw.githubusercontent.com, so directory listings were done by following imports.
 - **Polymath16 wiki (asone.ai).** Blocked by the proxy (CONNECT 403). The Parts 509-vertex and Heule 553-vertex vertex lists are not available. We used Heule's explicit construction instead.
-- **Mathlib cache (lakecache.blob.core.windows.net).** Blocked by the proxy (CONNECT 403).
+- **Mathlib cache (lakecache.blob.core.windows.net).** Blocked by the proxy (CONNECT 403). Worked around by building Mathlib from source (about 8.5 CPU-hours).
+- **`elan toolchain install`.** Its GitHub API/manifest lookups got a 403. Worked around by downloading the release tarball directly.
 
 ## Results
 
@@ -217,10 +237,11 @@ What this does **not** cover:
 | χ(R²) ≤ 7 | proved (classical); inequalities re-checked | `cert_section8.py` (G) |
 | OpenAI Lemma 8.9 (Moser placement lies in region (8.4)) | checked exactly (algebraic arithmetic plus rigorous intervals) | `cert_section8.py` (A–D) |
 | OpenAI Prop. 8.2 finite combinatorics | computed (exhaustive, superset of cases) | `cert_section8.py` (F) |
-| **χ(R²) ≥ 6 (OpenAI, Thm 1.1)** | **claimed; not verified here.** Unrefereed preprint; Lean proof published but not re-run here; the analytic core is not audited; no finite certificate exists to check | — |
+| **χ(R²) ≥ 6 (OpenAI, Thm 1.1)** | **Lean-verified (OpenAI's formalization, re-run here from source)**. Statement independently restated; axioms are only propext, Classical.choice, Quot.sound. Not refereed, the analytic text is not human-audited, and no finite certificate exists | `lean_recheck/` |
+| χ(R²) ∈ {6, 7} | Lean-verified lower bound (above) plus the classical upper bound | — |
 
 ## Next steps
 
-- Lean re-check: get `lakecache.blob.core.windows.net` allowed, or budget a from-source Mathlib build; then compile `Five.lean` and print its axioms.
-- If the Lean check passes, audit the Lean *statement chain*: that `ProperColoring` and the `ComparatorChallenges` statement are what `Five.lean` proves, and that no local `instance` or `notation` changes the meaning of ℂ, `‖·‖` or `Fin 5`.
+- Independent kernel replay of the OAI `.olean` files (lean4checker / `leanchecker`), to remove trust in the elaborator path. Mathlib replay costs extra CPU time.
+- Update the README status table and the ProofAtlas comparison: χ ≥ 6 now has a re-run formal proof here.
 - Optional: an adversarial read of §§2–4, the transfer, where the claim is most surprising.
