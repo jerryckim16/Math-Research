@@ -1,0 +1,19 @@
+# frankl_enum.c output, run 2026-11-24 (gcc -O2), n=1..5 single run, n=6 in 4 parts
+n=1: base [k=0]: 1 labeled families, 1 classes, orbit-sum 1
+n=1 part=0/1 base_labeled=1 base_classes=1 leaves=2 labeled_total=2 labeled_fulluniverse=1 tight=1 counterexamples=0
+n=2: base [k=1]: 2 labeled families, 2 classes, orbit-sum 2
+n=2 part=0/1 base_labeled=2 base_classes=2 leaves=7 labeled_total=7 labeled_fulluniverse=4 tight=4 counterexamples=0
+n=3: base [k=2]: 7 labeled families, 5 classes, orbit-sum 7
+n=3 part=0/1 base_labeled=7 base_classes=5 leaves=45 labeled_total=61 labeled_fulluniverse=45 tight=14 counterexamples=0
+n=4: base [k=3]: 61 labeled families, 19 classes, orbit-sum 61
+n=4 part=0/1 base_labeled=61 base_classes=19 leaves=861 labeled_total=2480 labeled_fulluniverse=2271 tight=51 counterexamples=0
+n=5: base [k=4]: 2480 labeled families, 184 classes, orbit-sum 2480
+n=5 part=0/1 base_labeled=2480 base_classes=184 leaves=123220 labeled_total=1385552 labeled_fulluniverse=1373701 tight=202 counterexamples=0
+n=6: base [k=5]: 1385552 labeled families, 14664 classes, orbit-sum 1385552
+n=6: base [k=5]: 1385552 labeled families, 14664 classes, orbit-sum 1385552
+n=6: base [k=5]: 1385552 labeled families, 14664 classes, orbit-sum 1385552
+n=6: base [k=5]: 1385552 labeled families, 14664 classes, orbit-sum 1385552
+n=6 part=0/4 base_labeled=1385552 base_classes=14664 leaves=236424330 labeled_total=19279009113 labeled_fulluniverse=19276907963 tight=224 counterexamples=0
+n=6 part=1/4 base_labeled=1385552 base_classes=14664 leaves=230194261 labeled_total=19096715353 labeled_fulluniverse=19094516348 tight=205 counterexamples=0
+n=6 part=2/4 base_labeled=1385552 base_classes=14664 leaves=229138759 labeled_total=18753083752 labeled_fulluniverse=18751088295 tight=350 counterexamples=0
+n=6 part=3/4 base_labeled=1385552 base_classes=14664 leaves=229571324 labeled_total=18844943256 labeled_fulluniverse=18842961630 tight=97 counterexamples=0
