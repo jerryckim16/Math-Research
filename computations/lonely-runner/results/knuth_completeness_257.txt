@@ -1,0 +1,15 @@
+# Knuth random-probe cost estimate for level-one completeness at k = 14, LRC_PRUNE=2
+# covergen.c probe mode: covergen2 14 p -1 20000 SEED 20000000 (20,000 probes; capped DFS of 2e7 nodes for speed).
+# Calibration: actual node counts were p = 239 unpruned 4.75e10 and p = 251 LRC_PRUNE=2 8.93e10 (8.47 core-hours, 2.93e6 nodes/core-second).
+# The estimate is unbiased for the tree size, and it agrees with these actuals to within 2% (239) and 5% (251). The speed measured on the real run is used to convert nodes to core-hours.
+p=239 seed=1 knuth_estimate_nodes 4.719809e+10 stderr 1.076e+09 probes 20000 capped_dfs nodes 20000093 secs 9.740 nodes_per_sec 2.053e+06 
+p=239 seed=2 knuth_estimate_nodes 4.707401e+10 stderr 1.030e+09 probes 20000 capped_dfs nodes 20000093 secs 9.363 nodes_per_sec 2.136e+06 
+p=239 seed=3 knuth_estimate_nodes 4.586828e+10 stderr 9.751e+08 probes 20000 capped_dfs nodes 20000093 secs 8.485 nodes_per_sec 2.357e+06 
+p=251 seed=1 knuth_estimate_nodes 9.459315e+10 stderr 2.326e+09 probes 20000 capped_dfs nodes 20000106 secs 8.675 nodes_per_sec 2.305e+06 
+p=251 seed=2 knuth_estimate_nodes 9.429674e+10 stderr 2.454e+09 probes 20000 capped_dfs nodes 20000106 secs 9.509 nodes_per_sec 2.103e+06 
+p=251 seed=3 knuth_estimate_nodes 9.276853e+10 stderr 2.116e+09 probes 20000 capped_dfs nodes 20000106 secs 9.583 nodes_per_sec 2.087e+06 
+p=257 seed=1 knuth_estimate_nodes 2.147663e+11 stderr 4.846e+09 probes 20000 capped_dfs nodes 20000115 secs 10.047 nodes_per_sec 1.991e+06 
+p=257 seed=2 knuth_estimate_nodes 2.153834e+11 stderr 5.137e+09 probes 20000 capped_dfs nodes 20000115 secs 10.133 nodes_per_sec 1.974e+06 
+p=257 seed=3 knuth_estimate_nodes 2.181034e+11 stderr 5.564e+09 probes 20000 capped_dfs nodes 20000115 secs 9.634 nodes_per_sec 2.076e+06 
+# p = 257: mean 2.16e11 nodes (2.42 x p = 251), about 20.5 core-hours, i.e. at least about 7 h wall time on 3 cores (12 h or more with the shard imbalance seen at 251).
+# Decision (2026-11-24): over the agreed budget of about 3 h wall time, so it was not run; the started run was stopped after 20 minutes.
