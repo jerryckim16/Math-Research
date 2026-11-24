@@ -1,0 +1,2 @@
+{"status": "timeout", "iters": 909, "seconds": 599.9994678497314, "n": 4, "m": 9, "branch": [2, 2, 6], "num_allocs": 908, "c0": false, "opts": {"c0": false, "lemma_m": true, "multi": 0, "seed_points": 0, "arith": 2}, "seeded": 0}
+{"status": "timeout", "iters": 769, "seconds": 299.999737739563, "n": 4, "m": 9, "branch": [[2, 0], [2, 0], [6, 0]], "num_allocs": 768, "c0": false, "opts": {"c0": false, "lemma_m": true, "multi": 0, "seed_points": 0, "arith": 2}, "seeded": 0}

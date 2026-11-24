@@ -18,3 +18,5 @@ pending: 257 records (61 branch-level, 196 cubes), 99586 allocations, 223-1364 p
 third session (cvc5 completion, in progress), same command, smallest records first, chunks of <= 24 min (3 workers):
 after chunk 1: verdicts Counter({'unsat': 825}); records 979, cvc5 unsat 825, not unsat [], pending 154 (36 branch-level, 118 cubes; 309-1364 allocs)
 tree coverage with cvc5-verified records only: 75/120 branches
+after chunk 2 (3 workers): cvc5 unsat 894, pending 85; coverage 90/120
+after chunk 3 (4 workers, 24 min): cvc5 unsat 954, not unsat [], pending 25 (13 branch-level, 12 cubes; 666-1364 allocs); tree coverage with cvc5-verified records only: 98/120
