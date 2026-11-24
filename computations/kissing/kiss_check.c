@@ -1,0 +1,174 @@
+/*
+ * kiss_check.c -- exact pairwise check of a kissing configuration.
+ *
+ * Input: a raw file of n rows x d columns of signed int8 integers (row-major,
+ * no header). Each row a is a nonzero integer direction in R^d.
+ *
+ * The rows form a kissing configuration (pairwise angles >= 60 degrees) iff
+ * for every pair i < j, with p = a_i.a_j, A = |a_i|^2, B = |a_j|^2:
+ *
+ *        p <= 0   or   4 p^2 <= A B.
+ *
+ * Equivalently p <= T(A,B) where T(A,B) = isqrt(floor(A*B/4)) (p integer).
+ * A repeated row (or a positive multiple) has 4p^2 = 4AB > AB, so the check
+ * also certifies that the rows are pairwise distinct directions.
+ *
+ * Arithmetic: dot products are accumulated in int16. This is exact when
+ * every squared norm is <= 32767: each partial sum satisfies
+ * |sum_{k<=m} a_k b_k| <= sum_k |a_k||b_k| <= |a||b| <= max(A,B) (Cauchy-
+ * Schwarz), so no partial sum overflows. The program checks this
+ * precondition and aborts if it fails.
+ *
+ * Output: n, d, the norm classes, number of violating pairs, the maximum
+ * of p - T over all pairs (<= 0 iff the check passes), the number of
+ * contact pairs (4p^2 = AB exactly, i.e. angle exactly 60 degrees), and for
+ * each class pair the maximum inner product p observed.
+ *
+ * Build: gcc -O3 -march=native -fopenmp kiss_check.c -o kiss_check
+ * Usage: kiss_check FILE.i8 d
+ */
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <omp.h>
+
+#define MAXCLS 64
+#define JB 2048
+
+static int64_t isqrt64(int64_t x) {
+    if (x < 0) return -1;
+    int64_t r = 0;
+    while ((r + 1) * (r + 1) <= x) r++; /* values here are small */
+    return r;
+}
+
+int main(int argc, char **argv) {
+    if (argc != 3) { fprintf(stderr, "usage: %s FILE.i8 d\n", argv[0]); return 2; }
+    const char *fn = argv[1];
+    int d = atoi(argv[2]);
+    if (d <= 0 || d > 4096) { fprintf(stderr, "bad d\n"); return 2; }
+    FILE *f = fopen(fn, "rb");
+    if (!f) { perror(fn); return 2; }
+    fseek(f, 0, SEEK_END);
+    long sz = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    if (sz % d) { fprintf(stderr, "file size %ld not a multiple of d=%d\n", sz, d); return 2; }
+    int64_t n = sz / d;
+    int8_t *raw = malloc(sz);
+    if (fread(raw, 1, sz, f) != (size_t)sz) { fprintf(stderr, "read error\n"); return 2; }
+    fclose(f);
+
+    /* norms and classes */
+    int32_t *nrm = malloc(n * sizeof(int32_t));
+    int ncls = 0; int32_t clsnorm[MAXCLS]; int64_t clscount[MAXCLS];
+    uint8_t *cls = malloc(n);
+    int32_t maxnorm = 0;
+    for (int64_t i = 0; i < n; i++) {
+        int32_t s = 0;
+        for (int k = 0; k < d; k++) s += (int32_t)raw[i * d + k] * raw[i * d + k];
+        nrm[i] = s;
+        if (s == 0) { fprintf(stderr, "row %lld is zero\n", (long long)i); return 1; }
+        if (s > maxnorm) maxnorm = s;
+        int c;
+        for (c = 0; c < ncls; c++) if (clsnorm[c] == s) break;
+        if (c == ncls) {
+            if (ncls == MAXCLS) { fprintf(stderr, "too many norm classes\n"); return 2; }
+            clsnorm[ncls] = s; clscount[ncls] = 0; ncls++;
+        }
+        cls[i] = (uint8_t)c; clscount[c]++;
+    }
+    if (maxnorm > 32767) { fprintf(stderr, "max squared norm %d > 32767: int16 path not exact\n", maxnorm); return 2; }
+
+    /* thresholds T[c1][c2] and contact values */
+    int16_t T[MAXCLS][MAXCLS], C[MAXCLS][MAXCLS];
+    for (int a = 0; a < ncls; a++) for (int b = 0; b < ncls; b++) {
+        int64_t AB = (int64_t)clsnorm[a] * clsnorm[b];
+        int64_t t = isqrt64(AB / 4);
+        T[a][b] = (int16_t)t;
+        C[a][b] = (4 * t * t == AB) ? (int16_t)t : (int16_t)32767; /* 32767 never reached */
+    }
+
+    /* column-major int16 copy */
+    int16_t *bt = aligned_alloc(64, ((size_t)d * n * 2 + 63) / 64 * 64);
+    for (int64_t i = 0; i < n; i++) for (int k = 0; k < d; k++) bt[(size_t)k * n + i] = raw[i * d + k];
+    /* per-class threshold rows: TT[c][j] = T[c][cls[j]], CC[c][j] = C[c][cls[j]] */
+    int16_t *TT = malloc((size_t)ncls * n * 2), *CC = malloc((size_t)ncls * n * 2);
+    for (int c = 0; c < ncls; c++) for (int64_t j = 0; j < n; j++) {
+        TT[(size_t)c * n + j] = T[c][cls[j]];
+        CC[(size_t)c * n + j] = C[c][cls[j]];
+    }
+
+    int64_t nblk = (n + JB - 1) / JB;
+    int64_t viol = 0, contacts = 0;
+    int32_t maxexcess = -32768;
+    int16_t maxp[MAXCLS][MAXCLS];
+    for (int a = 0; a < MAXCLS; a++) for (int b = 0; b < MAXCLS; b++) maxp[a][b] = -32768;
+    int64_t first_i = -1, first_j = -1;
+
+    #pragma omp parallel
+    {
+        int16_t acc[JB] __attribute__((aligned(64)));
+        int64_t lviol = 0, lcont = 0; int32_t lmax = -32768;
+        int16_t lmaxp[MAXCLS][MAXCLS];
+        for (int a = 0; a < MAXCLS; a++) for (int b = 0; b < MAXCLS; b++) lmaxp[a][b] = -32768;
+        int64_t lfi = -1, lfj = -1;
+        #pragma omp for schedule(dynamic, 1)
+        for (int64_t blk = nblk - 1; blk >= 0; blk--) {
+            int64_t j0 = blk * JB, j1 = j0 + JB; if (j1 > n) j1 = n;
+            for (int64_t i = 0; i < j1 - 1; i++) {
+                int64_t js = (i + 1 > j0) ? i + 1 : j0;
+                int len = (int)(j1 - js);
+                if (len <= 0) continue;
+                memset(acc, 0, sizeof(int16_t) * len);
+                const int8_t *ai = raw + i * d;
+                for (int k = 0; k < d; k++) {
+                    int16_t x = ai[k];
+                    if (!x) continue;
+                    const int16_t *b = bt + (size_t)k * n + js;
+                    for (int t = 0; t < len; t++) acc[t] += x * b[t];
+                }
+                int ci = cls[i];
+                const int16_t *tt = TT + (size_t)ci * n + js, *cc = CC + (size_t)ci * n + js;
+                int32_t bmax = -32768; int64_t bv = 0, bc = 0;
+                for (int t = 0; t < len; t++) {
+                    int32_t e = (int32_t)acc[t] - tt[t];
+                    bmax = e > bmax ? e : bmax;
+                    bv += (e > 0);
+                    bc += (acc[t] == cc[t]);
+                }
+                if (bmax > lmax) lmax = bmax;
+                lviol += bv; lcont += bc;
+                if (bv && lfi < 0) {
+                    for (int t = 0; t < len; t++) if ((int32_t)acc[t] - tt[t] > 0) { lfi = i; lfj = js + t; break; }
+                }
+                /* per class-pair maxima (scalar, cheap relative to the dot products) */
+                for (int t = 0; t < len; t++) {
+                    int cj = cls[js + t];
+                    if (acc[t] > lmaxp[ci][cj]) lmaxp[ci][cj] = acc[t];
+                }
+            }
+        }
+        #pragma omp critical
+        {
+            viol += lviol; contacts += lcont;
+            if (lmax > maxexcess) maxexcess = lmax;
+            for (int a = 0; a < ncls; a++) for (int b = 0; b < ncls; b++) if (lmaxp[a][b] > maxp[a][b]) maxp[a][b] = lmaxp[a][b];
+            if (lfi >= 0 && (first_i < 0 || lfi < first_i)) { first_i = lfi; first_j = lfj; }
+        }
+    }
+
+    printf("file %s\nrows %lld\ncolumns %d\nnorm_classes %d\n", fn, (long long)n, d, ncls);
+    for (int c = 0; c < ncls; c++) printf("  squared_norm %d count %lld\n", clsnorm[c], (long long)clscount[c]);
+    printf("pairs %lld\n", (long long)(n * (n - 1) / 2));
+    for (int a = 0; a < ncls; a++) for (int b = a; b < ncls; b++) {
+        int16_t m = maxp[a][b] > maxp[b][a] ? maxp[a][b] : maxp[b][a];
+        if (m == -32768) continue;
+        printf("  class_pair %d,%d max_inner_product %d threshold %d\n", clsnorm[a], clsnorm[b], m, T[a][b]);
+    }
+    printf("contacts_60deg %lld\n", (long long)contacts);
+    printf("max_excess %d\nviolations %lld\n", maxexcess, (long long)viol);
+    if (viol) printf("first_violation %lld %lld\n", (long long)first_i, (long long)first_j);
+    printf("RESULT %s\n", viol == 0 ? "PASS" : "FAIL");
+    return viol == 0 ? 0 : 1;
+}
