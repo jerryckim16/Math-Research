@@ -75,7 +75,21 @@ with c(x) ≠ c(y) whenever |x − y| = 1. Colour classes are arbitrary
 - We fetched the transitive OAI imports of `Five.lean`: 70 modules, 30,336 lines, depending only on Mathlib.
   - The pins are Lean `v4.34.1` and Mathlib `d13f23b723b8a846827a245b89c10fc7d3f11612`.
   - `grep` finds no `sorry`, `admit`, `axiom`, `native_decide`, `implemented_by`, `extern` or `unsafe`.
+- All 70 Lean files on `main` (2026-11-24) are byte-identical to those at the pinned commit `adc7f12`. The concatenation has sha256 `21e567a5…9703`. The toolchain and Mathlib revision are the same at both.
 - The Lean proof is organised differently from the paper: Borel transfer, then a mesh / graph-map argument.
+- **Map of the Lean sources against the paper** (from imports and statement names; not compiled):
+
+  | Lean directory | Modules / lines | Paper part |
+  | --- | --- | --- |
+  | `OAI/MeasureTheory/CompactFactors` | 14 / 7,728 | §§2.3–3.2: compact towers, relative centres, conditional limits, Lemma 2.7 |
+  | `OAI/Analysis/PlaneSpectrum` | 19 / 8,466 | §§2.1–2.2, 3.3–3.4: characters, invariant mean, wild laws, Haar rigidity (Thm 2.3) |
+  | `OAI/Geometry/PlaneColoring` | 37 / 14,142 | §4 (`BorelTransfer.proper_to_borel_weak`, Thm 1.3 ⇒) and §§5–8 (`Palettes`, `Transitions`, `CyclicCore`, `DiskAverages`, `ContinuumLimits`, `FourTransport`, `FiveSupport`, `Moser`, `Mesh`, …) |
+
+  - `Five.lean` combines `proper_to_borel_weak` (proper ⇒ Borel weak colouring) with `no_measurable_weak_five_coloring`.
+  - The final step goes through `FullApprox` and a planar-cover lemma (`graph_map_small_mesh_impossible`), not literally through the paper's §8 case split.
+  - The converse transfer (§4.2) is not needed for Theorem 1.1, and it is not on the path to `Five.lean`.
+  - Lean's `WeakColoring` is "AE-measurable, and c(p) ≠ c(p + e^{iθ}) for (volume × Haar)-a.e. (p, θ)". This is equivalent to Definition 1.2.
+  - `Moser.lean` uses the same placement as (8.6), *with* the parentheses: `moserRotation*(moserPoint i+(-290+149*I)/250)`. This matches our corrected reading.
 - **We have not compiled it.** See Approach 3.
 
 ## Approaches
@@ -136,6 +150,10 @@ with c(x) ≠ c(y) whenever |x − y| = 1. Colour classes are arbitrary
   - Every sign vector with I, O ≠ ∅ is one + run and one − run, of lengths {2, 3}.
   - No six-position palette word exists, even allowing arbitrary independent sign vectors at the three non-antipodal positions. That is a superset of the paper's configurations.
 - **(G) Hexagonal 7-colouring.** 2r < 1 and (√21 − 2)r > 1 for r = 2/5.
+- **(H) §§2–3 algebra** (sympy and Fractions).
+  - Identity (3.14): |A − Bu²|² = (A−B)² + 4AB(Im u)² = |−L + (A−B)u + Lu²|², with L = √(AB) and |u| = 1.
+  - The unit decomposition x = k + k′ in Lemma 2.7, with k = x/2 + i√(1−x²/4).
+  - The explicit numerics in Lemma 2.7: 18τ²/s² = 0.0018 at s = 100τ, and the Jensen step 0.95² − 0.1 > 1/4.
 
 What this does **not** cover:
 - The analytic core: Theorem 2.3 rigidity, the transfer Theorem 1.3, palettes (§5), local finiteness (§6), continuum extraction (§7), and the four-cycle parity argument (§8.3).
