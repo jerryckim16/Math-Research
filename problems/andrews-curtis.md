@@ -197,6 +197,10 @@ Not checked: the §6 analysis of the Two-Hump classification table, the 214-pair
   - Per source: 68,481,208 (AK(3)), 5,374,816 (P1), 14,772,800 (P2).
   - So **no state of energy < 29 is forward-reachable from two of AK(3), P1, P2.** Hence directed d_GS ≥ 29 for each pair, in both directions.
   - In the same run, the levels below 28 again gave exactly the cap-28 counts (47,544,780; 36,700,896 / 2,323,596 / 8,520,288).
+- **Passive-source runs (directed reachability from one source only).** `ac_search_compact ... P --passive AK3 Q` expands only P. It reports a meeting if P's forward sublevel set contains AK(3) or Q.
+  - Validation: at exclusive caps 25 and 29, P1 alone settles 135,892 and 5,374,816 states, and P2 alone settles 168,304 and 14,772,800. These are exactly the per-source counts of the multi-source runs, as they must be when there is no meeting.
+  - **Cap 30, P1 alone:** 17,796,820 states settled, and the set contains neither AK(3) nor P2. This took 496 s on one core at 0.96 GB peak RSS.
+  - So there is no directed path P1 ⇝ AK(3) and no directed path P1 ⇝ P2 with all energies < 30. On its own this says nothing about paths *into* P1, or about V-shaped or zig-zag paths. The multi-source run below covers the V-shaped paths.
 - Caveat for caps 28 and 29: the result comes from one implementation. Our second engine (`ac_search.cpp`) needs about 10 GB at cap 28, so it was not run. The engine does match the paper exactly at caps 25–27. The graph-relative scope noted below applies in full.
 - **The full graph** (all rotations, not only cancelling junctions) is barely larger but about 20× slower in our implementation.
   - Cap 21: 41,306 states against 40,078 with `--junction`. Cap 23: 285,760 against 274,430. No meeting in either.
