@@ -366,6 +366,54 @@ Per-gate JSON files are in `results/lrc14_gates/`.
 - **All match the certificates:** exactly one witness-free lift per member, and 0 improper after the gcd clause. At p = 83 even the search-node count (17,753,408) coincides with the record.
 - Not checked: the other 92 of the 111 primes; the binary cascade; the level-one family.
 
+### 8. Private-time pruning for the level-one generator (step 6)
+
+**Notation.** Fix k and a prime p. Put n = (p−1)/2 (folded time classes 1..n) and folded speed classes 1..n. Class v *covers* time a iff (k+1)·d_p(av) < p. For a set C of classes and v ∈ C, the *private times* of v in C are the times covered by v and by no other class of C; write priv_C(v) for their number.
+
+**Fact.** Every class covers exactly m = ⌊(p−1)/(k+1)⌋ times.
+
+- As a runs over 1..n, the folded residue d_p(av) runs over 1..n bijectively, because v is a unit and folding identifies ±.
+- (k+1)x < p ⇔ x ≤ m, since (k+1) ∤ p.
+
+**Lemma 4.1 (Allikvere, arXiv:2609.02604v2; our transcription).** Let C be a cover of all n times by s distinct classes. Some class of C has at least q_s := ⌈max(0, 2n − s·m)/s⌉ private times.
+
+*Proof.* Let n_j be the number of times covered by exactly j classes of C.
+
+1. Counting incidences: s·m = Σ_j j·n_j ≥ n_1 + 2(n − n_1).
+2. So n_1 ≥ 2n − s·m.
+3. The n_1 singly-covered times are private to their class, and there are s classes, so by pigeonhole one class has at least ⌈n_1/s⌉ ≥ q_s of them. ∎
+
+**Normalisation.**
+
+- Multiplying by a unit u maps covers to covers: v covers a iff uv covers u⁻¹a. So it maps private times of v to private times of uv bijectively.
+- Hence every unit orbit of minimal covers contains a representative C ∋ 1 in which class 1 has the **largest** number of private times. Choose v with maximal priv_C(v) and scale by v⁻¹.
+- Then in particular priv_C(1) ≥ q_|C|.
+- Every improper k-multiset is C + extras for a minimal cover C (see `covergen.c`), so restricting to these representatives keeps at least one representative of every orbit of I(k,p,1).
+
+**Search cuts** (`covergen.c`, environment `LRC_PRUNE`):
+
+- **`LRC_PRUNE=1` (Lemma 4.1).**
+  - Leaf filter: priv_C(1) ≥ q_|C|.
+  - Node cut: class 1's private set only shrinks when classes are added, and q_s is non-increasing in s (|C| ≤ k). So a node whose current priv(1) < q_k has no passing leaf below it, and a child that would bring priv(1) below q_k is skipped. Its class is still excluded for later siblings, exactly as in the unpruned search.
+- **`LRC_PRUNE=2` (max-private normalisation, Allikvere §4.1).**
+  - Leaf filter: priv_C(1) ≥ priv_C(v) for every v ∈ C.
+  - Node cut ("locked" times): a private time of a chosen class v that **no still-allowed class covers** remains private to v in every completion (allowed sets only shrink below a node). Since priv(1) only shrinks, the node is cut if |locked(v)| > priv(1) for some v.
+  - Forbidding: an allowed class c with priv(1) − |P₁ ∩ cov(c)| < max_v |locked(v)| is removed from the allowed set. Here P₁ is class 1's current private set. Adding c would leave class 1 below some class's locked count forever, and forbidding classes only enlarges locked sets. The gain bound is then re-applied.
+- These rules only remove search nodes with no admissible leaf below them, and leaves that are not the normalised representative. The orbit set is unchanged.
+
+**Validation** (`test_lonely.py`, `test_covergen_pruning_preserves_orbits`). For (k,p) = (5,41), (7,61), (8,101), (9,137), (14,89), levels 0, 1 and 2 give identical orbit sets, and at (14,89) that set has the certificate's 687,016 orbits. At (14,113) only the node counts were measured: the orbit-set comparison (expanding 43.8M unpruned covers) did not finish within its time limit, so it is not claimed.
+
+**Measured speed-up** (single core):
+
+| (k, p) | nodes, levels 0 / 1 / 2 | minimal covers output | time |
+| --- | --- | --- | --- |
+| (14, 89) | 8.49M / 4.74M / 4.73M | 1.69M / 0.98M / 0.26M | 3.3 / 1.9 / 1.8 s |
+| (14, 113) | 268M / 240M / 235M | 43.8M / 43.1M / 6.6M | 88 / 87 / 70 s |
+
+- The node savings shrink as p grows. q_k is only 2 at p = 239. The locked-time rule also rarely fires, because nearly every time stays reachable until deep in the tree.
+- The large gain is in output: 5–7× fewer covers to expand and canonicalise.
+- **Failed route (kept):** these rules do **not** reproduce Allikvere's roughly 14× smaller tree (Approach 4). His engine also uses a two-branch search (irredundant k-class covers and extensions of smaller covers) with irredundance-aware bounds, which we have not implemented.
+
 ## Independent re-check summary
 
 Scope: J. Allikvere's computer-assisted proofs of LRC(13) and LRC(14), i.e. 14 and 15 runners (arXiv:2609.02604v2). Certificates: Zenodo 10.5281/zenodo.22066772 and 10.5281/zenodo.22667683. All checks use our own code (C and Python, in `computations/lonely-runner/`), written from the definitions in the paper and in arXiv:2604.23906. The archives were read as data only; none of the author's programs were executed.

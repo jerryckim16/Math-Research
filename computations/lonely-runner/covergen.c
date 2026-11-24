@@ -75,11 +75,46 @@ static int minimal(void) {
     return 1;
 }
 
+/* Private-time pruning (Allikvere, arXiv:2609.02604v2, Lemma 4.1), enabled
+ * with LRC_PRUNE=1.  Every class covers exactly m = floor((p-1)/(k+1)) of the
+ * n = (p-1)/2 folded times, so in a cover by s classes at least 2n - s*m
+ * times are covered exactly once, and some class has
+ * q_s = ceil(max(0, 2n - s*m)/s) private times.  Units preserve private
+ * times, so every orbit of minimal covers has a representative containing
+ * class 1 with priv(1) >= q_|C|.  We keep only those (leaf filter), and since
+ * priv(1) only shrinks as classes are added and q_s is non-increasing in s,
+ * a node with priv(1) < q_k has no such leaf below it (cut). */
+static int prune = 0, qk = 0, mcov = 0;
+static int qs(int s) { long t = 2L * h - (long)s * mcov; if (t <= 0) return 0; return (int)((t + s - 1) / s); }
+static bs others;   /* union of cov of chosen classes other than class 1 */
+/* LRC_PRUNE=2 adds the max-private normalisation (Allikvere §4.1, "each orbit
+ * has a representative with enough times covered by just one speed"; the
+ * locked-time rule is Lemma M of the munim notes): scale so that class 1 has
+ * the MOST private times in C (any class attaining the maximum).  Leaf filter:
+ * priv(1) >= priv(v) for every v in C.  Cut: a private time of a chosen class v
+ * that no still-allowed class covers stays private to v in every completion,
+ * while priv(1) can only shrink; so if |locked(v)| > priv(1) no leaf below
+ * passes the filter. */
+static int priv1(const bs *O) { int s = 0; for (int i = 0; i < W; i++) s += __builtin_popcountll(cov[1].w[i] & ~O->w[i]); return s; }
+
 static void dfs(const bs *U, const bs *A, int depth) {
     nodes++;
     if (nodecap && nodes >= nodecap) return;
     if (isempty(U)) {
         leaves++;
+        if (prune && priv1(&others) < qs(nL)) return;
+        if (prune >= 2) {
+            int p1 = priv1(&others);
+            for (int i = 1; i < nL; i++) {
+                int c = 0;
+                for (int w = 0; w < W; w++) {
+                    uint64_t x = cov[L[i]].w[w];
+                    for (int j = 0; j < nL; j++) if (j != i) x &= ~cov[L[j]].w[w];
+                    c += __builtin_popcountll(x);
+                }
+                if (c > p1) return;
+            }
+        }
         if (minimal()) {
             printed++;
             if (!quiet) {
@@ -94,6 +129,36 @@ static void dfs(const bs *U, const bs *A, int depth) {
     /* gain bound */
     for (int c = 1; c <= h; c++) if (has(A, c)) { int g = popand(&cov[c], U); if (g > maxg) maxg = g; }
     if ((long)left * maxg < need) return;
+    if (prune >= 2 && nL > 1) {
+        bs reach; memset(&reach, 0, sizeof reach);
+        for (int c = 1; c <= h; c++) if (has(A, c)) for (int w = 0; w < W; w++) reach.w[w] |= cov[c].w[w];
+        int p1 = priv1(&others), maxlocked = 0;
+        for (int i = 1; i < nL; i++) {
+            int c = 0;
+            for (int w = 0; w < W; w++) {
+                uint64_t x = cov[L[i]].w[w] & ~reach.w[w];
+                for (int j = 0; j < nL; j++) if (j != i) x &= ~cov[L[j]].w[w];
+                c += __builtin_popcountll(x);
+            }
+            if (c > p1) return;
+            if (c > maxlocked) maxlocked = c;
+        }
+        /* forbid classes that would leave class 1 with fewer private times
+         * than some class's locked times (forbidding only adds locked times) */
+        if (maxlocked > 0) {
+            static bs Aloc[MAXK + 2];
+            Aloc[nL] = *A;
+            bs P1; for (int w = 0; w < W; w++) P1.w[w] = cov[1].w[w] & ~others.w[w];
+            for (int c = 1; c <= h; c++) if (has(A, c)) {
+                if (p1 - popand(&P1, &cov[c]) < maxlocked) clr(&Aloc[nL], c);
+            }
+            A = &Aloc[nL];
+            /* re-check the gain bound with the smaller allowed set */
+            maxg = 0;
+            for (int c = 1; c <= h; c++) if (has(A, c)) { int g = popand(&cov[c], U); if (g > maxg) maxg = g; }
+            if ((long)left * maxg < need) return;
+        }
+    }
     /* most constrained uncovered time (times are bit positions 1..h) */
     int besta = -1, bestm = 1 << 30;
     for (int a = 1; a <= h; a++) if (has(U, a)) {
@@ -108,10 +173,14 @@ static void dfs(const bs *U, const bs *A, int depth) {
         branch++;
         clr(&A2, c);                  /* excluded for later siblings and below */
         if (depth == 0 && nshards > 1 && (branch - 1) % nshards != shard) continue;
+        bs saveO = others;
+        for (int w = 0; w < W; w++) others.w[w] |= cov[c].w[w];
+        if (prune && priv1(&others) < qk) { others = saveO; continue; }
         bs U2; for (int w = 0; w < W; w++) U2.w[w] = U->w[w] & ~cov[c].w[w];
         L[nL++] = c;
         dfs(&U2, &A2, depth + 1);
         nL--;
+        others = saveO;
     }
 }
 
@@ -146,6 +215,7 @@ int main(int argc, char **argv) {
     if (argc < 3) { fprintf(stderr, "usage: covergen k p [maxtop]\n"); return 2; }
     k = atoi(argv[1]); p = atoi(argv[2]);
     if (argc > 3) maxtop = atol(argv[3]);
+    if (getenv("LRC_PRUNE")) prune = atoi(getenv("LRC_PRUNE"));
     if (getenv("LRC_NSHARDS")) { nshards = atol(getenv("LRC_NSHARDS")); shard = getenv("LRC_SHARD") ? atol(getenv("LRC_SHARD")) : 0; }
     long probes = 0;
     if (argc > 6) { probes = atol(argv[4]); rng ^= (unsigned long long)atol(argv[5]) * 2654435761ULL; nodecap = strtoull(argv[6], 0, 10); maxtop = -1; quiet = 1; }
@@ -156,6 +226,9 @@ int main(int argc, char **argv) {
             long r = ((long)a * v) % p, d = r < p - r ? r : p - r;
             if ((long)(k + 1) * d < p) cov[v].w[a >> 6] |= 1ULL << (a & 63);
         }
+    mcov = (p - 1) / (k + 1);
+    qk = qs(k);
+    memset(&others, 0, sizeof others);
     bs U, A; memset(&U, 0, sizeof U); memset(&A, 0, sizeof A);
     for (int a = 1; a <= h; a++) { U.w[a >> 6] |= 1ULL << (a & 63); A.w[a >> 6] |= 1ULL << (a & 63); }
     for (int w = 0; w < W; w++) U.w[w] &= ~cov[1].w[w];
@@ -175,6 +248,6 @@ int main(int argc, char **argv) {
         return 0;
     }
     dfs(&U, &A, 0);
-    fprintf(stderr, "nodes %llu leaves %llu minimal_covers %llu\n", nodes, leaves, printed);
+    fprintf(stderr, "nodes %llu leaves %llu minimal_covers %llu prune %d q_k %d m %d\n", nodes, leaves, printed, prune, qk, mcov);
     return 0;
 }
