@@ -106,15 +106,17 @@ def main():
                 summ = json.loads(tf.extractfile(m).read())
             elif "/rows_ir/" in name and name.endswith(".txt"):
                 ir_files += 1
-                data = tf.extractfile(m).read()
-                tmp_ir.write(data if data.endswith(b"\n") or not data else data + b"\n")
-                for line in data.split(b"\n"):
+                for line in tf.extractfile(m):        # line by line: files can hold 1e8 rows
+                    line = line.strip()
                     if line:
+                        tmp_ir.write(line + b"\n")
                         ir_res.add(line)
             elif "/rows_km1/" in name and name.endswith(".txt"):
                 km1_files += 1
-                data = tf.extractfile(m).read()
-                tmp_km.write(data if data.endswith(b"\n") or not data else data + b"\n")
+                for line in tf.extractfile(m):
+                    line = line.strip()
+                    if line:
+                        tmp_km.write(line + b"\n")
     tmp_ir.close()
     tmp_km.close()
     k, p = summ["gate"]["k"], summ["gate"]["p"]
@@ -176,7 +178,7 @@ def main():
             name = m.name
             if "/filt/" in name and name.endswith(".out"):
                 is_ext = "/filt/ext" in name
-                for line in tf.extractfile(m).read().split(b"\n"):
+                for line in tf.extractfile(m):
                     mm = SURV.match(line.strip())
                     if not mm:
                         continue
