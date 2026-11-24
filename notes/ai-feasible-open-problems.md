@@ -44,9 +44,10 @@ The summaries come from the arXiv abstracts.
 
 - **Hadamard 668:** Egan, Kotsireas, London and Ó Catháin, arXiv:2610.27175v2,
   report that Alpöge, Voinov and Reynolds-Haertle announced Hadamard matrices
-  at all twelve open orders below 2000 in August 2026, 668 among them, and that
-  their survey verifies the claimed matrices. The Tier 1 target "order 668" is
-  therefore appears resolved (reported, not checked here).
+  at the twelve orders below 2000 where none was known, in August 2026. Order
+  668 was the smallest of these. The survey says it verifies the claimed
+  matrices. So the Tier 1 target "order 668" appears to be resolved (reported,
+  not checked here).
 - **Kissing numbers:** several unrefereed 2026 lower-bound papers publish their
   data (dims 19, 25–31, 25–55, 32–39, 49–61). See `problems/kissing-numbers.md`.
 - **Turán K₄⁽³⁾:** Jeong, Park, Im, Lee and Yang, arXiv:2609.27495v2, claim
