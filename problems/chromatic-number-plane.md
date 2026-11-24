@@ -9,6 +9,9 @@
   - All 70 OAI modules compile.
   - A from-scratch restatement of "no proper 5-colouring of R²" is proved by the OAI theorem and depends only on [propext, Classical.choice, Quot.sound].
   - So χ ≥ 6 is **Lean-verified (re-run here)**, modulo trust in the Lean 4.34.1 kernel and the faithfulness of the restated statement.
+  - **Kernel replay (`leanchecker`).** The compiled `.olean` files were re-checked by the kernel, independently of the elaborator:
+    - all 70 OAI modules, one at a time;
+    - the whole 787,391-constant environment (core, Mathlib, OAI) from scratch with `--fresh`: exit 0, 41 min.
   - The paper's analytic argument itself was not audited by a human.
   - The SAT-style verification criteria (exact edges, LRAT-checked non-5-colourability) **do not apply and are not met**, because no finite 6-chromatic graph exists in the source. The evidence for χ ≥ 6 is the re-run formal proof, not a certificate.
 
@@ -209,8 +212,40 @@ What this does **not** cover:
   - The statement is exactly Theorem 1.1, with ℂ = R² and the complex norm equal to the Euclidean distance.
   - Negative control: a `sorry`-proved theorem in the same environment reports `[sorryAx]`.
 - **Trust base.** The Lean 4.34.1 kernel and elaborator (official release binary), Mathlib `d13f23b`, and our 5-line restatement.
-  - Not done: an independent kernel replay (`leanchecker` / lean4checker) of the `.olean` files.
+  - The kernel replay below removes the elaborator and the `.olean` writer from the trust base for the 70 OAI modules.
   - Not done: a human audit of the paper's §§2–7.
+
+### 3b. Kernel replay of the OAI `.olean` files with `leanchecker` (worked; full-environment replay also passed)
+
+- **Tool.**
+  - `leanchecker` ships with the Lean toolchain (`bin/leanchecker` of the official v4.34.1 release; source `src/lean/LeanChecker.lean`, by K. Morrison and S. Ullrich; it is lean4checker moved into core).
+  - It loads compiled `.olean` files and re-adds every stored declaration through the kernel's `addDecl` (`Lean.Kernel.Environment.replay`).
+  - So it re-checks what the files contain, independently of the elaborator, tactics and `.olean` writer that produced them. Its own docstring says it detects "environment hacking"; it is not an external verifier, since it uses the same kernel.
+- **Default mode, all 70 OAI modules** (`lean_recheck/kernel_replay.sh` step 2).
+  - Each module's own constants are replayed on top of its imported environment, one module per process: `LEAN_PATH=<mathlib paths>:oaicheck/build leanchecker -v <module>`.
+  - **70/70 exit 0, no errors. 569 s wall in total; the slowest is `OAI.Analysis.PlaneSpectrum.Basic` at 100 s; `OAI.Geometry.PlaneColoring.Five` takes 5.5 s.**
+  - The replay covers **4,273 constants, 3,553 of them theorems**. They were counted from the 70 `.olean` files with `lean_recheck/count_constants.lean`, which reads exactly the constant table `leanchecker` replays.
+  - Every OAI declaration on which `no_proper_five_coloring` depends is therefore re-checked by the kernel.
+  - Running all 70 at once (`leanchecker OAI`) starts one task per module, each importing Mathlib. On 15 GB RAM it was OOM-killed after 65 s, so the modules were run one at a time.
+- **Controls** (`lean_recheck/controls/NegCtl/`, each compiled with `lean -o` and checked the same way).
+  - *Hack:* an ill-typed `theorem NegCtl.bad : False := True.intro`, injected with `addDecl` under `debug.skipKernelTC = true` (environment hacking), plus a theorem that uses it.
+    - It compiles without error, and `leanchecker` **rejects** it: `(kernel) declaration type mismatch, 'NegCtl.bad' has type True but it is expected to have type False`, exit 1.
+    - This shows the tool really re-checks declarations, rather than trusting the `.olean`.
+  - *Good:* the same mechanism with the kernel check on and a well-typed value. Passes.
+  - *Sorry:* a `sorry` proof also passes, because `sorryAx` is an axiom, not a kernel error. So `leanchecker` does not replace the `#print axioms` check above. The two together are the evidence.
+- **Fresh mode** (`leanchecker --fresh OAI.Geometry.PlaneColoring.Five`, step 4).
+  - It replays the *entire* environment of `Five` into an empty kernel environment, single-threaded: Init, Std, Lean, all of Mathlib and its dependencies, and the OAI modules. That is **787,391 constants** in 10,814 modules (`env_size.lean`).
+  - This also re-checks Mathlib and core rather than trusting their `.olean` files.
+  - Calibration: `--fresh` on `Mathlib.Algebra.Group.Basic` (143,112 constants) took 95 s; on `Mathlib.Topology.Basic` (209,366) 142 s at 1.45 GB peak RSS.
+  - The full run, 14:34–15:15 UTC: **exit 0, no errors.** It took 2,469 s wall (41 min) and 2,367 s user CPU on one core, at 8.18 GB peak RSS (most of it file-backed `.olean` mappings).
+  - Linear extrapolation from the calibration predicted about 10 min. The analysis and measure-theory layers of Mathlib cost the kernel far more per constant than the early layers.
+  - The memory watchdog (kill at about 10.5 GB) never fired.
+- **Label.** **Kernel-replayed in full.** Every one of the 787,391 constants in the environment of `OAI.Geometry.PlaneColoring.Five` was re-checked by the Lean 4.34.1 kernel, starting from an empty environment. That covers core, Mathlib `d13f23b` with its dependencies, and the 70 OAI modules.
+  - The 70 OAI modules were also replayed module by module on top of their imports.
+  - What is still trusted:
+    - the kernel itself, run as the same binary and code that type-checked the proof at compile time, so this is not an independent kernel such as lean4lean or nanoda;
+    - `leanchecker`'s loading code;
+    - the 5-line restatement in `Check.lean`.
 ### 4. Find a finite 6-chromatic unit-distance graph (not attempted)
 
 - Theorem 1.1 plus compactness implies one exists, but the proof is non-constructive.
@@ -237,11 +272,13 @@ What this does **not** cover:
 | χ(R²) ≤ 7 | proved (classical); inequalities re-checked | `cert_section8.py` (G) |
 | OpenAI Lemma 8.9 (Moser placement lies in region (8.4)) | checked exactly (algebraic arithmetic plus rigorous intervals) | `cert_section8.py` (A–D) |
 | OpenAI Prop. 8.2 finite combinatorics | computed (exhaustive, superset of cases) | `cert_section8.py` (F) |
-| **χ(R²) ≥ 6 (OpenAI, Thm 1.1)** | **Lean-verified (OpenAI's formalization, re-run here from source)**. Statement independently restated; axioms are only propext, Classical.choice, Quot.sound. Not refereed, the analytic text is not human-audited, and no finite certificate exists | `lean_recheck/` |
+| **χ(R²) ≥ 6 (OpenAI, Thm 1.1)** | **Lean-verified (OpenAI's formalization, re-run here from source), and kernel-replayed with `leanchecker`**: 70/70 OAI modules in default mode (4,273 constants), plus `--fresh` replay of the whole 787,391-constant environment from scratch. Statement independently restated; axioms are only propext, Classical.choice, Quot.sound. Not refereed, the analytic text is not human-audited, and no finite certificate exists | `lean_recheck/` (`lean_recheck.sh`, `kernel_replay.sh`) |
 | χ(R²) ∈ {6, 7} | Lean-verified lower bound (above) plus the classical upper bound | — |
 
 ## Next steps
 
-- Independent kernel replay of the OAI `.olean` files (lean4checker / `leanchecker`), to remove trust in the elaborator path. Mathlib replay costs extra CPU time.
-- Update the README status table and the ProofAtlas comparison: χ ≥ 6 now has a re-run formal proof here.
+- Replay the proof with a kernel written independently of Lean's C++ kernel, to remove trust in that kernel too.
+  - Candidates: lean4lean, or nanoda via a `lean4export` file.
+  - Cost not measured. The `--fresh` replay with Lean's own kernel took 41 min single-threaded.
+  - The 18 GB build tree was deleted after this session, so this needs a rebuild: about 2.5 h with `lean_recheck.sh`.
 - Optional: an adversarial read of §§2–4, the transfer, where the claim is most surprising.

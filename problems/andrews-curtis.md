@@ -4,7 +4,9 @@
 **Status:** in progress. We are checking an unrefereed, computer-assisted claim independently: J. Carreras, arXiv:2607.23611v1 (July 2026). Done so far:
 - Theorems 1–4 (four AC-equivalences among the six hard length-14 Miller–Schupp presentations and AK(3)) are **certificate-checked**. Our own checker replays the author's move certificates.
 - Our own search **re-finds** Theorems 3–4 independently, and our checker accepts the resulting certificates.
-- The search reproduces **exactly** the paper's exhaustive state counts at energy cap 25 and the exact bottleneck 19 (Theorem 6). The cap-26 and cap-27 lower bounds are being re-run.
+- **Theorem 6** (computer-assisted) is re-derived with our own implementation:
+  - the exact bottleneck 19;
+  - all exhaustive state counts at energy caps 25, 26 and 27, matching the paper exactly, including the 13,504,944 states behind the "≥ 27" lower bounds.
 - AK(3) and the conjecture itself remain open.
 
 **Started:** 2026-11-24
@@ -159,7 +161,26 @@ Not checked: the §6 analysis of the Two-Hump classification table, the 214-pair
 - **Cap-25 counts (Theorem 6).** Sources {AK(3)}, {P1}, {P2}, exclusive cap 25: 1,836,928 states settled, **1,532,732 / 135,892 / 168,304** per source, no meeting. This took 83 s and about 0.4 GB.
   - These are *exactly* the paper's numbers.
   - The match is good evidence that our graph is the same as the paper's GS graph. Equal counts from two independent implementations are evidence, not a proof that the graphs coincide.
-- **Cap 26 / cap 27.** Running (see Results). The paper reports 6,212,968 and 13,504,944 states.
+- **Cap 26 (Theorem 6).** Same three sources, exclusive cap 26: **6,212,968** states settled, no meeting. This took 5 min 26 s on one core.
+  - Per source: 5,431,780 (AK(3)), **356,836** (P1), **424,352** (P2).
+  - The total matches the paper's 6,212,968. The P1 and P2 numbers match the paper's "energy ≤ 25" figures in §5 exactly.
+  - So every path in this graph joining any two of AK(3), P1, P2 has bottleneck ≥ 26.
+- **Cap 27 (Theorem 6).** Exclusive cap 27: **13,504,944** states settled, no meeting. This took 834 s wall on one core at 3.01 GB peak RSS.
+  - Per source: 10,118,636 (AK(3)), **851,836** (P1), **2,534,472** (P2).
+  - The total and the P1/P2 counts all equal the paper's numbers.
+  - So d_GS(P1, AK(3)), d_GS(P2, AK(3)) and d_GS(P1, P2) are all **≥ 27**, which is the lower-bound half of Theorem 6, re-derived here.
+  - The paper's cap-28 run hit its 40M-state budget and was inconclusive.
+- **Cap 28 (beyond the paper; running).**
+  - `ac_search_compact.cpp` explores the same graph using about 30 B per state instead of about 220 B: packed 2-bit words, an append-only state array, and an open-addressing index.
+  - Its per-level and per-source counts equal those of `ac_search.cpp`: cap 25 in full, cap 21 in `test_ac.py`.
+  - Run: exclusive cap 28 from {AK(3)}, {P1}, {P2}, budget 95M states (about 2.9 GB).
+  - Possible outcomes:
+    - a meeting at bottleneck 27, which would give a new explicit certificate for one of Shehper et al.'s uncertified claims;
+    - exhaustion with no meeting, which would give d_GS ≥ 28;
+    - budget exhausted, which would be inconclusive, as in the paper.
+- **The full graph** (all rotations, not only cancelling junctions) is barely larger but about 20× slower in our implementation.
+  - Cap 21: 41,306 states against 40,078 with `--junction`. Cap 23: 285,760 against 274,430. No meeting in either.
+  - It was not pushed further.
 - **Scope.** As the author says, Theorem 6 is a statement about this graph. It is not an AC-distance bound and not evidence of AC-inequivalence.
 
 ## Blocked / failed routes
@@ -181,13 +202,13 @@ Not checked: the §6 analysis of the Two-Hump classification table, the 214-pair
 | AK(2) is AC-trivial (known) | certificate-checked (our search and our checker) | `certs_ours/ak2_trivial.json` |
 | d_GS(P3, AK(3)) = d_GS(P4, AK(3)) = 19 (Thm 6, first part) | computed (exhaustive below cap 19, our implementation; relative to the graph) | `reproduce.sh` |
 | Sublevel counts at exclusive cap 25: 1,532,732 / 135,892 / 168,304, no meeting | computed; reproduces the paper's numbers exactly | `reproduce.sh` |
-| d_GS(P1 or P2, AK(3)) ≥ 26 and ≥ 27 (Thm 6) | in progress (cap-26 / cap-27 runs) | `AC_HEAVY=1 reproduce.sh` |
+| Sublevel count at exclusive cap 26: 6,212,968 (5,431,780 / 356,836 / 424,352), no meeting, so d_GS(P1, AK(3)), d_GS(P2, AK(3)), d_GS(P1, P2) ≥ 26 | computed; reproduces the paper's numbers exactly | `AC_HEAVY=1 reproduce.sh` |
+| Sublevel count at exclusive cap 27: 13,504,944 (10,118,636 / 851,836 / 2,534,472), no meeting, so d_GS(P1, AK(3)), d_GS(P2, AK(3)), d_GS(P1, P2) ≥ 27 (Thm 6) | computed (exhaustive, our implementation; relative to the graph); reproduces the paper's numbers exactly | same |
 | AK(3) AC-trivial? Andrews–Curtis conjecture | open | — |
 
 ## Next steps
 
-- Finish the cap-26 and cap-27 exhaustions from {AK(3)}, {P1}, {P2} and compare the state counts with 6,212,968 and 13,504,944 (cap 27: about 3 GB RAM, tens of minutes).
-- Bounded attack on the open edges: P1 or P2 → AK(3), the two remaining uncertified claims of Shehper et al.
+- **Next concrete step:** a bounded attack on the open edges, P1 or P2 → AK(3), the two remaining uncertified claims of Shehper et al.
   - Push our minimax search to cap 28–29 within a memory budget.
   - Alternatively, try the non-junction edges, which our search supports and the paper's graph excludes.
 - Formal check: port `ac_check` to Lean (word reduction plus move replay by `decide`) to turn the certificate checks into Lean-verified statements.

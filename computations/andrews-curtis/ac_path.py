@@ -64,7 +64,7 @@ def step_moves(state, target_key):
 def main(out_path, start, end, json_out):
     lines = open(out_path).read().split("\n")
     p = lines[lines.index("PATH") + 1: lines.index("END")]
-    keys = [tuple(sorted(l.split("|"))) for l in p]
+    keys = [canon_key(tuple(w(t) for t in l.split("|"))) for l in p]
     S = tuple(w(t) for t in start.split("/"))
     E = tuple(w(t) for t in end.split("/"))
     if keys[0] != canon_key(S):

@@ -18,6 +18,6 @@ done
 # Theorem 6 sublevel counts at exclusive cap 25: expect 1532732 135892 168304, no meeting (~90 s, 0.4 GB)
 "$W/ac_search" 25 --junction $AK3 + $P1 + $P2 | tail -2
 if [ "${AC_HEAVY:-0}" = 1 ]; then
-  "$W/ac_search" 26 --junction $AK3 + $P1 + $P2 | tail -2   # paper: 6,212,968 states, no meeting
-  "$W/ac_search" 27 --junction $AK3 + $P1 + $P2 | tail -2   # paper: 13,504,944 states, no meeting
+  "$W/ac_search" 26 --junction $AK3 + $P1 + $P2 | tail -2   # 6,212,968 states (5431780 356836 424352), no meeting; 5.5 min
+  "$W/ac_search" 27 --junction $AK3 + $P1 + $P2 | tail -2   # 13,504,944 states (10118636 851836 2534472), no meeting; 14 min, 3.0 GB
 fi

@@ -37,3 +37,5 @@ find OAI -name "*.lean" | LC_ALL=C sort | xargs cat | sha256sum   # expect 17145
 python3 "$here/compile_oai.py" . ../mathlib          # expect: done 70/70 failed []
 LEAN_PATH=$(cd ../mathlib && lake env printenv LEAN_PATH):$PWD/build lean Check.lean
 # expect: 'CNPRecheck.plane_not_five_colourable' depends on axioms: [propext, Classical.choice, Quot.sound]
+# 4. kernel replay of the compiled .olean files (leanchecker): see kernel_replay.sh "$W"
+#    (70/70 OAI modules in default mode; --fresh replay of all 787,391 constants: exit 0, 41 min)

@@ -160,6 +160,14 @@ def test_search_pipeline():
     # AK(3) and the trivial presentation are not joined below total length 14
     r = subprocess.run([exe, "14", "--junction", "xxxYYYY/xyxYXY", "+", "x/y"], capture_output=True, text=True)
     assert "EXHAUSTED" in r.stdout
+    # the compact engine explores the same graph: identical per-level counts
+    exe2 = os.path.join(tmp, "ac_compact")
+    subprocess.run(["g++", "-O2", "-std=c++17", "-o", exe2, os.path.join(HERE, "ac_search_compact.cpp")], check=True)
+    srcs = ["xxxYYYY/xyxYXY", "+", "XyyxYYY/XXXYxxy", "+", "XyyxYYY/XXXYxxY"]
+    r1 = subprocess.run([exe, "21", "--junction"] + srcs, capture_output=True, text=True).stdout
+    r2 = subprocess.run([exe2, "21", "--maxstates", "200000"] + srcs, capture_output=True, text=True).stdout
+    lv = lambda r: [l.split("per source:")[1] for l in r.splitlines() if l.startswith("level")]
+    assert lv(r1) == lv(r2) and lv(r1)[-1].split() == ["38612", "945", "521"], (lv(r1)[-1:], lv(r2)[-1:])
     # a corrupted path is rejected by the expansion step
     lines = open(out).read().split("\n")
     i = lines.index("PATH") + 2
