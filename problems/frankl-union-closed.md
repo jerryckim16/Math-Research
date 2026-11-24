@@ -3,7 +3,9 @@
 **Area:** extremal combinatorics / information theory
 **Status:** in progress. Literature pinned down from primary sources. The
 one-variable inequality behind the (3−√5)/2 bound is **certificate-checked**
-here with self-contained interval arithmetic. The conjecture is **checked
+here with self-contained interval arithmetic. **Every finite computation** in
+Costa–Sadhu's proof of c_UC ≥ c_L ≈ 0.3827091 (their Thm 1.1) is **independently
+re-certified**. The conjecture is **checked
 exhaustively for universes of size n ≤ 6**: all 75,973,751,474 labeled
 families, reproducing the known labeled counts exactly.
 **Started:** 2026-11-24
@@ -212,6 +214,72 @@ of sets. Here **n = universe size**.
   pairs even after symmetry. Plain enumeration cannot go further. The known
   range n ≤ 12 needs FC-family pruning.
 
+### 3. Independent re-verification of Costa–Sadhu Thm 1.1 (c_UC ≥ c_L ≈ 0.382709)
+
+- **Idea.** Costa–Sadhu's proof of the bound c_L has four parts:
+  - Liu's one-coordinate criterion (Liu, Prop. 3);
+  - the positive-correlation Lemma 2.1;
+  - Lemma R: H(r(x,y))² ≥ H(g(x)) H(g(y)), where r = xy(2−x−y+xy) and
+    g(x) = r(x,x);
+  - Lemma S: 2αH(xy) + 2β√(H(g(x))H(g(y))) ≥ (xH(y)+yH(x))/m*, where
+    m* = 1 − c_L and α, β are fixed by tangency at x = y = x*.
+
+  Lemma R is analytic except for one exact Bernstein certificate. Lemma S has
+  analytic boundary lemmas (5.3, 5.4), a Hessian check around the tangency
+  (t*, 0), and an interval box cover of the compact remainder. Our code
+  re-does every one of these finite steps, with our own cover.
+- **Outcome:** worked. See `computations/frankl/costa_sadhu_checks.py` and
+  `results/costa_sadhu_thm11.txt`.
+  - **Exact rationals.**
+    - The identity W r_xy = UV + xy, and r_x = yU, r_y = xV, r_xy, by
+      formal differentiation.
+    - g(43/64) − 1/2 = 305/2²⁴.
+    - The 4×4 Bernstein matrix of WUV − (1−r) on [0, 43/64]² equals the
+      published matrix entry by entry, and every entry is > 0.
+  - **Constants** (intervals): x* ∈ [0.690787593924988, 0.6907875939249881],
+    m* ∈ [0.61729091208126, 0.61729091208127], β ∈ [0.1000525598628,
+    0.1000525598630], t* = −log x* ∈ [0.36992289186770, 0.36992289186772],
+    c₀ = m*α ∈ [0.55552937614741, 0.55552937614746] > 1/2. All lie inside the
+    published enclosures. The decimal claim c_L > 0.382709087918735 holds
+    with a margin of only **3.0·10⁻¹⁷**, so it needs exact rational
+    arithmetic: we used a bracket for x* of width 2⁻⁷¹ and atanh-series log
+    bounds.
+  - **Scalars of Lemmas 5.3/5.4**: ζ(0.002) ≥ 0.0166724744112; the
+    5.4(a, b, c) values are ≥ 0.00117883769797, 0.0355980952001 and
+    0.0107176824298. Each is positive and matches the paper.
+  - **Tangency.** We use our own local rectangle Q₀ = [5/16, 7/16] × [−1/16,
+    1/16] in (t, d); F is even in d. On it F_tt ≥ 0.0337, F_dd ≥ 0.78 and
+    det ≥ 8.8·10⁻⁵ (703 boxes). So F is convex on Q₀. The point (t*, 0) is
+    stationary with F = 0 there (their Lemma 5.5, analytic), so F ≥ 0 on Q₀.
+  - **Cover.** This is our own dyadic decomposition: t ∈ [1/512, 45/32] with
+    v = t − d ≥ 2⁻¹⁵, and t ∈ [45/32, 33/8] with v ≥ 3/32. It overlaps the
+    analytic regions (t ≤ 0.002; v ≤ 5·10⁻⁵ for t ≤ 1.4; v ≤ 0.1 for
+    1.4 ≤ t ≤ 4.1; t ≥ 4.1).
+    - It uses 31,944 boxes with mean-value lower bounds F̃(c) −
+      sup|F̃_t|Δt − sup|F̃_ξ|Δξ, all rigorously rounded. The minimum certified
+      lower bound is 2.7·10⁻⁷.
+    - Box endpoints are exact dyadics, and the clipping ξ ≤ 1 − ν/t is
+      rounded upward.
+    - It takes about 8 CPU-minutes.
+  - **Test harness.** `test_frankl.py` checks the derivative formulas
+    (G', G'', Γ₅', Γ₅'', F̃_t, F̃_ξ and the Hessian) against 40-digit finite
+    differences. The mean-value bounds rely on them.
+- **What this establishes.** We re-ran every computer-assisted assertion
+  that Thm 1.1 uses, with independent code (not their MPFR supplement) and a
+  different cover. They come out true. We read but did not machine-check:
+  - Lemma 4.1 (entropy, one variable);
+  - Lemma 4.4 (M decreasing);
+  - the case analysis of Lemma R;
+  - Lemmas 5.2–5.5;
+  - the reduction (Prop. 3.1);
+  - Lemma 2.1;
+  - Liu's Prop. 3. This was read only as Costa–Sadhu restate it.
+
+  We found no error. Label: **c_UC ≥ c_L — proof read, all finite
+  computations certificate-checked independently**. Their record Thm 1.2
+  (0.3828852549667978, at ℓ₀ = 1409/2000) and Jiang's 0.38288525 were
+  **not** re-verified.
+
 ## Results
 
 | Claim | Evidence level | Where |
@@ -220,7 +288,59 @@ of sets. Here **n = universe size**.
 | c_UC ≥ (3−√5)/2 | proved (AHS) given the line above; the reduction is AHS's, read and not formalised | AHS arXiv:2211.11731 |
 | Frankl holds for every union-closed family on a universe of ≤ 6 elements | computationally checked (exhaustive, n ≤ 6) — already known up to 12 | `computations/frankl/frankl_enum.c`, `results/small_cases.txt` |
 | Labeled counts 2, 7, 61, 2480, 1385552, 75973751474 (and the universe-[n] counts) | computed; they equal Brinkmann–Deklerck | same |
+| Costa–Sadhu Lemma S (2D inequality at Liu's parameter), Lemma R's Bernstein certificate, all constants | certificate-checked independently (own interval code, own cover) | `computations/frankl/costa_sadhu_checks.py`, `results/costa_sadhu_thm11.txt` |
+| c_UC ≥ c_L = 0.3827090879187350… | proved in Costa–Sadhu (preprint); analytic steps read here, all computations re-certified here | same + arXiv:2610.02295 |
+| c_UC ≥ 0.3828852549667978 (Costa–Sadhu Thm 1.2), ≥ 0.38288525 (Jiang) | claimed, computer-assisted preprints; **not** re-verified here | arXiv:2610.02295, 2609.08291 |
+
+## Failed or closed routes (do not retry blindly)
+
+- **Pushing the pointwise entropy inequality past 0.38288526.** This is
+  impossible: there is a proved ceiling C* (Jiang Prop. "Limitation"; Costa–Sadhu
+  §7). Mixing in more product kernels ψ_j(x)ψ_j(y) does not help either (same
+  endpoint plus diagonal argument).
+- **Gilmer's Conjecture 1** (it would give 1/2) is false (Sawin; Ellis).
+- **iid-only arguments** cannot beat (3−√5)/2, even in principle. That bound
+  is sharp for approximately union-closed families (Chase–Lovett).
+- **Plain enumeration** stops at n = 6. n = 7 means about 2·10¹⁶
+  representative pairs.
+- Optional item not done: a numerical survey of a "conjectured better"
+  inequality. Every published variant with a closed-form optimum is already
+  pinned by the ceilings above, so a grid test would be redundant.
 
 ## Next steps
 
-- (see the end of the file; updated at each checkpoint)
+Realistic for the next session (bounded, about 3 hours):
+
+1. **Re-verify the record claim, Costa–Sadhu Thm 1.2 (0.3828852549667978).**
+   - It uses the same machinery at ℓ₀ = 1409/2000 with weights α₀ =
+     1/(2m₀) + 1/800000000. Here m₀α₀ is within about 10⁻⁹ of 1/2, so the
+     boundary lemmas get much tighter.
+   - It needs Lemma 6.x (the tuned product lemma, which has the same shape as
+     Lemma R) and a new 2D cover. `costa_sadhu_checks.py` is written so that
+     g, r and the weights can be replaced.
+   - Expect thin margins near the edge y = 1: c₀ − 1/2 ≈ 10⁻⁹.
+   - An independent second check of an unrefereed record bound has real
+     value. Alternatively re-verify Jiang's 0.38288525 (rational parameters,
+     code in its appendix).
+2. **Lean.**
+   - Ho (arXiv:2601.19327) already formalised Boppana's inequality in Lean 4.
+   - Mathlib-adjacent projects (PFR) have Shannon entropy.
+   - So formalising Gilmer + AHS, i.e. c_UC ≥ (3−√5)/2 in Lean, is a concrete
+     and *genuinely new* artefact. First check that nobody has done it (search
+     Zulip/GitHub).
+   - It is a multi-session project; the first step is a Lean statement plus
+     the two-point reduction (AHS Lemmas 2.1–3.1).
+
+Genuinely new, but not realistic in one session:
+
+3. **n = 13.**
+   - It needs FC-family pruning (Poonen weights, as in Živković–Vučković).
+   - A useful intermediate step is n = 7 by Poonen-style pruning, as a
+     pipeline test. Then, step by step, n = 8.
+4. **Beating 0.38289.**
+   - This needs an entropy inequality that is *not* pointwise in one
+     coordinate. Candidates: kernels with no product lower bound, block
+     (several-coordinate) chain rules, or Jiang's global coupling made uniform
+     in |F|.
+   - No concrete candidate has been identified yet. Any claim here must come
+     with a checkable certificate.
