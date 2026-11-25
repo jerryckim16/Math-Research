@@ -9,19 +9,19 @@ Every check marked pass covers **every** stored row (no sampling). **Not checked
 
 | p | archive | manifest | ir rows | km1 rooted / dedup | ext rows | level-2 survivors | first empty at | trace of rows dying at 16 | result |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 269 | not run | | | | | | | | |
-| 281 | not run | | | | | | | | |
-| 311 | not run | | | | | | | | |
-| 313 | not run | | | | | | | | |
-| 317 | not run | | | | | | | | |
-| 331 | not run | | | | | | | | |
-| 337 | not run | | | | | | | | |
-| 347 | not run | | | | | | | | |
+| 269 | ok | ok (945) | 6149965 | 27258 / 3334 | 446756 | 14692 | l4: 14690, l8: 1, l16: 1 | 1/2/4/0 | **pass** |
+| 281 | ok | ok (1091) | 3652578 | 10733 / 1236 | 173040 | 4165 | l4: 4163, l8: 1, l16: 1 | 1/2/4/0 | **pass** |
+| 311 | ok | ok (1327) | 2727133 | 4607 / 546 | 84630 | 895 | l4: 894, l16: 1 | 1/2/4/0 | **pass** |
+| 313 | ok | ok (1319) | 867745 | 941 / 106 | 16536 | 184 | l4: 183, l16: 1 | 1/2/4/0 | **pass** |
+| 317 | ok | ok (1323) | 419921 | 513 / 71 | 11218 | 73 | l4: 72, l16: 1 | 1/2/4/0 | **pass** |
+| 331 | ok | ok (1389) | 1108038 | 1396 / 155 | 25575 | 240 | l4: 239, l16: 1 | 1/2/4/0 | **pass** |
+| 337 | ok | ok (1511) | 7325187 | 14147 / 1477 | 248136 | 4886 | l4: 4885, l16: 1 | 1/2/4/0 | **pass** |
+| 347 | ok | ok (1397) | 236384 | 57 / 6 | 1038 | 12 | l4: 11, l16: 1 | 1/2/4/0 | **pass** |
 | 349 | ok | ok (1405) | 146951 | 55 / 6 | 1044 | 5 | l4: 4, l16: 1 | 1/2/4/0 | **pass** |
-| 353 | not run | | | | | | | | |
-| 359 | not run | | | | | | | | |
+| 353 | ok | ok (1653) | 3033467 | 4526 / 496 | 87296 | 1623 | l4: 1622, l16: 1 | 1/2/4/0 | **pass** |
+| 359 | ok | ok (1604) | 323024 | 204 / 21 | 3759 | 22 | l4: 21, l16: 1 | 1/2/4/0 | **pass** |
 | 367 | ok | ok (1615) | 105579 | 100 / 14 | 2562 | 30 | l4: 29, l16: 1 | 1/2/4/0 | **pass** |
-| 373 | not run | | | | | | | | |
+| 373 | ok | ok (1797) | 288919 | 237 / 26 | 4836 | 29 | l4: 28, l16: 1 | 1/2/4/0 | **pass** |
 | 379 | ok | ok (1732) | 35322 | 24 / 3 | 567 | 4 | l4: 3, l16: 1 | 1/2/4/0 | **pass** |
 | 383 | ok | ok (1711) | 5171 | 0 / 0 | 0 | 2 | l4: 1, l16: 1 | 1/2/4/0 | **pass** |
 | 389 | ok | ok (1837) | 186422 | 77 / 8 | 1552 | 3 | l4: 2, l16: 1 | 1/2/4/0 | **pass** |
@@ -69,4 +69,4 @@ Every check marked pass covers **every** stored row (no sampling). **Not checked
 | 653 | ok | ok (4961) | 2 | 0 / 0 | 0 | 1 | l16: 1 | 1/2/4/0 | **pass** |
 | 659 | ok | ok (5467) | 2 | 0 / 0 | 0 | 1 | l16: 1 | 1/2/4/0 | **pass** |
 
-Gates run: 48 of 59; passed: 48. Rows re-checked: 812038 irredundant + 7776 extension = 819814; level-2 survivors 103. Wall time 421 s (1 process). Sum of log p over passed gates: 298.74105683.
+Gates run: 59 of 59; passed: 59. Rows re-checked: 26944399 irredundant + 1110596 extension = 28054995; level-2 survivors 26924. Wall time 5303 s (1 process). Sum of log p over passed gates: 362.36191571.

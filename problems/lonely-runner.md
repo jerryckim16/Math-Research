@@ -4,6 +4,7 @@
 **Status:** in progress. Done so far:
 - The prime-gate framework is reproduced end to end for $\mathrm{LRC}(3)$–$\mathrm{LRC}(10)$ (4–11 runners), conditional on one cited bound ($B_k$). $\mathrm{LRC}(10)$ uses an explicit $\times 11$ lift, independent of Sungkawichai–Trakulthongchai's Prop. corlarge (step 7).
 - All 71 of Allikvere's 15-runner ($\mathrm{LRC}(14)$) gate certificates are independently re-checked, with no discrepancy found. Stored rows were checked in full at every gate; the cascade and kill in full at 54 gates and sampled at 17, with the cascade alone also in full at near-gcd gate 223; level-one completeness at 7 gates ($p = 89, 239, 251, 263, 269, 281, 283$). See "Independent re-check summary". His 14-runner terminal kills are re-checked at all 111 of his gate primes.
+- **Allikvere's 16-runner ($\mathrm{LRC}(15)$) gate certificates: all 59 re-checked (2026-11-25), with no discrepancy.** Every stored row, the binary cascade to level 16, every SUMMARY total and the archive hashes were checked with our own code (`notes/lonely-runner/cert15.md`). **Level-one completeness is checked at 1 of the 59 gates so far ($p = 269$: 6,589,665 orbits, equal to the certificate; Approach 15)**; at the other gates, and especially at the large gates where the stored families are tiny, the claim rests mainly on his search. Completeness runs continue at his cheapest gates.
 - The $n = 15$ shape lemma $R_{15} < 49/100$ is proved (Approach 10; every inequality machine-checked exactly). The general-$n$ parts of Allikvere's Theorem 3.8 are independently verified (Approach 11), so the 16-runner gate target 483.239 is proved here, given $\mathrm{LRC}(m)$ for $m \le 14$.
 - The cost of 16 runners with our code is estimated from measurements. **16 and 17 runners turn out to be already claimed** (Zenodo, Oct 2026; see the correction under Statement). The first unclaimed case is 18 runners.
 
@@ -60,7 +61,7 @@ Literature checked on 2026-11-23. In step 2, arxiv.org and zenodo.org became rea
 | 11, 12, 13 | 10–12 | claimed (computer-assisted preprint) | T. Sungkawichai, T. Trakulthongchai, "Eleven, twelve, and thirteen lonely runners", arXiv:2604.23906 (Apr 2026, v2); code github.com/vzsky/lonely-runners | **[read]** (LaTeX source in the code repository) |
 | 14 | 13 | claimed (computer-assisted preprint), two proofs | J. Allikvere, "Fourteen and fifteen lonely runners", arXiv:2609.02604 (v1 2 Sep 2026, "Fourteen lonely runners"; v2 24 Sep 2026). Certificates: Zenodo 10.5281/zenodo.22066772 | **[read]** v2 |
 | 15 | 14 | claimed (computer-assisted preprint) | Allikvere, same v2. Certificates: Zenodo 10.5281/zenodo.22667683. 2,137 CPU-hours | **[read]**; 4 of 71 gate certificates spot-checked (below) |
-| 16 | 15 | claimed (computer-assisted, Zenodo preprint) | J. Allikvere, *Sixteen lonely runners*, Zenodo 10.5281/zenodo.23304361 (2026-10-11) | metadata and manuscript source read (`notes/lonely-runner/literature.md`); level-one completeness independently checked at $p = 269$ (Approach 15); other certificates not yet re-checked here |
+| 16 | 15 | claimed (computer-assisted, Zenodo preprint) | J. Allikvere, *Sixteen lonely runners*, Zenodo 10.5281/zenodo.23304361 (2026-10-11) | metadata and manuscript source read (`notes/lonely-runner/literature.md`); all 59 gate certificates re-checked (rows, cascade, totals; `notes/lonely-runner/cert15.md`); level-one completeness independently checked at $p = 269$ (Approach 15) |
 | 17 | 16 | claimed, conditional on 16 runners (Zenodo preprint) | W. Toner, *Seventeen lonely runners, assuming sixteen*, Zenodo 10.5281/zenodo.23552885 (2026-10-22) | metadata and PDF read; not re-checked |
 | 18 | 17 | **open** (no located claim, 2026-11-25) | — | |
 
@@ -808,7 +809,7 @@ The test is `test_lonely.py`, `test_covergen_order_same_minimal_covers`, which a
 
 ### 15. Independent level-one completeness at Allikvere's 16-runner gates (step 17)
 
-**Goal.** Allikvere's $\mathrm{LRC}(15)$ claim (*Sixteen lonely runners*, Zenodo 10.5281/zenodo.23304361) certifies $J(15,p)=\varnothing$ at 59 primes $269 \le p \le 659$. The certificates store the level-one rows, so the cascade can be replayed. What no replay of the certificate checks is **completeness**: that the stored rows represent every unit orbit of $I(15,p,1)$. We check it by generating $I(15,p,1)$ ourselves and comparing orbit sets.
+**Goal.** Allikvere's $\mathrm{LRC}(15)$ claim (*Sixteen lonely runners*, Zenodo 10.5281/zenodo.23304361) certifies $J(15,p)=\varnothing$ at 59 primes $269 \le p \le 659$. The certificates store the level-one rows, so the cascade can be replayed; all 59 have been (`notes/lonely-runner/cert15.md`). What no replay of the certificate checks is **completeness**: that the stored rows represent every unit orbit of $I(15,p,1)$. We check it by generating $I(15,p,1)$ ourselves and comparing orbit sets.
 
 **Method.**
 
@@ -901,6 +902,13 @@ Started 2026-11-25. This is the current focus. The results below were reviewed b
 - **Lemma S (proved).** For a prime $k+2 \le p \le 2k+1$, a tuple is improper at level one iff its $\pm$ classes cover all $(p-1)/2$ classes. This gives tiny level-one sets at the smallest primes; for $k = 17$ the orbit counts are 1430, 728, 40, 8 at $p = 19, 23, 29, 31$. Allikvere has the same lemma for $k = 15$; ours was derived before we read it.
 - **Lemma T1 (proved).** For $p > k+1$, the class of $(1,\ldots,k)$ is improper at level $l$ iff $(k+1) \nmid l$. So $k = 17$ gates need a level divisible by $18$, i.e. lifts by 3 as well as 2.
 - **$J(15,31) = \emptyset$** (certificate-checked, two independent implementations, re-run by the coordinator). This is an independent re-derivation of one of Allikvere's 16-runner preliminary primes, not a new gate.
+
+**The tight orbit at $k = 17$** (`notes/lonely-runner/k17-structure.md`):
+
+- **Theorem K (proved).** For every prime $p \ge 353$, the tight orbit $(1,\ldots,17)$ dies at level 18 along the lift chain $\times 3\times 2\times 3$; along $\times 2\times 3\times 3$ the same holds for $p \ge 421$.
+- The proof uses Lemma R′ and the exact constants $\Lambda(17,3) = 1/352$ and $\Lambda(17,2) = 4/1683$. These were computed by two independent exact algorithms with a Fraction spot check; the coordinator re-ran the exact code and got $\Lambda(17,3) = 1/352$.
+- **The smallest primes do not work.** The four Lemma S gates $p = 19, 23, 29, 31$ for $k = 17$ blow up under the cascade with NG; for example, $p = 31$ goes from 8 orbits at level 1 to $1.8\cdot 10^{7}$ at level 4. This is recorded as a failed route.
+- **Lemma TN (proved)** gives lower bounds on the level at which a cascade with NG could close at small-$\tau$ primes.
 
 **Cost (heuristic; draft page `notes/lonely-runner/gates.md`).**
 

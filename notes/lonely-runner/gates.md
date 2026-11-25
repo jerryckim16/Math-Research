@@ -230,12 +230,22 @@ $8.1\cdot 10^4$ CPU-h, at $1.8\cdot 10^6$ nodes/s. The cheapest of his gates:
 
 ## 6. LRC(17) (18 runners): admissibility, cost, gate set
 
-**Target.** The bound agent gives $\sum_{p\in P}\ln p > 659.66535$. Its label is
-proved, given LRC($m$) for $m \le 16$ and Allikvere's general lemmas, which were
-re-derived by reading. It comes from a coarse relation-rank bound. Earlier
-values were 670.28173 (plain flag bound, shape lemma $R_{17} < 0.4755$) and
-667.92857 (hyperplane lemma). A rank-4 classification may lower it by a further
-23–25.
+**Target.** The rank-4 agent gives $\sum_{p\in P}\ln p > 647.534682$. It
+classifies rank 4 at $n = 17$, which pushes the binding rank to 5, with
+$(17/2)\ln J_5 = 22.747$. Its label is proved, given the inputs in the bound
+notes, §5.
+
+The target was revised several times during this session:
+
+| target | source |
+| --- | --- |
+| 670.28173 | plain flag bound, with the shape lemma $R_{17} < 0.4755$ machine-checked |
+| 667.92857 | hyperplane lemma |
+| 659.66535 | coarse relation-rank bound |
+| **647.534682** | **rank-4 classification (current)** |
+
+The tables below are computed at the current target, at the current target
+minus 10, and at 659.66535.
 
 Every target includes $-\ln \operatorname{lcm}(2..18) = -\ln 12252240 = -16.321$,
 so the gate primes must satisfy $p > 18$.
@@ -248,13 +258,12 @@ asks "is there a cover on at most 15 classes?". Data: `k17/tau_k17.txt`.
 - **A cover on $\le 15$ classes was found (exact),** so $\tau_{17}(p) \le 15$
   and, by Lemma T, the prime is near-gcd only:
   - every prime $19 \le p \le 311$;
-  - $p = 331$ and $379$;
-  - TAU17_FOUND_EXTRA.
+  - $p = 331$ and $379$.
 - **The small-primes agent's exact values**
   (`computations/lonely-runner/smallp/results/tau17.txt`; exhaustive DFS)
   agree. Every prime 37–257 has $\tau_{17} \in [9, 14]$. For example
   $\tau_{17}(71) = 14$, $\tau_{17}(173) = 14$, $\tau_{17}(257) = 14$.
-- **No small cover within 60 s:** TAU17_TIMEOUTS. These are *candidates* only.
+- **No small cover within 60 s:** every other prime $313 \le p \le 1103$ (120 primes, also 1583 and 1597). These are *candidates* only.
   Proving $\tau_{17}(p) \ge 16$ means exhausting the 15-class search. That took
   60 s for $\tau_{15}(239) \ge 14$, and Allikvere's $k = 15$ precondition took
   8 h at $p = 659$, so for $k = 17$ it is far beyond this session. A full
@@ -305,7 +314,35 @@ order solves the fractional knapsack "minimise cost subject to
 $\sum \ln p \ge T$" exactly, so the greedy set is optimal up to its last prime.
 "Admissible" means not shown to have $\tau_{17} \le 15$.
 
-GATESET_TABLE
+**$J$-empty route.** Gates are the $\tau$-candidates $\ge 313$. All of them are
+undetermined, not proved admissible.
+
+| target | gates | primes | $\sum\ln p$ | level-one CPU-h, current generator | with `LRC_ORDERLY=1` and the step-15 build ($\div 5$–$6$) |
+| --- | --- | --- | --- | --- | --- |
+| **647.534682** | **101** | 313–1021 | 649.14 | $6.8\cdot10^{7}$ (7,700 CPU-years) | $1.1$–$1.4\cdot10^{7}$ (1,300–1,500 CPU-years) |
+| 637.534682 (−10) | 100 | 313–1021 | 642.26 | $6.4\cdot10^{7}$ | $1.1$–$1.3\cdot10^{7}$ |
+| 659.66535 | 103 | 313–1021 | 662.97 | $7.6\cdot10^{7}$ | $1.3$–$1.5\cdot10^{7}$ |
+
+**Optimistic route.** This assumes every near-gcd prime closes, which is **not**
+established; see below.
+
+| target | gates | primes | level-one CPU-h | $\div 5$–$6$ |
+| --- | --- | --- | --- | --- |
+| 647.534682 | 118 | 19–719 | $4.4\cdot10^{6}$ | $0.73$–$0.87\cdot10^{6}$ |
+| 637.534682 | 116 | 19–701 | $3.8\cdot10^{6}$ | $0.64$–$0.77\cdot10^{6}$ |
+
+The gate list at 647.534682 ($J$-empty route) is every candidate prime from 313
+to 983, plus 1021; `python3 k17/gate_set.py 17 647.534682` prints it.
+
+About the $\div 5$–$6$ factor (heuristic):
+
+- It comes from the cloud session. It ported Toner's orderly-root rule
+  (`LRC_ORDERLY=1`, validated to give equal orbit sets).
+- Its Knuth node reductions at $k = 17$ are 5.9×, 6.7× and 6.5× at $p = 307$,
+  401 and 503. Time gains have tracked about half of the node gains.
+- The step-15 build gives another 1.6×.
+- The factor is measured at three primes only and is assumed to hold up to
+  about 1021.
 
 **Reading.**
 
@@ -314,9 +351,8 @@ GATESET_TABLE
 - **The lever is the near-gcd primes.** The 57 primes 19–311 give
   $\sum \ln p \approx 275$ for about $8\cdot10^{3}$ CPU-h of level one.
   - If they could all be closed by divisibility (Lemma S with a 3-adic kill), the
-    optimistic set to 659.67 would be 119 gates 19–719 at about
-    $4.6\cdot10^{6}$ CPU-h, about 16× cheaper. At target − 25 it would be about
-    $3.8\cdot10^{6}$ CPU-h.
+    optimistic set to 647.53 would be 118 gates 19–719 at about
+    $4.4\cdot10^{6}$ CPU-h, about 15× cheaper.
   - Against that, the small-primes agent found at $p = 71$ (381,083 level-one
     orbits) that the cascade blows up even with the shift lemma. So the
     smallest primes, $p \approx 4k$, almost certainly fail.
@@ -337,3 +373,24 @@ GATESET_TABLE
 - **`covergen.c`'s Knuth probe ignores the `LRC_PRUNE=2` locked-time rule.**
   The estimates therefore describe a slightly larger tree. At $k = 14$,
   $p = 251$, this made no measurable difference ($1.34$ vs $1.35\cdot10^{10}$).
+
+## 7. Files
+
+- `computations/lonely-runner/k15/tau.c`: the covering number $\tau_k(p)$
+  (exhaustive, with screening mode `TAU_FROM`).
+- `computations/lonely-runner/k15/gate15.c`: the binary cascade, the kill and the
+  Lemma S test, for $k+1$ a power of 2.
+- `computations/lonely-runner/k15/test_gate15.py`: 3 tests (brute-force cascade
+  at $k = 7$, soundness of Lemma S on samples, $\tau$ against brute force). All
+  pass.
+- `computations/lonely-runner/k15/knuth_k15.txt`: $k = 15$ Knuth table, primes
+  17–797.
+- `computations/lonely-runner/k15/allikvere_k15_summaries.json`: his 59
+  `SUMMARY.json` files, as data.
+- `computations/lonely-runner/k17/knuth_k17.txt` and `tau_k17.txt`: $k = 17$
+  Knuth table (19–1597) and $\tau$ screen (19–1103).
+- `computations/lonely-runner/k17/gate_set.py`: gate selection.
+
+**Suggested `covergen.c` change, not made.** Let the Knuth probe also apply the
+`LRC_PRUNE=2` locked-time rule, so that the estimates describe exactly the tree
+that is run.
