@@ -794,11 +794,16 @@ The test is `test_lonely.py`, `test_covergen_order_same_minimal_covers`, which a
 - At $(14,113)$ it is only 1.45× faster, because the canonicity test costs relatively more at small $p$.
 - For $k=17$ the tree ratio $N_{17}/N_{15}$ (`results/knuth_k15_k17.txt`, before the orderly rule) is about 22–26 at $p=307$–$503$, 42–44 at $p=601$–$701$, and 96 at $p=797$.
 
+**Exact check at a real gate (step 16).** The full orderly run at $p=251$ used `LRC_PRUNE=0 LRC_ORDERLY=1 LRC_IRR=2 LRC_ORDER=1 LRC_FINISH=1`, built with `-DWFIX=2`, in 32 depth-2 shards (`results/lrc14_gates/regen_251_orderly.json`).
+
+- **Output.** 2,253,938 covers, one per orbit. They expand to exactly the certificate's 2,405,962 rows and give **2,404,346 orbits, equal to the certificate**, with none only on one side.
+- **Cost.** $2.51\times10^{9}$ nodes, **841 CPU-s**, 3.6 min wall time on 4 cores. Earlier settings took 7,505 CPU-s (step 13) and about 30,500 (step 6); Allikvere's engine took 2,579 CPU-s on another machine.
+- **Dependencies.** This completeness check rests on the minimal-cover argument and Lemma B.1. It does not use Lemma 4.1.
+
 **Not tried yet:**
 
 - the mandatory-point bounds for the last 2–3 slots, measured marginal at step 12;
 - AVX-512 popcount kernels;
-- an exact orderly-rule full run at a real gate, for example $p=251$ against the certificate.
 
 ## Independent re-check summary
 
