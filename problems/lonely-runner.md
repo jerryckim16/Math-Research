@@ -4,7 +4,7 @@
 **Status:** in progress. Done so far:
 - The prime-gate framework is reproduced end to end for LRC(3)–LRC(10) (4–11 runners), conditional on one cited bound (B_k). LRC(10) uses an explicit ×11 lift, independent of Sungkawichai–Trakulthongchai's Prop. corlarge (step 7).
 - All 71 of Allikvere's 15-runner (LRC(14)) gate certificates are independently re-checked, with no discrepancy found. Stored rows were checked in full at every gate; the cascade and kill in full at 54 gates and sampled at 17, with the cascade alone also in full at near-gcd gate 223; level-one completeness at 3 gates. See "Independent re-check summary". His 14-runner terminal kills are re-checked at all 111 of his gate primes.
-- The n = 15 shape lemma R_15 < 49/100 is proved (Approach 10; every inequality machine-checked exactly). So the 16-runner gate target 483.239 holds conditional on Allikvere's general-n Theorem 3.8.
+- The n = 15 shape lemma R_15 < 49/100 is proved (Approach 10; every inequality machine-checked exactly). The general-n parts of Allikvere's Theorem 3.8 are independently verified (Approach 11), so the 16-runner gate target 483.239 is proved here, given LRC(m) for m ≤ 14.
 - The cost of the next open case (16 runners) is estimated from measurements.
 
 **Started:** 2026-11-23 (literature upgraded to primary texts the same day, step 2)
@@ -124,7 +124,7 @@ Details from the primary texts:
     - The ratio minimum is 3751/2349 > 4/3, exactly.
     - The paper's one-variable shape family gives min R_15 ≈ 0.48796 numerically.
     - If a shape lemma r_15 = 49/100 were proved, then ln(v_1⋯v_15) < 496.727, and the gate target after ln lcm(2..16) = ln 720720 would be 483.239. This agrees with the figure in the (unreviewed) munim lonely-runner-16 repository.
-    - **The shape lemma R_15 < 49/100 is now proved here** (Approach 10, step 9; machine-checked by `shape_lemma.py`). So the target 483.239 is proved conditional on the cited Theorem 3.8 (general n).
+    - **The shape lemma R_15 < 49/100 is now proved here** (Approach 10, step 9; machine-checked by `shape_lemma.py`). The general-n parts of Theorem 3.8 are verified in Approach 11 (step 10), so the target 483.239 is proved here, given LRC(m) for m ≤ 14.
 - **Prime gates (Sungkawichai–Trakulthongchai, Def. 2.1).** Fix k ≥ 2, a prime p and l ≥ 1. Put N = lp and Z_{p,l} = {x ∈ Z_N : p ∤ x}. Then w ∈ Z_{p,l}^k is *(k,p,l)-proper* if either
   - (a) gcd(l, w_1, …, ŵ_i, …, w_k) > 1 for some i, or
   - (b) some t ∈ (1/N)Z has ‖t w_i‖ ≥ 1/(k+1) for all i.
@@ -533,11 +533,121 @@ using q + 28t² = 1 + 2t + 27t².
 - A target above the true minimum (T = 946, or r_15 = 0.487) correctly fails the Step 4 check.
 - A float coordinate-descent search over Ω never goes below T, and finds the minimum ≈ 944.96 on the one-variable family. This search is a sanity check only, not part of the proof.
 
-**Consequence (conditional).** Allikvere's Theorem 3.8 is stated and proved for general n. For n = 15 its ratio hypothesis holds: min c_{i+1}/c_i = 3751/2349 > 4/3, exact (`flag_bound.py`). Its other hypothesis is LRC(m) for all m < 15, i.e. up to 15 runners, which is Allikvere's certificate-based result re-checked in Approach 7.
+**Consequence.** Allikvere's Theorem 3.8 is stated and proved for general n. For n = 15 its ratio hypothesis holds: min c_{i+1}/c_i = 3751/2349 > 4/3, exact (`flag_bound.py`). Its other hypothesis is LRC(m) for all m < 15, i.e. up to 15 runners, which is Allikvere's certificate-based result re-checked in Approach 7.
 
 With r_15 = 49/100 the theorem gives, for a primitive counterexample with 15 speeds, ln(v_1⋯v_15) < 15 ln(A_15 · (49/100)/15) = 496.727. With the forced divisor lcm(2..16) = 720720, the prime-gate target is 483.239.
 
-We did not re-prove the general-n parts of Theorem 3.8: the inclusion and covolume lemmas, the prefix inequalities, KZ bases and the product minimization. We read their proofs (§3.1–3.4 of the paper) and they make no use of n = 13 or 14. So the target 483.239 is **proved conditional on the cited Theorem 3.8**. It is no longer heuristic, but it is not independently verified end to end.
+At step 9 the general-n parts of Theorem 3.8 were only read, so the target was then labelled conditional on the cited theorem. They are verified in Approach 11 (step 10), which removes that condition.
+
+### 11. Independent check of the general-n flag bound, Theorem 3.8 (step 10)
+
+**Goal.** Verify the general-n parts of Allikvere's Theorem 3.8 (arXiv:2609.02604v2, §3, read from the v2 TeX source), so that the 16-runner target 483.239 no longer rests on the cited theorem. These are Lemmas 3.1, 3.2, 3.3, 3.5 and 3.6, Proposition 3.4 and the assembly.
+
+**Result.** Every step checks out, and no gap or error was found. Where a step has a finite or numeric component, it is machine-checked in exact rational arithmetic (`computations/lonely-runner/flag_theorem_check.py`, tests `test_flag_theorem.py`, 13 tests including negative controls). The purely logical steps (Lemma 3.3, Proposition 3.4, Lemma 3.5) were checked line by line by reading. They have no finite component to machine-check.
+
+The only inputs not re-proved here are:
+
+- **Standard facts:** the existence of Korkine–Zolotarev bases; the Minkowski–Weyl decomposition of a pointed polyhedron; Schur-concavity of Σ log; Babai's nearest-plane rounding; elementary lattice duality.
+- **Lower cases of the conjecture:** LRC(m) for m ≤ 14.
+
+**Setting.** Here n ≥ 2 and v ∈ Z^n_{>0} is primitive. "Counterexample" means every real t has some i with ‖t v_i‖ < 1/(n+1). We use the following objects:
+
+- S = Σ v_i, x = v/S, u = v/max v, and q_i = 1 + 2u_i − u_i² ∈ (1,2];
+- H = v^⊥ and P, the orthogonal projection onto H;
+- Λ = P Z^n, of rank d = n − 1;
+- D = P[−1,1]^n and E = P Q^{1/2} B_2^n;
+- ‖·‖_E, the norm on H whose unit ball is E.
+
+**Lattice facts (used in Lemma 3.2).**
+
+- **Covolume of Z^n ∩ H is ‖v‖.** The layers {z ∈ Z^n : ⟨v,z⟩ = k} of Z^n parallel to H are at spacing 1/‖v‖ (⟨v, Z^n⟩ = gcd(v) Z = Z), and det Z^n = 1.
+- **Λ is the dual of Z^n ∩ H.** Extend a basis y_1, …, y_{n−1} of the primitive sublattice Z^n ∩ H to a basis of Z^n, and take its dual basis y_k^* (in Z^n). Then the P y_i^* (i < n) are the dual basis of Z^n ∩ H inside H, and P y_n^* = 0.
+- **Hence det Λ = 1/‖v‖.** This is machine-checked exactly: an exact Hermite-form basis of P Z^n, at random primitive v for n = 3–6 (`check_covolume`).
+
+**Lemma 3.1 (Inclusion, E ⊆ D): verified.** Both bodies are convex and closed in H, so E ⊆ D iff h_E ≤ h_D on H.
+
+- **Support functions.** For y ∈ H, h_D(y) = sup_{x∈[−1,1]^n} ⟨Py, x⟩ = Σ |y_i|, and h_E(y) = sup_{|b|≤1} ⟨Q^{1/2}y, b⟩ = (Σ q_i y_i²)^{1/2}.
+- **Reduction to vertices.** By homogeneity it suffices that Σ q_i y_i² ≤ 1 on the polytope {y ∈ H : Σ|y_i| ≤ 1}. The left side is convex, so it suffices at the vertices.
+- **The vertices.** The vertices of a hyperplane section of a polytope are its intersections with edges, together with any polytope vertices lying in the hyperplane. No ±e_i lies in H (v_i ≠ 0). Edges between same-sign vertices miss H (v > 0). The segment from e_i to −e_j meets H at y = (v_j e_i − v_i e_j)/(v_i + v_j).
+- **The check at a vertex.** There Σ q y² ≤ 1 ⟺ (q_i − 1)v_j² + (q_j − 1)v_i² ≤ 2 v_i v_j. With q − 1 = u(2 − u) and v = M u, the difference of the two sides equals −2M² u_i u_j (1 − u_i)(1 − u_j) ≤ 0.
+
+Machine checks:
+
+- the identity, exactly, at 200 random rational points;
+- every vertex point, exactly, for random v with n = 3–7;
+- h_E(y)² ≤ h_D(y)² at random rational y ∈ H, a sample check of the conclusion;
+- negative control: with q replaced by 1 + 2u, the inclusion fails, as it must.
+
+**Lemma 3.2 (Covolume, covol_E(Λ) = 1/(S F_n(x))): verified.**
+
+- **The E norm.** By definition, ‖y‖_E = min{|z| : P Q^{1/2} z = y}. Writing Q^{1/2} z = y + λv and minimizing over λ gives ‖y‖_E² = yᵀ M y, with M = Q^{−1} − Q^{−1}v vᵀQ^{−1}/(vᵀQ^{−1}v).
+- **The paper's computation.** It uses the Gram matrix (UᵀQU)^{−1} and the Schur-complement identity det(UᵀQU) = det Q · ṽᵀQ^{−1}ṽ. It agrees with this formula, and it gives covol_E² = det Λ² / det(UᵀQU) = 1/(∏q_i · Σ v_i²/q_i) = 1/(S² F_n(x)²).
+- **Machine check.** At 20 random primitive v (n = 3–6), the Gram determinant of an exact Z-basis of Λ in the form M equals 1/(S² F_n²) exactly. It is computed directly from the definition of E, independently of the paper's U-coordinates. Negative control: a wrong F fails.
+
+**Lemma 3.3 (Separated points on rational subspaces; Giri–Kravitz Lemma 3.3): verified by reading.**
+
+*Statement.* Let 1 ≤ q ≤ n and assume LRC(m) for m ≤ n+1−q. Then every rational q-dimensional V ⊆ R^n with no identically vanishing coordinate contains s with ‖s_i‖ ≥ 1/(n+2−q) for all i.
+
+*Base case, q = 1.* V = R a with a primitive and all a_i ≠ 0. The |a_i| take m ≤ n distinct values, so LRC(m) gives t with ‖t a_i‖ ≥ 1/(m+1) ≥ 1/(n+1).
+
+*Induction step, q ≥ 2.* The restrictions a_k of the coordinate functionals to V are nonzero and span V*, so not all are proportional.
+
+- Take a non-proportional pair (i, j) minimizing the angle between their lines, and fix the sign so that ⟨a_i, a_j⟩ ≥ 0.
+- h = a_i + a_j lies strictly inside that angle. So, by minimality, no a_k is proportional to h: such an a_k would form a pair with a_i at a smaller angle.
+- V' = V ∩ {y_i + y_j = 0} is rational of dimension q − 1. a_k vanishes on V' iff a_k ∈ R h, so no coordinate vanishes on V'.
+- Deleting coordinate j is injective on V' (y_j = −y_i). The image V'' is rational and has no vanishing coordinate.
+- Induction applies in R^{n−1} with q − 1. It needs LRC(m) for m ≤ n+1−q, the same range, and gives distance 1/((n−1)+2−(q−1)) = 1/(n+2−q).
+
+Each step was checked, including the edge cases: the sign flip leaves ‖·‖ unchanged, and the pair minimizing the angle exists because there are finitely many pairs.
+
+**Proposition 3.4 (Prefix inequalities, t_1 + … + t_r > B_r = (2r/((n+1)(n+1−r)))²): verified by reading.** Take any basis b_1, …, b_d of Λ, its E-Gram–Schmidt vectors b_i^*, and t_i = ‖b_i^*‖_E². Choose z_i ∈ Z^n with P z_i = b_i, and let V = span(v, z_1, …, z_r).
+
+1. **V is admissible for Lemma 3.3.** It has dimension r + 1 (apply P to a linear relation) and is rational. No coordinate vanishes on it (v > 0).
+2. **A separated point.** Lemma 3.3 with q = r + 1 needs LRC(m) for m ≤ n − r ≤ n − 1. It gives s = a v + Σ a_i z_i with ‖s_k‖ ≥ 1/(n+1−r).
+3. **Rounding.** Nearest-plane rounding gives integers k_i with e = Σ(a_i − k_i) b_i = Σ θ_i b_i^*, |θ_i| ≤ ½. So ε = ‖e‖_E ≤ ½ (t_1 + … + t_r)^{1/2}.
+4. **From E to D.** By Lemma 3.1, e ∈ εE ⊆ εD, so e = P y with |y_k| ≤ ε.
+5. **A time t.** Σ(a_i − k_i) z_i − y lies in ker P = R v. Hence s − Σ k_i z_i − y = t v for some t, and ‖t v_k‖ ≥ ‖s_k‖ − |y_k| ≥ 1/(n+1−r) − ε.
+6. **Conclusion.** If ε ≤ 1/(n+1−r) − 1/(n+1) = r/((n+1)(n+1−r)), then t is a witness, which is impossible. So 4ε² > B_r, and t_1 + … + t_r ≥ 4ε² > B_r.
+
+Every step was checked, including the strict inequality and the LRC range.
+
+**Lemma 3.5 (KZ, t_{i+1} ≥ ¾ t_i): verified by reading (standard).**
+
+- In a KZ basis, b_i^* is a shortest nonzero vector of the projected lattice π_i(Λ).
+- π_i(b_{i+1}) = b_{i+1}^* + μ b_i^* with |μ| ≤ ½ is nonzero in π_i(Λ).
+- So t_i ≤ t_{i+1} + t_i/4. KZ bases exist for every lattice (Korkine–Zolotarev 1873; Lagarias–Lenstra–Schnorr 1990), in any Euclidean norm.
+
+**Lemma 3.6 (Product minimization, ∏ t_i ≥ ∏ c_i = K_n under c_{i+1}/c_i > 4/3): verified.**
+
+1. **Change of variables.** Put z_i = t_i/ρ^{i−1}. The constraints become z_1 ≤ … ≤ z_d and Σ_{i≤r} w_i z_i ≥ B_r. They define a polyhedron Π in the open positive orthant (z_1 ≥ B_1 > 0).
+2. **Reduction to vertices.** Π's recession cone is {0 ≤ z_1 ≤ … ≤ z_d}: the r = 1 constraint forces dz_1 ≥ 0. So Π is pointed and is the convex hull of its vertices plus that cone. f = Σ log(w_i z_i) is concave and nondecreasing, so f ≥ its minimum over the vertices.
+3. **Structure of a vertex.** At a vertex, the β maximal blocks of equal z use d − β monotonicity constraints, so at least β prefix constraints are active.
+   - None is active strictly inside a block (a, b]. Activity at r with feasibility at a gives ζ ≤ (weighted mean of c_i/w_i over a < i ≤ r) ≤ c_r/w_r. Here c_i > 0 by induction, and c_i/w_i strictly increases because (c_{i+1}/c_i)/ρ > 1/ρ² > 1. Activity at r with feasibility at r + 1 gives ζ ≥ c_{r+1}/w_{r+1} > c_r/w_r. These contradict each other.
+   - So all β block ends are active, and on each block t is geometric with ratio ρ and the same sum as c over the block.
+4. **Comparison within a block.** Ratio comparison shows that c↓ majorizes the geometric g (both decreasing, with equal totals). Schur-concavity of Σ log then gives ∏_block c ≤ ∏_block t.
+5. **The minimum is attained.** t = c is feasible.
+
+Machine checks, exact, with the actual B_r of each n:
+
+- **(a) Brute-force vertex enumeration, d ≤ 7.** All d-subsets of the 2d − 1 constraints are solved and filtered for feasibility. There are exactly 2^{d−1} vertices, each the block point of a composition of d, as the lemma's structure claim says, and each has ∏ t ≥ K_n.
+- **(b) Block points, n = 13, 14, 15.** All 2^{d−1} block points (8,192 at n = 15) are feasible and have ∏ t ≥ K_n, with equality only at t = c. K_14 equals the paper's value.
+- **(c) Random feasible points (float).** All have ∏ t ≥ K_n.
+- **Negative control.** For prefix constants with c_{i+1}/c_i < 4/3, a single geometric block is feasible and has a smaller product, so the hypothesis is needed.
+
+**Assembly (Theorem 3.8): verified.** Take a KZ basis in the E norm.
+
+- Proposition 3.4 and Lemma 3.5 give the hypotheses of Lemma 3.6, so covol_E(Λ)² = ∏ t_i ≥ K_n.
+- Lemma 3.2 then gives S F_n(x) ≤ A_n = K_n^{−1/2}.
+- With R_n < r_n: n (∏ v_i)^{1/n} = n S (∏ x_i)^{1/n} = S F_n R_n < r_n A_n.
+- For n = 15, the ratio minimum is 3751/2349 > 4/3 (exact) and r_15 = 49/100 (Approach 10). Hence ln(v_1⋯v_15) < 496.72677196, and the prime-gate target after ln 720720 is 483.23876597. Both are computed to 40 digits; n = 14 reproduces the paper's 414.77936455669981.
+
+**Consequence.** For a primitive counterexample with 15 speeds (16 runners), assuming LRC(m) for m ≤ 14: v_1⋯v_15 < e^{496.7268}. The 16-runner gate target 483.239 is therefore **proved here**, modulo:
+
+- **LRC(13) and LRC(14)**, the 14- and 15-runner cases. These are Allikvere's certificate-based results: LRC(14) is re-checked in Approach 7, fully at 54 of 71 gates, with level-one completeness at 3; LRC(13) is re-checked only through its terminal kills. LRC(m) for m ≤ 12 comes from the literature.
+- **The standard facts listed above.**
+- **The forced divisor** (Rosenfeld Lemma 4), which is elementary (see "The finite reduction").
+
+It no longer depends on citing Theorem 3.8.
 
 ## Independent re-check summary
 
@@ -558,7 +668,7 @@ Scope: J. Allikvere's computer-assisted proofs of LRC(13) and LRC(14), i.e. 14 a
 
 - **Level-one completeness at the other 68 LRC(14) gates.** That every orbit of I(14,p,1) is represented among the stored rows is checked only at p = 89, 239 and 251. At all other gates it rests on Allikvere's generator and its completeness proposition (his Prop. 4.2 with the private-time Lemma 4.1). We implemented Lemma 4.1 (Approach 8) but have run it to completeness only at p = 251.
 - **The sampled parts at the 19 near-gcd gates.** The unsampled cascade rows and kill records there were not re-computed.
-- **The analytic inputs.** The finite-checking bound (Malikiosis–Santos–Schymura, via Rosenfeld's Cor. 3) and Allikvere's flag bound (Thm 3.8) were not re-proved. The shape Lemma 3.7 is now re-checked for n = 13 and 14 and extended to n = 15 (Approach 10), but the general-n lattice lemmas behind Thm 3.8 were not re-proved. Nor were the prime-divisibility Lemma 2.2(ii), or the few-exception shift Lemma 3.12, beyond reading their proofs. The lower cases LRC(m), m ≤ 12, are taken from the literature.
+- **The analytic inputs.** The finite-checking bound (Malikiosis–Santos–Schymura, via Rosenfeld's Cor. 3) was not re-proved. Allikvere's flag bound (Thm 3.8) is now independently verified: the shape Lemma 3.7 is re-checked for n = 13 and 14 and extended to n = 15 (Approach 10), and its general-n Lemmas 3.1–3.6 and assembly are checked in Approach 11, resting only on standard facts (KZ bases, Minkowski–Weyl, Schur-concavity). Not re-proved, beyond reading their proofs, are the prime-divisibility Lemma 2.2(ii) and the few-exception shift Lemma 3.12. The lower cases LRC(m), m ≤ 12, are taken from the literature.
 - **LRC(13).** The archive does not contain the k = 13 level-one rows, so the rows, cascade and completeness cannot be re-checked from it.
 - **Our own code is not formally verified.** It is tested against brute force on small cases (18 tests) and against the certificates' own numbers.
 
@@ -576,12 +686,12 @@ Scope: J. Allikvere's computer-assisted proofs of LRC(13) and LRC(14), i.e. 14 a
 | LRC(10) (11 runners): all 61 primes 127…467 pass (identical to Sungkawichai–Trakulthongchai's P_10), Σ ln p = 342.72 > ln B_10 = 337.63 (exact test `prod_ge_B_k_exact`); cover generator, chain ×2×2×2, proj, ×11 (`liftfree.c`); in every gate only (1..10) survives the ×2 lifts and the ×11 lift kills it; 13,924 s wall (about 13.8 core-hours, almost all level one) on 4 processes. Depends on cited B_10, LRC(9) and tested-not-verified code; does **not** use Prop. corlarge (Next steps 6) | certificate-checked computation **+ cited B_k** | `results/lrc_k10.jsonl` |
 | Allikvere constants: K_13, K_14, ratio minima, ln bounds 341.031991 and 414.779365, target 401.984506 | exact rational re-derivation | `flag_bound.py` |
 | n = 15 flag constants: K_15, ratio min 3751/2349 > 4/3 | exact | `flag_bound.py` |
-| n = 15 shape lemma R_15 < 49/100 (min of H ≈ 944.96 > (1500/49)²), hence ln(v_1⋯v_15) < 496.727 and gate target 483.239 | shape lemma **proved** (written proof, every inequality exact-checked); the target is proved **conditional on cited Thm 3.8** (general n) | Approach 10, `shape_lemma.py`, `test_shape_lemma.py` |
+| n = 15 shape lemma R_15 < 49/100 (min of H ≈ 944.96 > (1500/49)²), hence ln(v_1⋯v_15) < 496.727 and gate target 483.239 | shape lemma **proved** (written proof, every inequality exact-checked); the general-n Thm 3.8 is **verified** (Approach 11; Lemmas 3.1, 3.2, 3.6 machine-checked exactly, 3.3–3.5 by reading), so the target is **proved given LRC(m), m ≤ 14** and standard facts | Approaches 10–11, `shape_lemma.py`, `flag_theorem_check.py`, tests |
 | 4 of 71 LRC(14) gate certificates (p = 263, 311, 397, 401): rows improper, cascade and kill reproduced | independent re-computation of the certificate's claims **except level-one completeness** | `check_allikvere.py`, `results/allikvere_spotcheck.jsonl` |
 | LRC(14) certificates: independent re-check of 71/71 gates. All 52 "J empty" gates and near-gcd gates 179 and 233 in full; cascade also in full at 223. Near-gcd gates 89, 163, 173, 223 (sample 3,000) and 131, 149, 157, 167, 181, 191, 193, 197, 199, 211, 227, 229, 241 (sample 500): all rows, plus seeded samples of the cascade and kill. Level-one completeness at p = 89, 239 and 251. No discrepancy found. | independent re-computation of the certificates' claims; cascade sampled at 16 and kill at 17 of the 19 near-gcd gates; completeness at 3 gates only | `results/lrc14_gates/COVERAGE.md`, Approach 7 |
 | LRC(13) certificates: terminal level-14 kill of both persistent orbits re-computed at all 111 gate primes; kill-file SHA-256s match manifests | independent re-computation (cascade and level one not checkable: rows not archived) | `results/lrc13_kills.jsonl` |
 | (1..15) dies at level 16 at all 79 primes 251–743 | computed exactly (one orbit only) | `results/tight_orbit_k15.jsonl` |
-| Cost of LRC(15) level one + kill with Allikvere-class code: about 1.75·10⁵ CPU-h (about 20 CPU-years) for 79 gates 251–743 under the flag target 483.24 (conditional on Thm 3.8, Approach 10); about 8.7·10⁶ CPU-h under the proved B_15 | **heuristic extrapolation from measurements** | `cost_estimate.py`, `results/knuth_covergen_k14_k15.txt` |
+| Cost of LRC(15) level one + kill with Allikvere-class code: about 1.75·10⁵ CPU-h (about 20 CPU-years) for 79 gates 251–743 under the flag target 483.24 (proved, Approaches 10–11); about 8.7·10⁶ CPU-h under the proved B_15 | **heuristic extrapolation from measurements** | `cost_estimate.py`, `results/knuth_covergen_k14_k15.txt` |
 
 "Certificate-checked computation + cited B_k" means the following. The chain LRC(2) ⇒ … ⇒ LRC(9) is a proof *if* three things hold:
 
@@ -594,7 +704,7 @@ Our code is tested against brute force, but not formally verified. These reprodu
 ## Next steps: plan for LRC(15) (16 runners)
 
 1. **Bound.**
-   - Done (step 9): R_15 < 49/100 is proved in Approach 10, so the flag target 483.239 holds conditional on the cited Theorem 3.8. What remains is an independent check of the general-n parts of Theorem 3.8 (the inclusion, covolume, prefix and product-minimization lemmas).
+   - Done (steps 9–10): R_15 < 49/100 is proved (Approach 10), and the general-n parts of Theorem 3.8 are independently verified (Approach 11). So the 16-runner gate target 483.239 is proved, given LRC(m) for m ≤ 14.
    - Without Theorem 3.8, the only target from MSS is ln B_15 − ln 720720 = 951.26. That needs about 147 gates up to 1223, which is roughly 50× the cost below.
 2. **Generator.** Add Allikvere's private-time normalisation (his Lemma 4.1 and the two-branch search) to `covergen.c`. Validate it against the current generator for k ≤ 9, and then against his archived k = 14 rows at p = 397 and 401. Those are small gates: about 13 and 16 CPU-h for his code.
 3. **Cost.**
