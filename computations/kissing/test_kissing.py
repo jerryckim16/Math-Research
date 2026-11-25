@@ -443,9 +443,6 @@ def partner_tests(D5, E8):
         print(f"ok  partner mode {name:12s} (basis change, |U| <= 2): {c}")
 
 
-if __name__ == "__main__":
-    main()
-
 
 def affine_tests(E8):
     """Section 10: class + partner modes with > 256 classes (40-43D format)."""
@@ -579,3 +576,7 @@ def affine_tests(E8):
     assert c2[2] == "FAIL"
     print(f"ok  affine class+partner mode, 300 classes (uint16 labels): {seen[False]} random sets fail, "
           f"{seen[True]} pass, C (whole and 3 parts) = numpy = Fraction reference; E8 PASS 6720, duplicate FAIL")
+
+
+if __name__ == "__main__":
+    main()
