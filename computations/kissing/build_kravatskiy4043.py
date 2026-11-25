@@ -44,12 +44,12 @@ Usage: python3 -I build_kravatskiy4043.py KRAVDIR DIM OUT ENUM_BIN [--variant NA
   (DIR keeps the shell enumerations, named by the sha256 of their input, for reuse)
        python3 -I build_kravatskiy4043.py --retable BASE VARIANT OUT
   negative controls (must FAIL): 40D --variant negcore (core on the residue
-  -c, the wrong centre); 43D --variant p48q (the 43D families enumerated in
-  the 41/42D P48q gram, the wrong parent lattice; rejected by the population
-  count). Head-only controls, a new table OUT.tab for the rows and labels of
-  BASE: shift (the head list shifted by one family, wrong order),
-  purenegate (pure heads negated), 43D tinyscale (tiny heads read over the
-  family denominator D instead of E).
+  -c, the wrong centre); 43D --variant p48q (the 43D families in the 41/42D
+  P48q gram, the wrong parent lattice; rejected at the build: the 43D
+  residues fail G c == 0 (mod 3) for that gram). Head-only controls (a new
+  table OUT.tab for the rows and labels of BASE): shift (the head list
+  shifted by one family, wrong order), purenegate (pure heads negated), 43D
+  tinyscale (tiny heads read over the family denominator D instead of E).
 """
 import hashlib
 import json
