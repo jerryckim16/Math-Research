@@ -6,7 +6,8 @@
 #
 # Needs: gcc with OpenMP, python3 with numpy, network access to github.com
 # release assets, raw.githubusercontent.com and zenodo.org. About 1.5 h wall
-# on 4 cores; peak RAM < 1 GB (25D/27D field checks: < 2 GB).
+# on 4 cores, plus about 1.5-2 h for section 7c (Kravatskiy 34-39D); peak RAM
+# < 1 GB (25D/27D field checks: < 2 GB; 39D build and class mode: < 3 GB).
 # Usage: reproduce.sh [WORKDIR] [--with-43]   (downloads and logs go to WORKDIR)
 # --with-43 adds the Qiushi 43D export (2,553,792 points; about 75 min more).
 set -euo pipefail
