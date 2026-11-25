@@ -13,7 +13,7 @@
 # --with-43 adds the Qiushi 43D export (2,553,792 points; about 75 min more).
 # --with-40-43 adds Kravatskiy's 40-43D records (section 7d; about 6.5 h more).
 # --with-45 adds the 45D build, its negative controls and two calibration parts
-#   (section 7e; about 1 h); --with-45-full runs all 16 parts (about 5.5 h of C).
+#   (section 7e; about 1.2 h); --with-45-full runs all 16 parts (about 6.1 h of C).
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 work=${1:-$(mktemp -d)}
@@ -273,8 +273,8 @@ fi
 #     over 3^8 class residues, plus 16 pure heads; 2,203 classes), rebuilt with our own
 #     shell enumerator. Only with --with-45: build (about 10 min on 4 cores, 18 min
 #     alongside other jobs), head-order and head-scale negative controls (early exit),
-#     and parts 0 and 1 of the 16-part C check (about 20 min each) as a calibration.
-#     --with-45-full runs all 16 parts (about 5.4 h of C); a part with a log is skipped.
+#     and parts 0 and 1 of the 16-part C check (about 23 min each) as a calibration.
+#     --with-45-full runs all 16 parts (about 6.1 h of C); a part with a log is skipped.
 if [ "$with45" -ge 1 ]; then
   [ -x "$work/bin/enum_affine" ] || gcc -O3 -march=native -fopenmp -Wall "$here/enum_affine.c" -o "$work/bin/enum_affine" -lm
   python3 -I "$here/fetch_kravatskiy.py" "$K" --with-45
