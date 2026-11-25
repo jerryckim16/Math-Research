@@ -12,3 +12,6 @@ k=3 N=24 delta=1/3: 411 tuples with lon <= delta, all have a harmful relation wi
 k=3 N=24 delta=2/5: 1027 tuples with lon <= delta, all have a harmful relation with ||m||^2 <= 200.00: True
 k=4 N=14 delta=1/5: 5 tuples with lon <= delta, all have a harmful relation with ||m||^2 <= 33.33: True
 k=4 N=14 delta=1/4: 109 tuples with lon <= delta, all have a harmful relation with ||m||^2 <= 48.00: True
+k=4 N=14 delta=1/3: 1114 tuples with lon <= delta, all have a harmful relation with ||m||^2 <= 108.00: True
+residue vacuity: 200 random v in Z_(16p)^15: min number of right halves completing a harmful {-1,0,1} relation = 468 (> 0 means vacuous)
+ALL OK
