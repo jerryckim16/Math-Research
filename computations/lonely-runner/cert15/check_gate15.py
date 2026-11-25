@@ -10,11 +10,11 @@ Usage: python3 -I check_gate15.py SHA256SUMS.txt evidence15_<p>_s0.tgz WORKDIR
 Archive format (read from the archives themselves; see notes/lonely-runner/cert15.md):
   out15_<p>/rows_ir/ir_<r>_<s>.txt   irredundant 15-class covers (hex, 2 digits/class)
   out15_<p>/rows_km1/km1_<r>.txt     rooted 14-class covers (hex)
-  out15_<p>/rows_km1/dedup_<i>.txt   the deduplicated 14-class covers, one per file
+  out15_<p>/rows_km1/dedup_<i>.txt   the deduplicated 14-class covers (one or more per file)
   out15_<p>/filt/ir_<r>_<s>.{out,stats}, ext_<i>.{out,stats}
       cascade of each input file: "SURVIVOR base: v_1..v_15 l2=.. [tight=..] l4=.. l8=.. l16=.."
       for every row with an improper level-2 lift; stats "rows=R survivors=S".
-      For ext_<i>, the rows are dedup_<i> extended by every class x = 1..(p-1)/2.
+      For ext_<i>, the rows are the covers of dedup_<i> extended by every class x = 1..(p-1)/2.
   out15_<p>/SUMMARY.json, MANIFEST_SHA256.json, kills/ (empty for J-empty gates).
 
 Checks, with our own code (rowcheck15.c in this directory; gatecheck.c and
@@ -239,8 +239,10 @@ def check(tgz, sums, work):
     if len(rooted) != bf["km1_rooted_covers"] or len(dedup) != bf["km1_covers_dedup"]:
         mis.append({"what": "km1 counts differ from SUMMARY", "ours": [len(rooted), len(dedup)],
                     "cert": [bf["km1_rooted_covers"], bf["km1_covers_dedup"]]})
-    if any(len(dl) != 1 for _, dl in dedup_files):
-        mis.append({"what": "a dedup file does not hold exactly one cover"})
+    rep["dedup_files"] = len(dedup_files)
+    rep["dedup_covers_per_file"] = sorted(collections.Counter(len(dl) for _, dl in dedup_files).items())
+    if any(len(dl) == 0 for _, dl in dedup_files):
+        mis.append({"what": "an empty dedup file"})
     rt = [hex_to_tuple(s, K - 1) for s in rooted]
     dt = [hex_to_tuple(s, K - 1) for s in dedup]
     if rt or dt:
@@ -255,11 +257,12 @@ def check(tgz, sums, work):
                     "ours": [h, len(dt) * h]})
     # C. cascade: every ir row and every extension row, one process
     with open(casin, "a") as oc:
-        for f, dl in dedup_files:
-            c = hex_to_tuple(dl[0], K - 1)
-            for x in range(1, h + 1):
-                oc.write(" ".join(map(str, c + (x,))) + "\n")
-            file_ranges.append(("ext_" + f[6:-4], h))
+        for f, dl in dedup_files:      # every cover of dedup_<i> (one or more), each extended by x = 1..h
+            for cl in dl:
+                c = hex_to_tuple(cl, K - 1)
+                for x in range(1, h + 1):
+                    oc.write(" ".join(map(str, c + (x,))) + "\n")
+            file_ranges.append(("ext_" + f[6:-4], h * len(dl)))
     tc = time.time()
     casout = os.path.join(scratch, "cascade.out")
     with open(casin) as fi, open(casout, "w") as fo:
