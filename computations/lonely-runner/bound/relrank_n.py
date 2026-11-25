@@ -193,3 +193,29 @@ if __name__ == "__main__":
                   f"J_greedy={f(cs['J_greedy'])} J_select={f(cs['J_select'])} J(r)={f(res['J(r)'][r]) if res['J(r)'][r] != 'excluded' else 'excl'}")
         print("  J_min", float(res["J_min"]), "at rank", res["argmin"])
         print("  plain", res["plain target"], "\n  gain ", res["gain"], "\n  new  ", res["new target"])
+
+
+def final_with_exclusions(n, excluded_ranks):
+    """As final(), with ranks in excluded_ranks removed (each must be proved
+    excluded, e.g. by rank_exclusion.exclude(n, r))."""
+    D, cases = J_cases(n)
+    best_sel, Jmin, arg, rows = Fr(0), None, None, {}
+    for r in sorted(cases):
+        cs = cases[r]
+        best_sel = max(best_sel, cs["J_select"])
+        if cs["J_greedy"] is None or r in excluded_ranks:
+            rows[r] = "excluded"
+            continue
+        Jr = max(Fr(1), cs["J_greedy"], best_sel)
+        rows[r] = Jr
+        if Jmin is None or Jr < Jmin:
+            Jmin, arg = Jr, r
+    Jr = max(Fr(1), best_sel)
+    rows[n - 1] = Jr
+    if Jr < Jmin:
+        Jmin, arg = Jr, n - 1
+    K, _, _ = flag_constants(n)
+    plain = n * (-ln(K) / 2 + ln(R_N[n]) - ln(n)) - ln(lcm_upto(n + 1))
+    gain = n * ln(Jmin) / 2
+    return {"J(r)": rows, "J_min": Jmin, "argmin": arg, "plain target": plain,
+            "gain": gain, "new target": plain - gain}

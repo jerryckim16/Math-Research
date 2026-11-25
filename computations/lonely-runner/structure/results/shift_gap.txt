@@ -1,0 +1,4 @@
+k=7 c=2 G=3360 nontrivial_y=63  min lb(y) = 960/6720 = 0.142857  (1/(k+1) = 0.125000)  #worst=1  worst y = 0 0 0 0 0 0 1
+min over nontrivial y of the longest good run: (n-1) = 40 grid steps, L_lb = 40/3360 = 1/84.00; worst y = 0 1 1 1 0 0 0
+k=15 c=2 G=13440 nontrivial_y=16383  min lb(y) = 1792/26880 = 0.066667  (1/(k+1) = 0.062500)  #worst=1  worst y = 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+min over nontrivial y of the longest good run: (n-1) = 46 grid steps, L_lb = 46/13440 = 1/292.17; worst y = 0 0 1 0 1 1 0 1 0 1 0 1 0 1 0

@@ -14,7 +14,8 @@
  *                              hex digits per class (as in the archives)
  * Per row: value range 1..h; classes distinct; class 1 present; COVER
  * (witness-free at level 1, threshold k+1 even when n < k); IRREDUNDANT
- * (every class covers some time no other class of the row covers).
+ * (every class covers some time no other class of the row covers; counted
+ * for covers only, where it is equivalent to: no class can be dropped).
  * Prints one summary line
  *   rows R bad_format F out_of_range O not_distinct D no_class1 C
  *   not_cover X redundant Y
@@ -67,8 +68,8 @@ int main(int argc, char **argv) {
             int cover = 1;
             for (int a = 1; a <= h; a++) if (!cnt[a]) { cover = 0; break; }
             if (!cover) { ncov++; if (!what) what = "not_cover"; }
-            int irr = 1;
-            for (int i = 0; i < n && irr; i++) {
+            int irr = 1;   /* tested on covers only: there it means no class can be dropped */
+            for (int i = 0; i < n && irr && cover; i++) {
                 int priv = 0;
                 for (int a = 1; a <= h && !priv; a++) if (cov[(size_t)v[i] * (h + 1) + a] && cnt[a] == 1) priv = 1;
                 if (!priv) irr = 0;
