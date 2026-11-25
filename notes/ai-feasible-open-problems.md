@@ -29,13 +29,13 @@ partial result that is within reach.
 | Rank | Problem | Concrete AI-sized target | Why it is feasible |
 | --- | --- | --- | --- |
 | 477 | Lonely Runner Conjecture | Prove the next unverified number of runners | Recent computer-assisted proofs extended the verified range by reducing each case to a finite check. The next case is mostly an algorithm and compute question. |
-| 256 | Erdős–Szekeres convex polygon (ES(n) = 2^(n-2)+1) | Prove ES(7) = 33 | ES(6) = 17 was settled by computer (Szekeres–Peters 2006). The empty-hexagon result (Heule–Scheucher 2024) shows SAT encodings of planar order types scale. |
-| 206 | Chromatic number of the plane | Find a 6-chromatic unit-distance graph, or a 6-colouring | ProofAtlas now records 6 ≤ χ ≤ 7 (Oct 2026 partial progress). Either answer is a finite object that a SAT solver can check, and the 5-chromatic graphs were found and shrunk by computer search. |
+| 256 | Erdős–Szekeres convex polygon ($\mathrm{ES}(n) = 2^{n-2}+1$) | Prove $\mathrm{ES}(7) = 33$ | $\mathrm{ES}(6) = 17$ was settled by computer (Szekeres–Peters 2006). The empty-hexagon result (Heule–Scheucher 2024) shows SAT encodings of planar order types scale. |
+| 206 | Chromatic number of the plane | Find a 6-chromatic unit-distance graph, or a 6-colouring | ProofAtlas now records $6 \le \chi \le 7$ (Oct 2026 partial progress). Either answer is a finite object that a SAT solver can check, and the 5-chromatic graphs were found and shrunk by computer search. |
 | 455 | Existence of EFX allocations | Settle 4 agents with additive valuations, or find a counterexample | The 3-agent case is known. Counterexample search over small instances is an LP/SMT problem, and the arguments are combinatorial. |
 | 284 | Hadamard matrix conjecture | Construct a Hadamard matrix of order 668 (smallest open order) | This is a single finite construction search. Settling the whole conjecture is not in reach. |
-| 98 | Exact kissing numbers, n > 4 | Close a gap, e.g. dimension 5 (40 to 44) | AlphaEvolve-style search has already improved lower bounds in some dimensions. Upper bounds come from SDP, and matching the two for a single dimension would count. |
+| 98 | Exact kissing numbers, $n > 4$ | Close a gap, e.g. dimension 5 (40 to 44) | AlphaEvolve-style search has already improved lower bounds in some dimensions. Upper bounds come from SDP, and matching the two for a single dimension would count. |
 | 383 | Andrews–Curtis conjecture | Trivialise or obstruct specific potential counterexamples (Akbulut–Kirby, Miller–Schupp families) | RL and search have already settled individual candidate presentations. A full disproof would need a new invariant, which is much harder. |
-| 347 | Fewest variables for undecidable H10 over Z | Lower the current record (11 unknowns over Z) | Each improvement is an explicit, checkable polynomial construction, which suits search plus careful verification. |
+| 347 | Fewest variables for undecidable H10 over $\mathbb{Z}$ | Lower the current record (11 unknowns over $\mathbb{Z}$) | Each improvement is an explicit, checkable polynomial construction, which suits search plus careful verification. |
 
 ### Status updates found 2026-11-24
 
@@ -50,8 +50,8 @@ The summaries come from the arXiv abstracts.
   not checked here).
 - **Kissing numbers:** several unrefereed 2026 lower-bound papers publish their
   data (dims 19, 25–31, 25–55, 32–39, 49–61). See `problems/kissing-numbers.md`.
-- **Turán K₄⁽³⁾:** Jeong, Park, Im, Lee and Yang, arXiv:2609.27495v2, claim
-  π(K₄⁽³⁾) ≤ 0.557789 with a Lean 4 proof (reported; the Lean proof was not
+- **Turán $K_{4}^{(3)}$:** Jeong, Park, Im, Lee and Yang, arXiv:2609.27495v2, claim
+  $\pi(K_{4}^{(3)}) \le 0.557789$ with a Lean 4 proof (reported; the Lean proof was not
   replayed here).
 
 ## Tier 2: short statements where a proof idea could plausibly come from AI
@@ -64,15 +64,15 @@ recently landed (Erdős-problem style).
 | Rank | Problem | Note |
 | --- | --- | --- |
 | 363 | Frankl union-closed sets | Gilmer's entropy method moved the bound from about 0.01 to about 0.38. ProofAtlas logs a claim of 0.38289 (Oct 2026). Reaching 1/2 needs a new idea, but the setting is elementary. |
-| 375 | Erdős matching conjecture | ProofAtlas logs fixed-k and k = 4 subcase claims (Oct–Nov 2026). Good for extending case by case. |
-| 319 | Černý conjecture | Bound is (n-1)^2. ProofAtlas logs a cubic-coefficient improvement claim (Nov 2026). Counterexample search for small n is cheap. |
+| 375 | Erdős matching conjecture | ProofAtlas logs fixed-$k$ and $k = 4$ subcase claims (Oct–Nov 2026). Good for extending case by case. |
+| 319 | Černý conjecture | Bound is $(n-1)^{2}$. ProofAtlas logs a cubic-coefficient improvement claim (Nov 2026). Counterexample search for small $n$ is cheap. |
 | 482 | Reed's conjecture | ProofAtlas logs partial progress for fixed forbidden cliques (Oct 2026). |
 | 488 / 411 / 500 | Total colouring, list edge colouring, Berge–Fulkerson | Graph colouring conjectures with small-case verification and active partial results. |
 | 471 | Coven–Meyerowitz tiling | Finite algebraic condition with known special cases. Computation can guide the proof. |
-| 359 | Turán density of K_4^(3) = 5/9 | Flag-algebra SDP bounds are close to 5/9 but do not reach it. A new certificate or a better construction is the AI-shaped route. |
-| 407 | Illumination conjecture | Low-dimensional cases (n = 3 in general) are the realistic target. |
-| 340 | Thomson problem | Computer-assisted optimality proofs for specific N (Schwartz did N = 5). The next N is a bounded target. |
-| 260 | Sample compression, O(d) | Purely combinatorial. A clever construction or argument would settle it. |
+| 359 | Turán density of $K_{4}^{(3)} = 5/9$ | Flag-algebra SDP bounds are close to 5/9 but do not reach it. A new certificate or a better construction is the AI-shaped route. |
+| 407 | Illumination conjecture | Low-dimensional cases ($n = 3$ in general) are the realistic target. |
+| 340 | Thomson problem | Computer-assisted optimality proofs for specific $N$ (Schwartz did $N = 5$). The next $N$ is a bounded target. |
+| 260 | Sample compression, $O(d)$ | Purely combinatorial. A clever construction or argument would settle it. |
 
 ## Avoid for now
 
@@ -81,7 +81,7 @@ recently landed (Erdős-problem style).
   large new frameworks.
 - **Prime-pattern conjectures.** Twin primes, Goldbach, Hardy–Littlewood and
   Landau's problems hit the parity barrier.
-- **Transcendence and irrationality** (γ, ζ(5), e and π). There is no
+- **Transcendence and irrationality** ($\gamma$, $\zeta(5)$, $e$ and $\pi$). There is no
   plausible method on the horizon.
 - **Complexity separations** (P vs NP, circuit lower bounds). Known barriers
   (relativization, natural proofs, algebrization) block most approaches.
@@ -92,8 +92,8 @@ recently landed (Erdős-problem style).
 
 1. Pick one Tier 1 target and write its exact finite subcase in
    `problems/<name>.md` using the template.
-2. Reproduce the current record computationally first (e.g. re-verify ES(6) =
-   17, or the latest lonely-runner case) to validate the pipeline.
+2. Reproduce the current record computationally first (e.g. re-verify $\mathrm{ES}(6) = 17$,
+   or the latest lonely-runner case) to validate the pipeline.
 3. Look for a Lean statement in DeepMind's `formal-conjectures` repository
    before formalising from scratch. Only 2 of the 500 ProofAtlas entries link
    one.
