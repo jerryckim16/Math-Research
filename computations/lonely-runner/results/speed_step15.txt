@@ -1,0 +1,22 @@
+# Step 15: LRC_FINISH=1 (exact two-slot finish), -DWFIX=n (compile-time bitset width), LRC_SHARD_DEPTH=2 (depth-1 job split).
+# Rules from the change log of Allikvere's basegen_v66_lf.cpp (v6.2 exact finish; v6.5 fixed-width kernels; irsubroot jobs), reimplemented; his program was read, not run.
+# Timings were taken back to back while a 4-process completeness run (p = 283) shared the 4 cores; compare within a table only.
+# (14,113) full run, LRC_PRUNE=2 LRC_IRR=2 LRC_ORDER=1 (+FINISH); cgA = default build, cgA1 = -DWFIX=1; same 6,638,391 covers in all:
+#   rep1 cgA FINISH=0 nodes,covers=108523276 6638391 secs 42.052
+#   rep1 cgA FINISH=1 nodes,covers=110009810 6638391 secs 27.468
+#   rep1 cgA1 FINISH=0 nodes,covers=108523276 6638391 secs 34.953
+#   rep1 cgA1 FINISH=1 nodes,covers=110009810 6638391 secs 20.897
+#   rep2 cgA FINISH=0 nodes,covers=108523276 6638391 secs 48.997
+#   rep2 cgA FINISH=1 nodes,covers=110009810 6638391 secs 25.413
+#   rep2 cgA1 FINISH=0 nodes,covers=108523276 6638391 secs 31.810
+#   rep2 cgA1 FINISH=1 nodes,covers=110009810 6638391 secs 18.997
+# (14,251) fixed 1/64 slice (LRC_SHARD_DEPTH=2 LRC_NSHARDS=64 LRC_SHARD=0), same 167,382 covers and byte-identical sorted output in all; cgA2 = -DWFIX=2:
+#   cgA FINISH=0 nodes,covers=372062366 167382 secs 275.49 md5 03395051
+#   cgA FINISH=1 nodes,covers=372076080 167382 secs 249.63 md5 03395051
+#   cgA2 FINISH=0 nodes,covers=372062366 167382 secs 175.87 md5 03395051
+#   cgA2 FINISH=1 nodes,covers=372076080 167382 secs 172.14 md5 03395051
+# Summary: at p = 113 FINISH 1.7x, WFIX 1.3x, both ~2.3x; at p = 251 FINISH 1.1x, WFIX 1.57x, both 1.60x.
+# k = 15 Knuth (heuristic; LRC_PRUNE=1 LRC_IRR=2 LRC_ORDER=1, 5000 probes):
+#   k=15 p=269 knuth_estimate_nodes 7.324490e+10 stderr 3.508e+09
+#   k=15 p=271 knuth_estimate_nodes 6.855056e+10 stderr 6.591e+09
+#   k=15 p=277 knuth_estimate_nodes 1.609616e+11 stderr 7.314e+09

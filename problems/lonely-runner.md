@@ -758,6 +758,53 @@ The test is `test_lonely.py`, `test_covergen_order_same_minimal_covers`, which a
   - bit-parallel or AVX-512 popcount kernels.
 - These are constant-factor or late-depth improvements.
 
+### 14. More generator speed: exact finish, fixed width, job split, orderly-root rule (steps 15–16)
+
+**Sources.** The first three changes come from the change log of Allikvere's generator (`basegen_v66_lf.cpp`; read as text, not run). The fourth is from Toner, "Seventeen lonely runners, assuming sixteen" (Zenodo 10.5281/zenodo.23552885, Appendix B, Lemma B.1; read as text; his code was not run). All four are reimplemented in our `covergen.c`.
+
+1. **Exact two-slot finish (`LRC_FINISH=1`).** With two classes left, after the first child $c_1$ the possible last classes are exactly the allowed $c_2$ in $\bigcap_{t \in U \setminus \mathrm{cov}(c_1)} \mathrm{cov}(t)$. These are enumerated directly. The leaf filters subsume every cut that is skipped, so the output is unchanged.
+2. **Compile-time width (`-DWFIX=n`).** The bitsets have exactly $n$ words instead of 32, so struct copies shrink and loops unroll. The output is unchanged.
+3. **Depth-1 job split (`LRC_SHARD_DEPTH=2`).** Depth-2 subtrees are dealt out by a global counter. All shards walk depths 0–1 identically, so the union over shards is the unsharded output.
+4. **Orderly-root rule (`LRC_ORDERLY=1`).**
+   - *Definitions.* The root's branching time and its candidate list $R=(r_0,r_1,\dots)$, in the child order used, are fixed. For a cover $S \ni 1$ let $\rho(S)=\min\{i : r_i \in S\}$; the search finds $S$ in the subtree of $r_{\rho(S)}$. Call $S$ canonical if $(\rho(S),\mathrm{sorted}(S))$ is lexicographically least among the pairs for $s^{-1}S$ (folded), $s \in S$.
+   - *Uniqueness.* Each unit orbit has exactly one canonical cover.
+   - *The cut.* At a node in the subtree of $r_\rho$ with selection $T$, if some $s^{-1}T$ ($s \in T$) contains $r_i$ with $i<\rho$, then every completion $S$ has $\rho(s^{-1}S) \le i < \rho(S)$. So $S$ is not canonical and the node is cut. We checked this argument.
+   - *Restriction.* The class-1 private-time quota is not unit-invariant, so the rule requires `LRC_PRUNE=0`.
+   - *Expansion.* One cover per orbit suffices for the multiset expansion, because $u(C+E)=uC+uE$.
+   - *Cost per node.* A precomputed $(h+1)^2$ table of $\mathrm{fold}(a\,b^{-1})$ makes the test a few lookups.
+
+**Validation.**
+
+- Items 1–3 print the same minimal covers as the plain search (`test_covergen_finish_wfix_sharddepth`).
+- Item 4, at $(k,p)=(7,61),(8,101),(9,137),(10,127),(14,89)$: exactly one cover per unit orbit of the plain minimal covers (for example 1,689,912 → 121,569 at $(14,89)$), and the expanded multiset orbit sets equal the plain search's (`test_covergen_orderly_root`).
+
+**Measured** (`results/speed_step15.txt`, `results/speed_step16_orderly.txt`; Knuth figures are heuristic):
+
+| $(k,p)$ | previous best (`LRC_PRUNE=2 LRC_IRR=2 LRC_ORDER=1`) | new |
+| --- | --- | --- |
+| $(14,113)$, full run | 42–49 s (shared cores) | 19–21 s with `LRC_FINISH` + `WFIX` (≈2.3×) |
+| $(14,251)$, a fixed $1/64$ slice | 275 s | 172 s with `LRC_FINISH` + `WFIX` (1.60×) |
+| $(14,157)$, full run, light load | 344.6 s (with `LRC_FINISH` + `WFIX`) | **100.9 s with `LRC_ORDERLY`** (3.4×) |
+| $(14,251)$, $(14,401)$, Knuth nodes | $1.43\times10^{10}$, $1.99\times10^{11}$ | $2.55\times10^{9}$, $2.92\times10^{10}$ with `LRC_ORDERLY` (5.6×, 6.8×) |
+| $(17,307)$, $(17,401)$, $(17,503)$, Knuth nodes | $1.11\times10^{13}$, $6.72\times10^{13}$, $1.20\times10^{14}$ | $1.87\times10^{12}$, $9.97\times10^{12}$, $1.83\times10^{13}$ (5.9×, 6.7×, 6.5×) |
+
+**Results:**
+
+- The orderly rule is the largest single gain so far.
+- At $(14,113)$ it is only 1.45× faster, because the canonicity test costs relatively more at small $p$.
+- For $k=17$ the tree ratio $N_{17}/N_{15}$ (`results/knuth_k15_k17.txt`, before the orderly rule) is about 22–26 at $p=307$–$503$, 42–44 at $p=601$–$701$, and 96 at $p=797$.
+
+**Exact check at a real gate (step 16).** The full orderly run at $p=251$ used `LRC_PRUNE=0 LRC_ORDERLY=1 LRC_IRR=2 LRC_ORDER=1 LRC_FINISH=1`, built with `-DWFIX=2`, in 32 depth-2 shards (`results/lrc14_gates/regen_251_orderly.json`).
+
+- **Output.** 2,253,938 covers, one per orbit. They expand to exactly the certificate's 2,405,962 rows and give **2,404,346 orbits, equal to the certificate**, with none only on one side.
+- **Cost.** $2.51\times10^{9}$ nodes, **841 CPU-s**, 3.6 min wall time on 4 cores. Earlier settings took 7,505 CPU-s (step 13) and about 30,500 (step 6); Allikvere's engine took 2,579 CPU-s on another machine.
+- **Dependencies.** This completeness check rests on the minimal-cover argument and Lemma B.1. It does not use Lemma 4.1.
+
+**Not tried yet:**
+
+- the mandatory-point bounds for the last 2–3 slots, measured marginal at step 12;
+- AVX-512 popcount kernels;
+
 ## Independent re-check summary
 
 Scope: J. Allikvere's computer-assisted proofs of $\mathrm{LRC}(13)$ and $\mathrm{LRC}(14)$, i.e. 14 and 15 runners (arXiv:2609.02604v2). Certificates: Zenodo 10.5281/zenodo.22066772 and 10.5281/zenodo.22667683. All checks use our own code (C and Python, in `computations/lonely-runner/`), written from the definitions in the paper and in arXiv:2604.23906. The archives were read as data only; none of the author's programs were executed.
@@ -852,7 +899,8 @@ Started 2026-11-25. This is the current focus. The results below were reviewed b
      - the lexicographic-minimum rule is an output filter (one row per orbit), not a node saving;
      - from his change log, not yet tried: the exact two-slot finish, the mandatory-point bounds for the last 2–3 slots, and bit-parallel popcount kernels;
      - his precondition search certifying $\tau(p) \ge k - 1$ (affects only the small second branch);
-     - the decomposition into jobs.
+     - the decomposition into jobs (done in step 15 as `LRC_SHARD_DEPTH=2`).
+   - Steps 15–16 (Approach 14): exact two-slot finish, compile-time width, depth-1 job split, and Toner's orderly-root rule. The orderly rule is 3.4× faster at $(k,p)=(14,157)$ and cuts the $k=17$ tree 6–7× (Knuth).
    - Validate any change against the current generator, and then against his archived $k = 14$ rows at $p = 397$ and 401. Those are small gates: about 13 and 16 CPU-h for his code.
 3. **Cost.**
    - Model: Allikvere's per-gate $k = 14$ CPU time, times our measured $k = 15$ / $k = 14$ tree-size ratio. The ratio grows from 4.4 at $p = 251$ to 10–18 at $p = 353$–$569$, fitted $\propto p^{1.0}$. His cost is fitted $\propto p^{6.07}$.

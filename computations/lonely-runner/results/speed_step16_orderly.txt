@@ -1,0 +1,23 @@
+# Step 16: LRC_ORDERLY=1, Toner's orderly-root canonical rule (Zenodo 10.5281/zenodo.23552885, seventeen.pdf
+# Appendix B, Lemma B.1), reimplemented from the paper's text; his code was not run.  Requires LRC_PRUNE=0.
+# Validation (also test_covergen_orderly_root): for (k,p) = (7,61),(8,101),(9,137),(10,127),(14,89) the orderly output has
+#   exactly one cover per unit orbit of the plain minimal covers (1315->188, 10188->1274, 8280->920, 75500->7552,
+#   1689912->121569) and the canon-expanded multiset orbit sets equal the plain search's (also with IRR=2 ORDER=1 FINISH=1).
+# Exact full runs, -DWFIX build, light load (load average 1-2), same machine back to back:
+#   (14,113) best (PRUNE=2 IRR=2 ORDER=1 FINISH=1): 110,009,810 nodes, 6,638,391 covers, 19.2 s
+#   (14,113) orderly (PRUNE=0 ORDERLY=1 IRR=2 ORDER=1 FINISH=1, quot table): 34,271,795 nodes, 3,142,673 covers, 13.2 s  (1.45x)
+#   (14,157) best: 1,268,153,272 nodes, 54,859,751 covers, 344.6 s
+#   (14,157) orderly: 333,189,953 nodes, 29,653,827 covers, 100.9 s  (3.4x)
+#   (before the quot lookup table, orderly took 21.6 s / 175.6 s under heavier load)
+# Knuth (heuristic; 10000 probes, seed 3; "best" = PRUNE=1 IRR=2 ORDER=1, "orderly" = PRUNE=0 ORDERLY=1 IRR=2 ORDER=1):
+#   (14 251) best knuth_estimate_nodes 1.431678e+10 stderr 7.729e+08
+#   (14 251) orderly knuth_estimate_nodes 2.554059e+09 stderr 3.488e+08
+#   (14 401) best knuth_estimate_nodes 1.986983e+11 stderr 6.243e+09
+#   (14 401) orderly knuth_estimate_nodes 2.919167e+10 stderr 1.945e+09
+#   (17 307) best knuth_estimate_nodes 1.107875e+13 stderr 5.048e+11
+#   (17 307) orderly knuth_estimate_nodes 1.874214e+12 stderr 4.466e+11
+#   (17 401) best knuth_estimate_nodes 6.722903e+13 stderr 5.012e+12
+#   (17 401) orderly knuth_estimate_nodes 9.966982e+12 stderr 1.020e+12
+#   (17 503) best knuth_estimate_nodes 1.196472e+14 stderr 3.935e+12
+#   (17 503) orderly knuth_estimate_nodes 1.830272e+13 stderr 1.463e+12
+# node reduction: (14,251) 5.6x, (14,401) 6.8x, (17,307) 5.9x, (17,401) 6.7x, (17,503) 6.5x
