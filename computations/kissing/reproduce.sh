@@ -272,8 +272,9 @@ fi
 # 7e. Kravatskiy 45D (7,655,056 points; 2,187 affine-shell families with rational heads
 #     over 3^8 class residues, plus 16 pure heads; 2,203 classes), rebuilt with our own
 #     shell enumerator. Only with --with-45: build (about 10 min on 4 cores, 18 min
-#     alongside other jobs), head-order and head-scale negative controls (early exit),
-#     and parts 0 and 1 of the 16-part C check (about 23 min each) as a calibration.
+#     alongside other jobs), head-order, head-scale and body-side (class index shifted)
+#     negative controls (early exit), and parts 0 and 1 of the 16-part C check (about
+#     23 min each) as a calibration.
 #     --with-45-full runs all 16 parts (about 6.1 h of C); a part with a log is skipped.
 if [ "$with45" -ge 1 ]; then
   [ -x "$work/bin/enum_affine" ] || gcc -O3 -march=native -fopenmp -Wall "$here/enum_affine.c" -o "$work/bin/enum_affine" -lm
@@ -286,6 +287,12 @@ if [ "$with45" -ge 1 ]; then
     if "$CHK" "$K/krav45_x.i8" 40 "$K/krav45.lab" "$work/neg/k45_$v.tab" --partner "$K/krav45_xg.i8" \
         > "$work/neg/k45_$v.txt"; then echo "NEGATIVE CONTROL k45_$v WAS ACCEPTED"; exit 1; fi
   done
+  # body side: family 987 (r3 = 10) with class index 1319 read as 1320 (wrong coset, 15 rows)
+  python3 -I "$B45" --bodyvariant "$K/krav45" "$K" "$work/bin/enum_affine" "$work/neg/k45_classshift" classshift
+  if "$CHK" "$work/neg/k45_classshift_x.i8" 40 "$work/neg/k45_classshift.lab" "$K/krav45.tab" \
+      --partner "$work/neg/k45_classshift_xg.i8" > "$work/neg/k45_classshift.txt"; then
+    echo "NEGATIVE CONTROL k45_classshift WAS ACCEPTED"; exit 1; fi
+  rm -f "$work/neg/k45_classshift_x.i8" "$work/neg/k45_classshift_xg.i8"  # 2 x 306 MB
   unset KISS_STOP_AT_FIRST
   parts="0 1"; [ "$with45" = 2 ] && parts=$(seq 0 15)
   for k in $parts; do  # 16 parts (each under 25 min); together they cover every pair once

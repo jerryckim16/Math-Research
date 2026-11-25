@@ -43,6 +43,15 @@ Usage: python3 -I build_kravatskiy45.py KRAVDIR OUT ENUM_BIN [--work DIR] [--job
   head-only negative controls (must FAIL): shift (the head list shifted by
   one family, wrong order), headscale (family heads read over D/2 instead of
   D, i.e. doubled).
+       python3 -I build_kravatskiy45.py --bodyvariant BASE KRAVDIR ENUM_BIN OUT classshift
+  body-side negative control (must FAIL), checked against BASE's .tab: the
+  first r3 = 10 family (987, class 1319) has its class index read as 1320,
+  a class no family uses, so its bodies come from the wrong coset (with its
+  own head and label). Its shifted shell is enumerated afresh (15 rows; the
+  published weight is 30, so the build's weight assertion alone would already
+  reject it). Every other row is BASE's. Writes OUT_x.i8, OUT_xg.i8, OUT.lab.
+  (For many other r3 = 10 families the shifted shell is empty: that removes
+  points, which no pairwise check can reject, only the weight check.)
 """
 import hashlib
 import json
@@ -177,9 +186,41 @@ def retable(base, variant, out):
     print(f"45D variant {variant}: table -> {out}.tab (rows, labels: {base})")
 
 
+def bodyvariant(base, kdir, enum_bin, out, variant):
+    """Body-side negative control: BASE's rows and labels with one family's
+    bodies taken from the wrong coset; checked against BASE's table."""
+    assert variant == "classshift", f"unknown variant {variant}"
+    meta = json.load(open(base + "_meta.json"))
+    assert meta["dim"] == 45 and meta["variant"] is None and meta["rows"] == CLAIM
+    A, G, R = load(kdir)
+    cl, r3, w = A["classes"], A["r3"], A["weights"]
+    i = int(np.flatnonzero(r3 == 10)[0])  # the first r3 = 10 family
+    c2 = (int(cl[i]) + 1) % 3 ** 8
+    assert c2 not in set(int(c) for c in cl), "shifted class is used by a family"
+    work = out + "_enumwork"
+    os.makedirs(work, exist_ok=True)
+    Xs = b43.shell(G, R[c2], 3 * int(r3[i]), enum_bin, work, {})
+    assert len(Xs) > 0, "shifted shell is empty (a subset: no pairwise check can reject it)"
+    print(f"family {i}: class {int(cl[i])} -> {c2}, r3 {int(r3[i])}; shifted shell {len(Xs)} rows, "
+          f"published weight {int(w[i])} (weight check: {'pass' if len(Xs) == int(w[i]) else 'FAIL'})")
+    X = np.fromfile(base + "_x.i8", dtype=np.int8).reshape(-1, 40)
+    lab = np.fromfile(base + ".lab", dtype="<u2")
+    assert len(X) == len(lab) == CLAIM
+    at = np.flatnonzero(lab == i)
+    assert len(at) == int(w[i]) and np.all(np.diff(at) == 1)
+    X = np.vstack([X[:at[0]], Xs, X[at[-1] + 1:]])
+    lab = np.concatenate([lab[:at[0]], np.full(len(Xs), i, dtype="<u2"), lab[at[-1] + 1:]])
+    b43.write_rows(out, X, G)
+    lab.astype("<u2").tofile(out + ".lab")
+    print(f"45D body variant {variant}: {len(X)} rows -> {out}_x.i8, _xg.i8, .lab "
+          f"(check against {base}.tab)")
+
+
 def main():
     if sys.argv[1] == "--retable":
         return retable(sys.argv[2], sys.argv[3], sys.argv[4])
+    if sys.argv[1] == "--bodyvariant":
+        return bodyvariant(*sys.argv[2:7])
     kdir, out, enum_bin = sys.argv[1], sys.argv[2], sys.argv[3]
     work = sys.argv[sys.argv.index("--work") + 1] if "--work" in sys.argv else out + "_enumwork"
     jobs = int(sys.argv[sys.argv.index("--jobs") + 1]) if "--jobs" in sys.argv else 4
