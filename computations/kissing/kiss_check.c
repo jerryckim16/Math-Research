@@ -27,8 +27,9 @@
  * Class mode (optional, used for points that are not small integer rows):
  *   kiss_check FILE.i8 d LABELS.u8 TABLE.txt
  * LABELS.u8 holds one class label per row, uint8 (file size n) or uint16
- * little-endian (file size 2n, for more than 256 classes, at most MAXCLS);
- * TABLE.txt holds "k" and
+ * little-endian (file size 2n, for more than 256 classes); TABLE.txt holds
+ * "k" (1 <= k <= MAXTAB; the class arrays are allocated for k, so 45D's
+ * 2,203 classes fit) and
  * then k*k lines "a b T C". Pair (i, j) then passes iff a_i.a_j <= T[l_i][l_j],
  * and counts as a contact iff a_i.a_j == C[l_i][l_j]. The table is computed
  * exactly elsewhere (class_table.py) from an exact decomposition of the true
@@ -52,6 +53,11 @@
  * (i, j) with i < j and j in [blk*JB, (blk+1)*JB), so the M parts together
  * cover every pair exactly once; each part prints its own pair count.
  *
+ * Output of the per class-pair maxima: one line per class pair observed when
+ * there are at most MAXNORM classes (as before); with more classes (45D:
+ * 2.4M class pairs) only the pairs whose maximum reaches or exceeds the
+ * threshold are listed, with a count of the pairs omitted.
+ *
  * Environment KISS_STOP_AT_FIRST=1 (for negative controls only): stop soon
  * after the first violation; the counts printed are then partial and the
  * result is FAIL with a genuine violating pair.
@@ -65,7 +71,8 @@
 #include <string.h>
 #include <omp.h>
 
-#define MAXCLS 1024
+#define MAXNORM 1024  /* norm classes (norm mode); also the old class-mode limit */
+#define MAXTAB 8192   /* class mode: table classes (memory ~ 7 * MAXTAB^2 * 2 bytes) */
 #define JB 2048
 
 static int64_t isqrt64(int64_t x) {
@@ -93,6 +100,15 @@ int main(int argc, char **argv) {
     }
     int partnermode = partfn != NULL;
     int classmode = labfn != NULL;  /* body rows may be zero there */
+    /* class arrays: K x K, K = MAXNORM, or the table's k when larger */
+    int K = MAXNORM, tabk = 0;
+    if (classmode) {
+        FILE *ft = fopen(tabfn, "r");
+        if (!ft || fscanf(ft, "%d", &tabk) != 1 || tabk < 1 || tabk > MAXTAB) { fprintf(stderr, "bad table\n"); return 2; }
+        fclose(ft);
+        if (tabk > K) K = tabk;
+    }
+#define IX(a, b) ((size_t)(a) * K + (b))
     const char *fn = argv[1];
     int d = atoi(argv[2]);
     if (d <= 0 || d > 4096) { fprintf(stderr, "bad d\n"); return 2; }
@@ -125,7 +141,8 @@ int main(int argc, char **argv) {
 
     /* norms and classes */
     int32_t *nrm = malloc(n * sizeof(int32_t));
-    int ncls = 0; int32_t clsnorm[MAXCLS]; int64_t clscount[MAXCLS];
+    int ncls = 0;
+    int32_t *clsnorm = malloc(sizeof(int32_t) * K); int64_t *clscount = malloc(sizeof(int64_t) * K);
     uint16_t *cls = malloc(n * sizeof(uint16_t));
     int32_t maxnorm = 0;
     for (int64_t i = 0; i < n; i++) {
@@ -137,7 +154,7 @@ int main(int argc, char **argv) {
         int c;
         for (c = 0; c < ncls; c++) if (clsnorm[c] == s) break;
         if (c == ncls) {
-            if (ncls == MAXCLS) { fprintf(stderr, "too many norm classes\n"); return 2; }
+            if (ncls == MAXNORM) { fprintf(stderr, "too many norm classes\n"); return 2; }
             clsnorm[ncls] = s; clscount[ncls] = 0; ncls++;
         }
         cls[i] = (uint16_t)c; clscount[c]++;
@@ -145,12 +162,13 @@ int main(int argc, char **argv) {
     if (!partnermode && maxnorm > 32767) { fprintf(stderr, "max squared norm %d > 32767: int16 path not exact\n", maxnorm); return 2; }
 
     /* thresholds T[c1][c2] and contact values */
-    static int16_t T[MAXCLS][MAXCLS], C[MAXCLS][MAXCLS];
+    int16_t *T = calloc((size_t)K * K, sizeof(int16_t)), *C = calloc((size_t)K * K, sizeof(int16_t));
+    if (!T || !C) { fprintf(stderr, "out of memory\n"); return 2; }
     for (int a = 0; a < ncls; a++) for (int b = 0; b < ncls; b++) {
         int64_t AB = (int64_t)clsnorm[a] * clsnorm[b];
         int64_t t = isqrt64(AB / 4);
-        T[a][b] = (int16_t)t;
-        C[a][b] = (4 * t * t == AB) ? (int16_t)t : (int16_t)32767; /* 32767 never reached */
+        T[IX(a, b)] = (int16_t)t;
+        C[IX(a, b)] = (4 * t * t == AB) ? (int16_t)t : (int16_t)32767; /* 32767 never reached */
     }
     if (classmode) {
         if (maxnorm >= 32767) { fprintf(stderr, "class mode needs max squared norm < 32767\n"); return 2; }
@@ -170,15 +188,17 @@ int main(int argc, char **argv) {
         } else { fprintf(stderr, "labels file size is neither n nor 2n\n"); return 2; }
         fclose(fl);
         FILE *ft = fopen(tabfn, "r");
-        if (!ft || fscanf(ft, "%d", &ncls) != 1 || ncls < 1 || ncls > MAXCLS) { fprintf(stderr, "bad table\n"); return 2; }
-        static int seen[MAXCLS][MAXCLS]; memset(seen, 0, sizeof seen);
-        for (int e = 0; e < ncls * ncls; e++) {
+        if (!ft || fscanf(ft, "%d", &ncls) != 1 || ncls != tabk) { fprintf(stderr, "bad table\n"); return 2; }
+        uint8_t *seen = calloc((size_t)K * K, 1);
+        if (!seen) { fprintf(stderr, "out of memory\n"); return 2; }
+        for (int64_t e = 0; e < (int64_t)ncls * ncls; e++) {
             int a, b; long tv, cv;
-            if (fscanf(ft, "%d %d %ld %ld", &a, &b, &tv, &cv) != 4 || a < 0 || b < 0 || a >= ncls || b >= ncls || seen[a][b]
+            if (fscanf(ft, "%d %d %ld %ld", &a, &b, &tv, &cv) != 4 || a < 0 || b < 0 || a >= ncls || b >= ncls || seen[IX(a, b)]
                 || tv < -32768 || tv > 32767 || cv < -32768 || cv > 32767) { fprintf(stderr, "bad table entry\n"); return 2; }
-            seen[a][b] = 1; T[a][b] = (int16_t)tv; C[a][b] = (int16_t)cv;
+            seen[IX(a, b)] = 1; T[IX(a, b)] = (int16_t)tv; C[IX(a, b)] = (int16_t)cv;
         }
         fclose(ft);
+        free(seen);
         for (int c = 0; c < ncls; c++) { clsnorm[c] = c; clscount[c] = 0; }
         for (int64_t i = 0; i < n; i++) {
             if (cls[i] >= ncls) { fprintf(stderr, "label out of range\n"); return 2; }
@@ -195,8 +215,9 @@ int main(int argc, char **argv) {
     int64_t nblk = (n + JB - 1) / JB;
     int64_t viol = 0, contacts = 0;
     int32_t maxexcess = -32768;
-    static int16_t maxp[MAXCLS][MAXCLS];
-    for (int a = 0; a < MAXCLS; a++) for (int b = 0; b < MAXCLS; b++) maxp[a][b] = -32768;
+    int16_t *maxp = malloc(sizeof(int16_t) * (size_t)K * K);
+    if (!maxp) { fprintf(stderr, "out of memory\n"); return 2; }
+    for (size_t e = 0; e < (size_t)K * K; e++) maxp[e] = -32768;
     int64_t partpairs = 0;
     for (int64_t blk = partk; blk < nblk; blk += partm) {
         int64_t j0 = blk * JB, j1 = j0 + JB; if (j1 > n) j1 = n;
@@ -211,9 +232,10 @@ int main(int argc, char **argv) {
     {
         int16_t acc[JB] __attribute__((aligned(64)));
         int64_t lviol = 0, lcont = 0; int32_t lmax = -32768;
-        int16_t (*lmaxp)[MAXCLS] = malloc(sizeof(int16_t) * MAXCLS * MAXCLS);
+        int16_t *lmaxp = malloc(sizeof(int16_t) * (size_t)K * K);
         int16_t *TT = malloc(sizeof(int16_t) * (size_t)ncls * JB), *CC = malloc(sizeof(int16_t) * (size_t)ncls * JB);
-        for (int a = 0; a < MAXCLS; a++) for (int b = 0; b < MAXCLS; b++) lmaxp[a][b] = -32768;
+        if (!lmaxp || !TT || !CC) { fprintf(stderr, "out of memory\n"); exit(2); }
+        for (size_t e = 0; e < (size_t)K * K; e++) lmaxp[e] = -32768;
         int64_t lfi = -1, lfj = -1;
         #pragma omp for schedule(dynamic, 1)
         for (int64_t blk = nblk - 1; blk >= 0; blk--) {
@@ -221,8 +243,8 @@ int main(int argc, char **argv) {
             if (blk % partm != partk) continue;
             int64_t j0 = blk * JB, j1 = j0 + JB; if (j1 > n) j1 = n;
             for (int c = 0; c < ncls; c++) for (int64_t j = j0; j < j1; j++) {
-                TT[(size_t)c * JB + (j - j0)] = T[c][cls[j]];
-                CC[(size_t)c * JB + (j - j0)] = C[c][cls[j]];
+                TT[(size_t)c * JB + (j - j0)] = T[IX(c, cls[j])];
+                CC[(size_t)c * JB + (j - j0)] = C[IX(c, cls[j])];
             }
             for (int64_t i = 0; i < j1 - 1; i++) {
                 int64_t js = (i + 1 > j0) ? i + 1 : j0;
@@ -254,7 +276,7 @@ int main(int argc, char **argv) {
                 /* per class-pair maxima (scalar, cheap relative to the dot products) */
                 for (int t = 0; t < len; t++) {
                     int cj = cls[js + t];
-                    if (acc[t] > lmaxp[ci][cj]) lmaxp[ci][cj] = acc[t];
+                    if (acc[t] > lmaxp[IX(ci, cj)]) lmaxp[IX(ci, cj)] = acc[t];
                 }
             }
         }
@@ -262,7 +284,7 @@ int main(int argc, char **argv) {
         {
             viol += lviol; contacts += lcont;
             if (lmax > maxexcess) maxexcess = lmax;
-            for (int a = 0; a < ncls; a++) for (int b = 0; b < ncls; b++) if (lmaxp[a][b] > maxp[a][b]) maxp[a][b] = lmaxp[a][b];
+            for (int a = 0; a < ncls; a++) for (int b = 0; b < ncls; b++) if (lmaxp[IX(a, b)] > maxp[IX(a, b)]) maxp[IX(a, b)] = lmaxp[IX(a, b)];
             if (lfi >= 0 && (first_i < 0 || lfi < first_i)) { first_i = lfi; first_j = lfj; }
         }
         free(lmaxp); free(TT); free(CC);
@@ -272,11 +294,14 @@ int main(int argc, char **argv) {
     for (int c = 0; c < ncls; c++) printf("  %s %d count %lld\n", classmode ? "label" : "squared_norm", clsnorm[c], (long long)clscount[c]);
     printf("pairs %lld\n", (long long)(n * (n - 1) / 2));
     if (partm > 1) printf("part %lld of %lld: pairs_in_part %lld\n", (long long)partk, (long long)partm, (long long)partpairs);
+    int64_t omitted = 0;
     for (int a = 0; a < ncls; a++) for (int b = a; b < ncls; b++) {
-        int16_t m = maxp[a][b] > maxp[b][a] ? maxp[a][b] : maxp[b][a];
+        int16_t m = maxp[IX(a, b)] > maxp[IX(b, a)] ? maxp[IX(a, b)] : maxp[IX(b, a)];
         if (m == -32768) continue;
-        printf("  class_pair %d,%d max_inner_product %d threshold %d\n", clsnorm[a], clsnorm[b], m, T[a][b]);
+        if (ncls > MAXNORM && m < T[IX(a, b)]) { omitted++; continue; }
+        printf("  class_pair %d,%d max_inner_product %d threshold %d\n", clsnorm[a], clsnorm[b], m, T[IX(a, b)]);
     }
+    if (ncls > MAXNORM) printf("class_pairs_below_threshold_omitted %lld\n", (long long)omitted);
     printf("contacts_60deg %lld\n", (long long)contacts);
     printf("max_excess %d\nviolations %lld\n", maxexcess, (long long)viol);
     if (viol) printf("first_violation %lld %lld\n", (long long)first_i, (long long)first_j);
