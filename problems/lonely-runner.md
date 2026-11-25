@@ -3,7 +3,7 @@
 **Area:** Diophantine approximation / combinatorics
 **Status:** in progress. Done so far:
 - The prime-gate framework is reproduced end to end for $\mathrm{LRC}(3)$–$\mathrm{LRC}(10)$ (4–11 runners), conditional on one cited bound ($B_k$). $\mathrm{LRC}(10)$ uses an explicit $\times 11$ lift, independent of Sungkawichai–Trakulthongchai's Prop. corlarge (step 7).
-- All 71 of Allikvere's 15-runner ($\mathrm{LRC}(14)$) gate certificates are independently re-checked, with no discrepancy found. Stored rows were checked in full at every gate; the cascade and kill in full at 54 gates and sampled at 17, with the cascade alone also in full at near-gcd gate 223; level-one completeness at 6 gates ($p = 89, 239, 251, 263, 269, 283$). See "Independent re-check summary". His 14-runner terminal kills are re-checked at all 111 of his gate primes.
+- All 71 of Allikvere's 15-runner ($\mathrm{LRC}(14)$) gate certificates are independently re-checked, with no discrepancy found. Stored rows were checked in full at every gate; the cascade and kill in full at 54 gates and sampled at 17, with the cascade alone also in full at near-gcd gate 223; level-one completeness at 7 gates ($p = 89, 239, 251, 263, 269, 281, 283$). See "Independent re-check summary". His 14-runner terminal kills are re-checked at all 111 of his gate primes.
 - The $n = 15$ shape lemma $R_{15} < 49/100$ is proved (Approach 10; every inequality machine-checked exactly). The general-$n$ parts of Allikvere's Theorem 3.8 are independently verified (Approach 11), so the 16-runner gate target 483.239 is proved here, given $\mathrm{LRC}(m)$ for $m \le 14$.
 - The cost of 16 runners with our code is estimated from measurements. **16 and 17 runners turn out to be already claimed** (Zenodo, Oct 2026; see the correction under Statement). The first unclaimed case is 18 runners.
 
@@ -60,7 +60,7 @@ Literature checked on 2026-11-23. In step 2, arxiv.org and zenodo.org became rea
 | 11, 12, 13 | 10–12 | claimed (computer-assisted preprint) | T. Sungkawichai, T. Trakulthongchai, "Eleven, twelve, and thirteen lonely runners", arXiv:2604.23906 (Apr 2026, v2); code github.com/vzsky/lonely-runners | **[read]** (LaTeX source in the code repository) |
 | 14 | 13 | claimed (computer-assisted preprint), two proofs | J. Allikvere, "Fourteen and fifteen lonely runners", arXiv:2609.02604 (v1 2 Sep 2026, "Fourteen lonely runners"; v2 24 Sep 2026). Certificates: Zenodo 10.5281/zenodo.22066772 | **[read]** v2 |
 | 15 | 14 | claimed (computer-assisted preprint) | Allikvere, same v2. Certificates: Zenodo 10.5281/zenodo.22667683. 2,137 CPU-hours | **[read]**; 4 of 71 gate certificates spot-checked (below) |
-| 16 | 15 | claimed (computer-assisted, Zenodo preprint) | J. Allikvere, *Sixteen lonely runners*, Zenodo 10.5281/zenodo.23304361 (2026-10-11) | metadata and manuscript source read (`notes/lonely-runner/literature.md`); certificates not yet re-checked |
+| 16 | 15 | claimed (computer-assisted, Zenodo preprint) | J. Allikvere, *Sixteen lonely runners*, Zenodo 10.5281/zenodo.23304361 (2026-10-11) | metadata and manuscript source read (`notes/lonely-runner/literature.md`); level-one completeness independently checked at $p = 269$ (Approach 15); other certificates not yet re-checked here |
 | 17 | 16 | claimed, conditional on 16 runners (Zenodo preprint) | W. Toner, *Seventeen lonely runners, assuming sixteen*, Zenodo 10.5281/zenodo.23552885 (2026-10-22) | metadata and PDF read; not re-checked |
 | 18 | 17 | **open** (no located claim, 2026-11-25) | — | |
 
@@ -296,7 +296,7 @@ Per-gate JSON files are in `results/lrc14_gates/`.
 
 - All 52 "J empty" gates were checked in full.
 - 19 of the 19 near-gcd gates were checked: every stored row tested, with the cascade and kill on seeded samples (3,000, or 500 for the large archives).
-- Level-one completeness was checked at 6 gates ($p = 89, 239, 251, 263, 269, 283$).
+- Level-one completeness was checked at 7 gates ($p = 89, 239, 251, 263, 269, 281, 283$).
 - **No discrepancy was found.**
 - **All 71 gates are now covered.**
 
@@ -377,7 +377,8 @@ Per-gate JSON files are in `results/lrc14_gates/`.
   - $p = 269$: **197,957 orbits, equal to the certificate** (none only on one side); 318,113 covers; $1.22\cdot 10^{10}$ nodes; 8,433 CPU-s; 36 min wall.
   - $p = 263$: **849,135 orbits, equal to the certificate** (none only on one side); 1,376,334 covers; $1.91\cdot 10^{10}$ nodes; 12,517 CPU-s; 56 min wall.
   - $p = 283$: **480,781 orbits, equal to the certificate** (none only on one side); 741,139 covers; $2.17\cdot 10^{10}$ nodes; 18,665 CPU-s; 82 min wall (run with another job sharing the cores).
-- Not done: completeness at the other 65 gates (a $p = 179$ run was lost in a step-3 restart).
+  - $p = 281$ (step 17, orderly generator `LRC_PRUNE=0 LRC_ORDERLY=1 LRC_IRR=2 LRC_ORDER=1 LRC_FINISH=1`, 32 depth-2 shards): **496,107 orbits, equal to the certificate** (none only on one side); 486,408 covers; $4.69\cdot 10^{9}$ nodes; 1,903 CPU-s; 8 min wall.
+- Not done: completeness at the other 64 gates (a $p = 179$ run was lost in a step-3 restart).
 
 **$\mathrm{LRC}(13)$ archive** (Zenodo 10.5281/zenodo.22066772, `fourteen_lonely_runners_package.zip`).
 
@@ -655,7 +656,7 @@ Machine checks, exact, with the actual $B_r$ of each $n$:
 
 **Consequence.** For a primitive counterexample with 15 speeds (16 runners), assuming $\mathrm{LRC}(m)$ for $m \le 14$: $v_1\cdots v_{15} < e^{496.7268}$. The 16-runner gate target 483.239 is therefore **proved here**, modulo:
 
-- **$\mathrm{LRC}(13)$ and $\mathrm{LRC}(14)$**, the 14- and 15-runner cases. These are Allikvere's certificate-based results: $\mathrm{LRC}(14)$ is re-checked in Approach 7, fully at 54 of 71 gates, with level-one completeness at 6 gates ($p = 89, 239, 251, 263, 269, 283$); $\mathrm{LRC}(13)$ is re-checked only through its terminal kills. $\mathrm{LRC}(m)$ for $m \le 12$ comes from the literature.
+- **$\mathrm{LRC}(13)$ and $\mathrm{LRC}(14)$**, the 14- and 15-runner cases. These are Allikvere's certificate-based results: $\mathrm{LRC}(14)$ is re-checked in Approach 7, fully at 54 of 71 gates, with level-one completeness at 7 gates ($p = 89, 239, 251, 263, 269, 281, 283$); $\mathrm{LRC}(13)$ is re-checked only through its terminal kills. $\mathrm{LRC}(m)$ for $m \le 12$ comes from the literature.
 - **The standard facts listed above.**
 - **The forced divisor** (Rosenfeld Lemma 4), which is elementary (see "The finite reduction").
 
@@ -805,6 +806,26 @@ The test is `test_lonely.py`, `test_covergen_order_same_minimal_covers`, which a
 - the mandatory-point bounds for the last 2–3 slots, measured marginal at step 12;
 - AVX-512 popcount kernels;
 
+### 15. Independent level-one completeness at Allikvere's 16-runner gates (step 17)
+
+**Goal.** Allikvere's $\mathrm{LRC}(15)$ claim (*Sixteen lonely runners*, Zenodo 10.5281/zenodo.23304361) certifies $J(15,p)=\varnothing$ at 59 primes $269 \le p \le 659$. The certificates store the level-one rows, so the cascade can be replayed. What no replay of the certificate checks is **completeness**: that the stored rows represent every unit orbit of $I(15,p,1)$. We check it by generating $I(15,p,1)$ ourselves and comparing orbit sets.
+
+**Method.**
+
+- **Archive.** `evidence15_<p>_s0.tgz` is downloaded from Zenodo and its SHA-256 compared with the record's `SHA256SUMS.txt` (the file has CRLF line endings, which are stripped). The archive is parsed only by our own code; none of his programs are run.
+- **Ours.** `covergen.c` at $k=15$ with `LRC_PRUNE=0 LRC_ORDERLY=1 LRC_IRR=2 LRC_ORDER=1 LRC_FINISH=1` (orderly-root rule, Approach 14), built with `-DWFIX`, in 32 depth-2 shards on 4 cores. The covers are expanded to 15-multisets and reduced to unit-orbit canonical forms by `canon.c`.
+- **Theirs.** `rows_ir/*.txt` plus `rows_km1/*.txt`, each $14$-class cover extended by every class, reduced the same way (`completeness_check.py`, which now accepts the `out15_<p>` layout).
+- **Pass.** The two orbit sets are equal.
+- **Dependencies.** Completeness rests on the minimal-cover argument in `covergen.c` and Toner's Lemma B.1 (proof checked, Approach 14).
+
+**Results** (`results/lrc15_gates/completeness_<p>.json`):
+
+| $p$ | orbits (ours = his) | only on one side | our covers → rows | his rows (ir + km1 ext) | nodes | our CPU-s | his generation CPU-s |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 269 | **6,589,665 = 6,589,665** | 0 / 0 | 6,153,299 → 6,596,721 | 6,149,965 + 446,756 = 6,596,721 | $1.41\times10^{10}$ | 5,160 (22 min wall) | 26,741 |
+
+**Status.** At $p = 269$ the $\mathrm{LRC}(15)$ gate's level-one family is **independently verified complete**. The remaining 58 gates are queued cheapest first by orderly Knuth estimates (`results/lrc15_gates/knuth_orderly_k15.txt`; heuristic): $p = 281$ about $2.1\times10^{10}$ nodes, up to $p = 641$ about $6.8\times10^{12}$.
+
 ## Independent re-check summary
 
 Scope: J. Allikvere's computer-assisted proofs of $\mathrm{LRC}(13)$ and $\mathrm{LRC}(14)$, i.e. 14 and 15 runners (arXiv:2609.02604v2). Certificates: Zenodo 10.5281/zenodo.22066772 and 10.5281/zenodo.22667683. All checks use our own code (C and Python, in `computations/lonely-runner/`), written from the definitions in the paper and in arXiv:2604.23906. The archives were read as data only; none of the author's programs were executed.
@@ -815,14 +836,14 @@ Scope: J. Allikvere's computer-assisted proofs of $\mathrm{LRC}(13)$ and $\mathr
 - **Stored level-one rows: all 71 gates, every row.** Every stored irredundant row is witness-free at level 1, i.e. lies in $I(14,p,1)$. Every stored km1 multiset is a cover. That is 495,538,971 stored irredundant rows in total.
 - **Binary cascade, levels 2–32.** In full at all 52 "$J(14,p) = \emptyset$" gates and at the near-gcd gates $p = 179$, 223 and 233 (step 8). At the other 16 near-gcd gates, on seeded uniform samples of stored rows (compared both ways) and of extension-survivor lines: 3,000 at $p = 89, 163, 173$; 500 at the 13 large archives. There were 0 mismatches.
 - **Level-15 kill records.** In full at the 52 "J empty" gates (one persistent orbit, $(1,\ldots,14)$, each) and at $p = 179$ (all 8,011 orbits) and $p = 233$ (all 13,457 orbits). At the other near-gcd gates, on seeded samples of the same sizes. Every record checked is reproduced exactly: level-3/5 witness-free lifts, CRT candidates, level-15 grid, gcd clause, and the few-exception shift Lemma 3.12. Improper after Lemma 3.12 is 0 everywhere, and improper after the gcd clause is 0 at the "J empty" gates. At the stream-checked gates, the number of kill files equals the certificate's persistent-orbit count.
-- **Level-one completeness at 6 gates ($p = 89, 239, 251, 263, 269, 283$).** At $p = 89$ (near-gcd), $p = 239, 251, 263, 269$ and 283 ("J empty"; 263, 269 and 283 in step 14), an independent minimal-cover enumeration reproduces exactly the certificate's set of level-one orbits: 687,016, 1,441,284, 2,404,346, 849,135, 197,957 and 480,781 orbits. The runs at 89 and 239 are unpruned; the run at 251 uses our implementation of the private-time pruning (Approach 8).
+- **Level-one completeness at 7 gates ($p = 89, 239, 251, 263, 269, 281, 283$).** At $p = 89$ (near-gcd), $p = 239, 251, 263, 269, 281$ and 283 ("J empty"; 263, 269 and 283 in step 14, 281 in step 17), an independent minimal-cover enumeration reproduces exactly the certificate's set of level-one orbits: 687,016, 1,441,284, 2,404,346, 849,135, 197,957, 496,107 and 480,781 orbits. The run at 281 uses the orderly-root rule (Approach 14) instead of the private-time pruning. The runs at 89 and 239 are unpruned; the run at 251 uses our implementation of the private-time pruning (Approach 8).
 - **Constants.** The flag-bound constants $K_{14}$, $A_{14}$, the log bound 414.779365 and the target 401.984506 were re-derived exactly. The 71 gates' $\sum \ln p = 408.8233$ exceeds the target, recomputed from the gate list.
 - **$\mathrm{LRC}(13)$.** At all 111 gate primes, the terminal level-14 kill of both persistent orbits was recomputed and matches, and the kill files' SHA-256 match the gate manifests.
 - **No discrepancy with any certificate was found.**
 
 **What remains unverified here:**
 
-- **Level-one completeness at the other 65 $\mathrm{LRC}(14)$ gates.** That every orbit of $I(14,p,1)$ is represented among the stored rows is checked only at 6 gates ($p = 89, 239, 251, 263, 269, 283$). At all other gates it rests on Allikvere's generator and its completeness proposition (his Prop. 4.2 with the private-time Lemma 4.1). We implemented Lemma 4.1 (Approach 8) and have run it to completeness at $p = 251$, 263, 269 and 283 (step 14).
+- **Level-one completeness at the other 64 $\mathrm{LRC}(14)$ gates.** That every orbit of $I(14,p,1)$ is represented among the stored rows is checked only at 7 gates ($p = 89, 239, 251, 263, 269, 281, 283$). At all other gates it rests on Allikvere's generator and its completeness proposition (his Prop. 4.2 with the private-time Lemma 4.1). We implemented Lemma 4.1 (Approach 8) and have run it to completeness at $p = 251$, 263, 269 and 283 (step 14).
 - **The sampled parts at the 19 near-gcd gates.** The unsampled cascade rows and kill records there were not re-computed.
 - **The analytic inputs.** The finite-checking bound (Malikiosis–Santos–Schymura, via Rosenfeld's Cor. 3) was not re-proved. Allikvere's flag bound (Thm 3.8) is now independently verified: the shape Lemma 3.7 is re-checked for $n = 13$ and 14 and extended to $n = 15$ (Approach 10), and its general-$n$ Lemmas 3.1–3.6 and assembly are checked in Approach 11, resting only on standard facts (KZ bases, Minkowski–Weyl, Schur-concavity). Not re-proved, beyond reading their proofs, are the prime-divisibility Lemma 2.2(ii) and the few-exception shift Lemma 3.12. The lower cases $\mathrm{LRC}(m)$, $m \le 12$, are taken from the literature.
 - **$\mathrm{LRC}(13)$.** The archive does not contain the $k = 13$ level-one rows, so the rows, cascade and completeness cannot be re-checked from it.
@@ -844,10 +865,11 @@ Scope: J. Allikvere's computer-assisted proofs of $\mathrm{LRC}(13)$ and $\mathr
 | $n = 15$ flag constants: $K_{15}$, ratio min $3751/2349 > 4/3$ | exact | `flag_bound.py` |
 | $n = 15$ shape lemma $R_{15} < 49/100$ (min of $H \approx 944.96 > (1500/49)^2$), hence $\ln(v_1\cdots v_{15}) < 496.727$ and gate target 483.239 | shape lemma **proved** (written proof, every inequality exact-checked); the general-$n$ Thm 3.8 is **verified** (Approach 11; Lemmas 3.1, 3.2, 3.6 machine-checked exactly, 3.3–3.5 by reading), so the target is **proved given $\mathrm{LRC}(m)$, $m \le 14$** and standard facts | Approaches 10–11, `shape_lemma.py`, `flag_theorem_check.py`, tests |
 | 4 of 71 $\mathrm{LRC}(14)$ gate certificates ($p = 263, 311, 397, 401$): rows improper, cascade and kill reproduced | independent re-computation of the certificate's claims **except level-one completeness** | `check_allikvere.py`, `results/allikvere_spotcheck.jsonl` |
-| $\mathrm{LRC}(14)$ certificates: independent re-check of 71/71 gates. All 52 "J empty" gates and near-gcd gates 179 and 233 in full; cascade also in full at 223. Near-gcd gates 89, 163, 173, 223 (sample 3,000) and 131, 149, 157, 167, 181, 191, 193, 197, 199, 211, 227, 229, 241 (sample 500): all rows, plus seeded samples of the cascade and kill. Level-one completeness at 6 gates ($p = 89, 239, 251, 263, 269, 283$). No discrepancy found. | independent re-computation of the certificates' claims; cascade sampled at 16 and kill at 17 of the 19 near-gcd gates; completeness at 6 gates only | `results/lrc14_gates/COVERAGE.md`, Approach 7 |
+| $\mathrm{LRC}(14)$ certificates: independent re-check of 71/71 gates. All 52 "J empty" gates and near-gcd gates 179 and 233 in full; cascade also in full at 223. Near-gcd gates 89, 163, 173, 223 (sample 3,000) and 131, 149, 157, 167, 181, 191, 193, 197, 199, 211, 227, 229, 241 (sample 500): all rows, plus seeded samples of the cascade and kill. Level-one completeness at 7 gates ($p = 89, 239, 251, 263, 269, 281, 283$). No discrepancy found. | independent re-computation of the certificates' claims; cascade sampled at 16 and kill at 17 of the 19 near-gcd gates; completeness at 6 gates only | `results/lrc14_gates/COVERAGE.md`, Approach 7 |
 | $\mathrm{LRC}(13)$ certificates: terminal level-14 kill of both persistent orbits re-computed at all 111 gate primes; kill-file SHA-256s match manifests | independent re-computation (cascade and level one not checkable: rows not archived) | `results/lrc13_kills.jsonl` |
 | $(1,\ldots,15)$ dies at level 16 at all 79 primes 251–743 | computed exactly (one orbit only) | `results/tight_orbit_k15.jsonl` |
 | Child ordering + cutoff (`LRC_ORDER=1`) and incremental redundancy cut (`LRC_IRR` bit 4): same minimal covers as the plain search; $k = 14$ nodes $2.75\times$ fewer at $p = 113$ (58 s → 31.6 s), $3.5\times$ fewer at $p = 251$ (Knuth). Exact sharded run at $p = 251$ (step 13): $1.35\cdot 10^{10}$ nodes, 7,505 CPU-s ($4.1\times$ faster than step 6), same 3,876,360 covers and 2,404,346 orbits as the certificate | validated computation; **worked** (Knuth figures heuristic) | Approach 13, `results/knuth_order_k14.txt`, `results/lrc14_gates/regen_251_order.json` |
+| $\mathrm{LRC}(15)$ (Allikvere, 16 runners): level-one completeness at gate $p = 269$, with 6,589,665 orbits equal to the certificate's (step 17) | independent re-computation; **1 of 59 gates** | Approach 15, `results/lrc15_gates/` |
 | Two-branch level-one search (`LRC_TWOBRANCH=1`): same minimal covers as the single tree in 36 configurations; node change at $k = 14$ is +14% ($p = 89$), +7% ($p = 113$), +3.4% ($p = 251$), +2.0% ($p = 401$) | validated computation; **failed route** (no speed-up) | Approach 12, `results/knuth_twobranch_k14.txt` |
 | Cost of $\mathrm{LRC}(15)$ level one + kill with Allikvere-class code: about $1.75\cdot 10^{5}$ CPU-h (about 20 CPU-years) for 79 gates 251–743 under the flag target 483.24 (proved, Approaches 10–11); about $2.0\cdot 10^{5}$ CPU-h for level one with our generator (step 13; $9.5\cdot 10^{5}$ at step 11); about $8.7\cdot 10^{6}$ CPU-h under the proved $B_{15}$ | **heuristic extrapolation from measurements** | `cost_estimate.py`, `results/knuth_covergen_k14_k15.txt` |
 
