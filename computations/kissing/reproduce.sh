@@ -8,16 +8,21 @@
 # release assets, raw.githubusercontent.com and zenodo.org. About 1.5 h wall
 # on 4 cores, plus about 1.5-2 h for section 7c (Kravatskiy 34-39D); peak RAM
 # < 1 GB (25D/27D field checks: < 2 GB; 39D build and class mode: < 3 GB).
-# Usage: reproduce.sh [WORKDIR] [--with-43] [--with-40-43]   (downloads and logs go to WORKDIR)
+# Usage: reproduce.sh [WORKDIR] [--with-43] [--with-40-43] [--with-45] [--with-45-full]
+#   (downloads and logs go to WORKDIR)
 # --with-43 adds the Qiushi 43D export (2,553,792 points; about 75 min more).
-# --with-40-43 adds Kravatskiy's 40-43D records (section 7d; about 4 h more).
+# --with-40-43 adds Kravatskiy's 40-43D records (section 7d; about 6.5 h more).
+# --with-45 adds the 45D build, its negative controls and two calibration parts
+#   (section 7e; about 1.2 h); --with-45-full runs all 16 parts (about 6.1 h of C).
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 work=${1:-$(mktemp -d)}
 with43=""
 with4043=0
+with45=0
 for a in "${@:2}"; do
-  case "$a" in --with-43) with43=--with-43 ;; --with-40-43) with4043=1 ;; *) echo "unknown option $a"; exit 2 ;; esac
+  case "$a" in --with-43) with43=--with-43 ;; --with-40-43) with4043=1 ;; --with-45) with45=1 ;;
+    --with-45-full) with45=2 ;; *) echo "unknown option $a"; exit 2 ;; esac
 done
 mkdir -p "$work"/bin "$work"/known "$work"/qiushi "$work"/lin "$work"/linbuild "$work"/neg "$work"/q2527 \
   "$work"/krav "$work"/small
@@ -219,7 +224,8 @@ unset KISS_STOP_AT_FIRST
 #     shell enumerator (enum_affine.c) and checked over all pairs by kiss_check.c in
 #     partner mode (40D) or class + partner mode (41-43D, table from the builder).
 #     Only with --with-40-43: about 1.7 h of C on 4 cores (40D 11 min, 41D 22 min,
-#     42D 21 min, 43D 44 min), 48 min of numpy for 40D and 73 min for 41D, builds about 25 min; peak RAM < 2 GB (C), about 3 GB (numpy, 41D).
+#     42D 21 min, 43D 44 min), numpy 48 min for 40D, 73 min for 41D and about 2.4 h
+#     for 42D, builds about 25 min; peak RAM < 2 GB (C), about 3 GB (numpy, 41D/42D).
 if [ "$with4043" = 1 ]; then
   gcc -O3 -march=native -fopenmp -Wall "$here/enum_affine.c" -o "$work/bin/enum_affine" -lm
   python3 -I "$here/fetch_kravatskiy.py" "$K" --with-40-43
@@ -234,6 +240,10 @@ if [ "$with4043" = 1 ]; then
   for k in 0 1 2 3 4; do  # second implementation for 41D: five tile parts (about 15 min each), which cover every pair once
     python3 "$here/kiss_check_np.py" "$K/krav41_x.i8" 40 --classes "$K/krav41.lab" "$K/krav41.tab" \
       --partner "$K/krav41_xg.i8" --part $k 5 | tee "$K/np41_p$k.txt" | grep -E "^part|contacts|max_excess|RESULT"
+  done
+  for k in 0 1 2 3 4 5 6 7; do  # second implementation for 42D: eight tile parts (about 18 min each), which cover every pair once
+    python3 "$here/kiss_check_np.py" "$K/krav42_x.i8" 40 --classes "$K/krav42.lab" "$K/krav42.tab" \
+      --partner "$K/krav42_xg.i8" --part $k 8 | tee "$K/np42_p$k.txt" | grep -E "^part|contacts|max_excess|RESULT"
   done
   for d in 41 42 43; do
     for k in 0 1 2 3; do  # four parts (each under 25 min); together they cover every pair once
@@ -257,6 +267,34 @@ if [ "$with4043" = 1 ]; then
         > "$work/neg/k${d}_$v.txt"; then echo "NEGATIVE CONTROL k${d}_$v WAS ACCEPTED"; exit 1; fi
   done
   unset KISS_STOP_AT_FIRST
+fi
+
+# 7e. Kravatskiy 45D (7,655,056 points; 2,187 affine-shell families with rational heads
+#     over 3^8 class residues, plus 16 pure heads; 2,203 classes), rebuilt with our own
+#     shell enumerator. Only with --with-45: build (about 10 min on 4 cores, 18 min
+#     alongside other jobs), head-order and head-scale negative controls (early exit),
+#     and parts 0 and 1 of the 16-part C check (about 23 min each) as a calibration.
+#     --with-45-full runs all 16 parts (about 6.1 h of C); a part with a log is skipped.
+if [ "$with45" -ge 1 ]; then
+  [ -x "$work/bin/enum_affine" ] || gcc -O3 -march=native -fopenmp -Wall "$here/enum_affine.c" -o "$work/bin/enum_affine" -lm
+  python3 -I "$here/fetch_kravatskiy.py" "$K" --with-45
+  B45="$here/build_kravatskiy45.py"
+  [ -f "$K/krav45_meta.json" ] || python3 -I "$B45" "$K" "$K/krav45" "$work/bin/enum_affine" --work "$K/enum45" --jobs 4  # asserts every weight
+  export KISS_STOP_AT_FIRST=1
+  for v in shift headscale; do
+    python3 -I "$B45" --retable "$K/krav45" $v "$work/neg/k45_$v"
+    if "$CHK" "$K/krav45_x.i8" 40 "$K/krav45.lab" "$work/neg/k45_$v.tab" --partner "$K/krav45_xg.i8" \
+        > "$work/neg/k45_$v.txt"; then echo "NEGATIVE CONTROL k45_$v WAS ACCEPTED"; exit 1; fi
+  done
+  unset KISS_STOP_AT_FIRST
+  parts="0 1"; [ "$with45" = 2 ] && parts=$(seq 0 15)
+  for k in $parts; do  # 16 parts (each under 25 min); together they cover every pair once
+    log="$K/check45_p$k.txt"
+    grep -q "^RESULT" "$log" 2>/dev/null && { grep -E "pairs_in_part|contacts|max_excess|RESULT" "$log"; continue; }
+    "$CHK" "$K/krav45_x.i8" 40 "$K/krav45.lab" "$K/krav45.tab" --partner "$K/krav45_xg.i8" --part $k 16 \
+      > "$log.tmp" && mv "$log.tmp" "$log"
+    grep -E "pairs_in_part|contacts|max_excess|RESULT" "$log"
+  done
 fi
 
 # 8. 11D: 604 points from the EinsteinArena appendix (arXiv:2606.10402v2), our build

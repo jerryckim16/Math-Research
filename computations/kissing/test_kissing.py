@@ -41,6 +41,15 @@ kiss_check binary; scratch files are written there too).
    exactly with a pure-Python Fraction check of the inner products, passing
    and failing; E8 spread over 300 zero-head classes passes with 6720
    contacts; enum_affine.c reproduces a brute-force affine shell count.
+11. Large class counts (45D: 2,203 classes; kiss_check.c allocates its
+   class arrays for the table's k, at most MAXTAB = 8192): with 2,300
+   classes (uint16 labels, most used labels above 2,048, table written by
+   build_kravatskiy45.write_table), random affine sets, failing and
+   passing, agree in C (whole, and as 3 parts covering C(n,2)) with the
+   Fraction reference; E8 over 2,300 zero-head classes passes with 6720
+   contacts. Negative controls fail: a duplicated row, and lowering one
+   table entry (labels above 1,024) of a class pair that has contacts; a
+   table with k = 8,193 classes is rejected.
 8. Chain rebuild (small, synthetic, in the format of build_kravatskiy34.py):
    a toy parent certificate plus a witness is edited by the same `edit`
    function; the stars, root deletions and counts come out as computed by
@@ -177,6 +186,7 @@ def main():
     chain_tests()
     partner_tests(D5, E8)
     affine_tests(E8)
+    bigclass_tests(E8)
     print("ALL TESTS PASSED")
 
 
@@ -576,6 +586,115 @@ def affine_tests(E8):
     assert c2[2] == "FAIL"
     print(f"ok  affine class+partner mode, 300 classes (uint16 labels): {seen[False]} random sets fail, "
           f"{seen[True]} pass, C (whole and 3 parts) = numpy = Fraction reference; E8 PASS 6720, duplicate FAIL")
+
+
+def bigclass_tests(E8):
+    """Section 11: class + partner mode with 2,300 classes (more than the old
+    limit of 1,024; 45D has 2,203)."""
+    from fractions import Fraction
+    import build_kravatskiy45 as b45
+    rng = random.Random(20261126)
+    k = 2300
+
+    def ref(X, G, classes, lab):
+        V = C2 = 0
+        for i in range(len(X)):
+            for j in range(i + 1, len(X)):
+                (ra, Da, za), (rb, Db, zb) = classes[lab[i]], classes[lab[j]]
+                ip = Fraction(int(X[i] @ G @ X[j]), 3) + Fraction(sum(u * v for u, v in zip(za, zb)), Da * Db)
+                A = ra + Fraction(sum(u * u for u in za), Da * Da)
+                B = rb + Fraction(sum(u * u for u in zb), Db * Db)
+                V += ip > 0 and 4 * ip * ip > A * B
+                C2 += ip > 0 and 4 * ip * ip == A * B
+        return V, C2
+
+    def run(X, G, lab, pre, tab_from=None):
+        X = np.array(X, dtype=np.int64)
+        assert np.abs(X).max() <= 127 and np.abs(X @ G).max() <= 127
+        X.astype(np.int8).tofile(pre + "_x.i8")
+        (X @ G).astype(np.int8).tofile(pre + "_xg.i8")
+        np.array(lab).astype("<u2").tofile(pre + ".lab")
+        args = [pre + "_x.i8", str(X.shape[1]), pre + ".lab", (tab_from or pre) + ".tab", "--partner", pre + "_xg.i8"]
+        o = subprocess.run([CBIN] + args, capture_output=True, text=True).stdout
+        c = parse(o)
+        assert "class_pairs_below_threshold_omitted" in o and f"label_classes {k}" in o, o[:300]
+        parts, ppairs = [0, 0], 0
+        for kk in range(3):
+            o3 = subprocess.run([CBIN] + args + ["--part", str(kk), "3"], capture_output=True, text=True).stdout
+            q = parse(o3)
+            parts[0] += q[0]
+            parts[1] += q[1]
+            ppairs += int(re.search(r"pairs_in_part (\d+)", o3).group(1))
+        n = len(X)
+        assert ppairs == n * (n - 1) // 2 and tuple(parts) == c[:2], (ppairs, parts, c)
+        return c
+
+    d = 5
+    U = np.eye(d, dtype=np.int64)
+    for _ in range(3 * d):
+        i, j = rng.sample(range(d), 2)
+        V = U.copy()
+        V[i] += rng.choice((-1, 1)) * V[j]
+        if np.abs(V).max() <= 2:
+            U = V
+    G = 3 * (U @ U.T)
+    D = 10**6 + 3
+    bodies, classes = [], []
+    for _ in range(k):
+        x = [rng.randint(-2, 2) for _ in range(d)]
+        while not any(x) or np.abs(np.array(x) @ G).max() > 127 or int(np.array(x) @ G @ np.array(x)) > 54:
+            x = [rng.randint(-1, 1) for _ in range(d)]
+        bodies.append(x)
+        classes.append((int(np.array(x) @ G @ np.array(x)) // 3, D, [rng.randint(-3 * D, 3 * D) for _ in range(2)]))
+    pre = os.path.join(BUILD, "t_big")
+    b45.write_table(classes, pre)
+    used = rng.sample(range(2048, k), 200) + rng.sample(range(0, 2048), 100)
+    X = [bodies[c] for c in used]
+    lab = list(used)
+    V, C2 = ref(np.array(X), G, classes, lab)
+    c = run(X, G, lab, pre)
+    assert c[:2] == (V, C2) and c[2] == "FAIL", (c, V, C2)
+    keep = []  # a greedy valid subset (by the Fraction test) passes
+    for i in range(len(X)):
+        if all(ref(np.array([X[i], X[j]]), G, classes, [lab[i], lab[j]])[0] == 0 for j in keep):
+            keep.append(i)
+    Xk, lk = [X[i] for i in keep], [lab[i] for i in keep]
+    V2, C3 = ref(np.array(Xk), G, classes, lk)
+    c2 = run(Xk, G, lk, pre + "k", tab_from=pre)
+    assert V2 == 0 and c2 == (0, C3, "PASS"), (c2, V2, C3)
+    # E8 over 2,300 zero-head classes, labels above 1,024
+    G8 = 3 * np.eye(8, dtype=np.int64)
+    rows = [list(r) for r in E8]
+    cl8 = [(8, rng.choice((1, 5, 10**9)), [0, 0]) for _ in range(k)]
+    pre8 = os.path.join(BUILD, "t_big8")
+    T8, C8 = b45.write_table(cl8, pre8)
+    lab8 = [rng.randrange(1025, k) for _ in rows]
+    c8 = run(rows, G8, lab8, pre8)
+    assert c8 == (0, 6720, "PASS"), c8
+    c8d = run(rows + [rows[4]], G8, lab8 + [lab8[4]], pre8 + "d", tab_from=pre8)
+    assert c8d[2] == "FAIL", c8d
+    # lower T for the class pair of a contact pair (both labels > 1,024)
+    R8 = np.array(rows)
+    i, j = next((i, j) for i in range(len(rows)) for j in range(i + 1, len(rows))
+                if 2 * int(R8[i] @ R8[j]) == int(R8[i] @ R8[i]))
+    a, b = lab8[i], lab8[j]
+    lines = open(pre8 + ".tab").read().splitlines()
+    for e in {(a, b), (b, a)}:
+        ln = 1 + e[0] * k + e[1]
+        u = lines[ln].split()
+        assert (int(u[0]), int(u[1])) == e
+        lines[ln] = f"{u[0]} {u[1]} {int(u[2]) - 1} {u[3]}"
+    open(pre8 + "low.tab", "w").write("\n".join(lines) + "\n")
+    c8l = run(rows, G8, lab8, pre8 + "l", tab_from=pre8 + "low")
+    assert c8l[2] == "FAIL" and c8l[0] >= 1, c8l
+    with open(pre8 + "huge.tab", "w") as f:
+        f.write("8193\n")
+    o = subprocess.run([CBIN, pre8 + "_x.i8", "8", pre8 + ".lab", pre8 + "huge.tab", "--partner", pre8 + "_xg.i8"],
+                       capture_output=True, text=True)
+    assert o.returncode == 2 and "bad table" in o.stderr, (o.returncode, o.stderr)
+    print(f"ok  class+partner mode, {k} classes: random set FAIL ({V} violations, {C2} contacts), greedy subset "
+          f"PASS ({C3} contacts), C (whole and 3 parts) = Fraction reference; E8 PASS 6720; duplicate, "
+          f"lowered entry ({a},{b}) FAIL; k = 8193 rejected")
 
 
 if __name__ == "__main__":

@@ -5,7 +5,8 @@ the exact witness for 25, the parent file plus trade for 29, and the
 compact witnesses for 32 and 33; with --with-34-39, the parent files and
 edit recipes from which build_kravatskiy34.py ... build_kravatskiy39.py
 rebuild the 34-39D records; with --with-40-43, the affine-shell data from
-which build_kravatskiy4043.py rebuilds the 40-43D records.
+which build_kravatskiy4043.py rebuilds the 40-43D records; with --with-45,
+the 45D family table and class geometry read by build_kravatskiy45.py.
 
 Source: https://github.com/alexlegeartis/KissingNumbers at commit
 907f9b1f4c5f8bb4196ea03775f60cc260189789 (2026-11-23), fetched 2026-11-24
@@ -14,7 +15,7 @@ The files are treated as untrusted data: each is checked against the sha256
 pinned below before load_kravatskiy.py parses it (numpy, allow_pickle=False).
 None of the repository's code is run.
 
-Usage: python3 -I fetch_kravatskiy.py OUTDIR [--with-34-39] [--with-40-43]
+Usage: python3 -I fetch_kravatskiy.py OUTDIR [--with-34-39] [--with-40-43] [--with-45]
 """
 import hashlib
 import os
@@ -133,6 +134,18 @@ EXTRA_40_43 = [
 ]
 
 
+# 45D (7,655,056 points): the family table (class index, r3, weight, head
+# numerators over one denominator, pure directions) and the class geometry
+# (body Gram matrix and the 3^8 class residues) read by build_kravatskiy45.py.
+# Both sha256 equal the author's dim41-46-p48-heads/data/SHA256SUMS.txt.
+EXTRA_45 = [
+    ("k45_configuration.npz", "dim41-46-p48-heads/coordinated45/configuration.npz",
+     "bb4bddd2edba731a06934715dbe62c78ab15fb56b75b0e1bb08aacf799b268b5"),
+    ("k45_geometry.npz", "dim41-46-p48-heads/coordinated45/geometry.npz",
+     "6c854f55c485866505fffce7ed8efc792c43bc5489a31d447089e4086e65444f"),
+]
+
+
 def sha256(path):
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -141,7 +154,7 @@ def sha256(path):
     return h.hexdigest()
 
 
-def main(out, with3439=False, with4043=False):
+def main(out, with3439=False, with4043=False, with45=False):
     os.makedirs(out, exist_ok=True)
     for n, d, rel, digest in FILES:
         path = os.path.join(out, f"krav{d}_{n}.npz")
@@ -152,7 +165,7 @@ def main(out, with3439=False, with4043=False):
             raise SystemExit(f"{rel}: sha256 {got} != pinned {digest}")
         print(f"{d} {n} sha256 OK -> {path}")
     for name, rel, digest in (EXTRA + (EXTRA_34_39 if with3439 else [])
-                              + (EXTRA_40_43 if with4043 else [])):
+                              + (EXTRA_40_43 if with4043 else []) + (EXTRA_45 if with45 else [])):
         path = os.path.join(out, name)
         if not os.path.exists(path) or sha256(path) != digest:
             urllib.request.urlretrieve(RAW + rel, path)
@@ -162,4 +175,4 @@ def main(out, with3439=False, with4043=False):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], "--with-34-39" in sys.argv, "--with-40-43" in sys.argv)
+    main(sys.argv[1], "--with-34-39" in sys.argv, "--with-40-43" in sys.argv, "--with-45" in sys.argv)
