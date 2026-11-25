@@ -111,23 +111,30 @@ def rank(rows):
     return rk
 
 
-def shell(G, c, n, enum_bin, work, cache):
-    """All x == c (mod 3) with x G x^T == n, sorted, via enum_affine."""
-    key = (tuple(int(v) for v in c), int(n))
-    if key in cache:
-        return cache[key]
+def enum_file(G, c, n, enum_bin, work, env=None):
+    """Run enum_affine for x == c (mod 3), x G x^T == n unless WORK already
+    has the result; return the output path. The output is kept in WORK,
+    named by the hash of its input (so negative-control variants and
+    restarted builds reuse it); shell() re-checks every row."""
     text = (f"40 {int(n)}\n" + "\n".join(" ".join(map(str, map(int, r))) for r in G)
-            + "\n" + " ".join(map(str, key[0])) + "\n")
-    # the enumeration output is kept in WORK, named by the hash of its input
-    # (so negative-control variants reuse it); every row is re-checked below
+            + "\n" + " ".join(map(str, map(int, c))) + "\n")
     tag = hashlib.sha256(text.encode()).hexdigest()[:24]
     inp, out = os.path.join(work, tag + ".in"), os.path.join(work, tag + ".i8")
     if not os.path.exists(out + ".done"):
         with open(inp, "w") as f:
             f.write(text)
         cnt = int(subprocess.run([enum_bin, inp, out], check=True, capture_output=True,
-                                 text=True).stdout.split()[0])
+                                 text=True, env=env).stdout.split()[0])
         open(out + ".done", "w").write(str(cnt))
+    return out
+
+
+def shell(G, c, n, enum_bin, work, cache):
+    """All x == c (mod 3) with x G x^T == n, sorted, via enum_affine."""
+    key = (tuple(int(v) for v in c), int(n))
+    if key in cache:
+        return cache[key]
+    out = enum_file(G, key[0], n, enum_bin, work)
     cnt = int(open(out + ".done").read())
     X = np.fromfile(out, dtype=np.int8).reshape(-1, 40)
     assert len(X) == cnt
@@ -141,40 +148,55 @@ def shell(G, c, n, enum_bin, work, cache):
     return X
 
 
-def table(classes):
-    """classes: list of (r, D, z). Returns {(a, b): (T, C)} (C = 32767: no contact)."""
+def norms(classes):
+    """N_a = r D^2 + |z|^2 for each class (r, D, z), checked > 0 and with
+    body norm 3r <= BMAX."""
     N = [r * D * D + sum(v * v for v in z) for r, D, z in classes]
     assert all(v > 0 for v in N)
     # body norms x G x^T = 3r <= BMAX, so |t| <= BMAX (Cauchy-Schwarz in G)
     # and clamping T to [-BMAX-1, BMAX+1] changes no outcome
     assert all(0 <= 3 * r <= BMAX for r, _, _ in classes)
-    out = {}
-    for a, (ra, Da, za) in enumerate(classes):
-        for b, (rb, Db, zb) in enumerate(classes):
-            zz = sum(x * y for x, y in zip(za, zb))
-            M9 = 9 * N[a] * N[b]
-            Q = math.isqrt(M9)
-            den = 2 * Da * Db
-            T = (Q - 6 * zz) // den
-            for t, ok in ((T, True), (T + 1, False)):
-                s = den * t + 6 * zz
-                assert (s <= 0 or s * s <= M9) == ok
-            C = 32767
-            if Q * Q == M9 and Q > 0 and (Q - 6 * zz) % den == 0:
-                C = (Q - 6 * zz) // den
-                assert C == T
-            if not -BMAX <= C <= BMAX:
-                C = 32767
-            out[a, b] = (max(-BMAX - 1, min(BMAX + 1, T)), C)
-    return out
+    return N
 
 
-def write_rows(out, X, G):
+def entry(ca, cb, Na, Nb):
+    """(T, C) for classes ca = (r, D, z), cb with norms Na, Nb (C = 32767: no contact)."""
+    (_, Da, za), (_, Db, zb) = ca, cb
+    zz = sum(x * y for x, y in zip(za, zb))
+    M9 = 9 * Na * Nb
+    Q = math.isqrt(M9)
+    den = 2 * Da * Db
+    T = (Q - 6 * zz) // den
+    for t, ok in ((T, True), (T + 1, False)):
+        s = den * t + 6 * zz
+        assert (s <= 0 or s * s <= M9) == ok
+    C = 32767
+    if Q * Q == M9 and Q > 0 and (Q - 6 * zz) % den == 0:
+        C = (Q - 6 * zz) // den
+        assert C == T
+    if not -BMAX <= C <= BMAX:
+        C = 32767
+    return max(-BMAX - 1, min(BMAX + 1, T)), C
+
+
+def table(classes):
+    """classes: list of (r, D, z). Returns {(a, b): (T, C)} (C = 32767: no contact)."""
+    N = norms(classes)
+    return {(a, b): entry(ca, cb, N[a], N[b])
+            for a, ca in enumerate(classes) for b, cb in enumerate(classes)}
+
+
+def write_rows(out, X, G, chunk=1 << 18):
+    """Write the rows X (int8) and the partner rows X G (int8), forming X G
+    in int64 chunks of CHUNK rows, so it never sits in memory whole (45D:
+    7.7M rows would be 2.4 GB). The bytes written do not depend on CHUNK."""
     X = np.ascontiguousarray(X, dtype=np.int8)
-    XG = X.astype(np.int64) @ G
-    assert np.abs(XG).max() <= 127, "partner rows exceed int8"
     X.tofile(out + "_x.i8")
-    XG.astype(np.int8).tofile(out + "_xg.i8")
+    with open(out + "_xg.i8", "wb") as f:
+        for i in range(0, len(X), chunk):
+            XG = X[i:i + chunk].astype(np.int64) @ G
+            assert np.abs(XG).max() <= 127, "partner rows exceed int8"
+            XG.astype(np.int8).tofile(f)
 
 
 def build40(kdir, out, enum_bin, variant, work):
