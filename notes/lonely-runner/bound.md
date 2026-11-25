@@ -19,7 +19,7 @@ Scripts are in `computations/lonely-runner/bound/` and tests are in `test_bound.
 | **Lemma H** (hyperplane prefix) + **Lemma M** (block minimisation) | $481.12260$ ($-2.1162$) | $667.92857$ ($-2.3532$) | **proved** (§2, `hyperplane.py`) |
 | 2-D CVP refinement of the rounding step | about $-0.12$ more | not run | heuristic (§6) |
 | Allikvere's relation-rank bound | $459.084$ (his value) | not available | audit, §4: assembly, rank 3, ranks 6–8 and the general lemmas reproduced; ranks 4–5 classification **not** re-done |
-| coarse relation-rank bound (his general lemmas, our code, no fine classification) | no gain while rank 2 is not excluded | in progress | §5 |
+| coarse relation-rank bound (his general lemmas re-derived for general $n$, our code, ranks $\le3$ excluded by our own enumeration, no fine classification) | $473.42745$ ($-9.811$) | $\mathbf{659.66535}$ ($-10.6164$) | **proved** given LRC($m$), $m<n$, and the general lemmas as read (§5) |
 
 ## 1. Leverage: where the target is sensitive
 
@@ -240,12 +240,50 @@ Our coarse re-computation (§5) quantifies how much those classifications carry:
   - $J^{\text{select}}$ uses $r'$ selected odd relations and full-row-index $g$ bounds, with no Riesz input.
   - The gain is $\tfrac n2\ln\min_rJ(r)$.
 
-**$n=15$ (sanity).** Ranks $\le3$ are not excluded by the greedy bound alone: rank 2 survives with $J=0.90$, rank 3 with $J=2.14$. So the coarse bound gives **no gain** (the minimum is $J=1$ at rank 2).
+**Low-rank exclusions (our own enumeration, `rank_exclusion.py`).**
 
-- With Allikvere's rank-2 and rank-3 exclusions (rank 3 re-verified in §4), the coarse minimum moves to rank 4 with $J_4=3.70$: a gain of $9.8$ units.
-- Excluding rank 4 as well would give $J_5=16.4$: a gain of $21$.
+- *Method.* Fix a greedy-surviving profile $(s_1,\dots,s_r)$. Enumerate every multiplicity vector over the $(3^r-1)/2$ projective column types with those row supports and at most $n$ nonzero columns.
+  - Compute the complete ternary section by solving from $r$ independent present columns for all $3^r$ values.
+  - Reject sections containing a support-one line.
+  - Evaluate $S_O(\delta)$ exactly at both rational endpoints of $\delta$. $S_O(\delta)-\delta$ is affine in $\delta$, so the endpoints decide the whole interval.
+  - Rank $r$ is excluded if every maximum is $<\delta$.
+- *Validity.* The section and $S_O$ depend only on the column multiset. Column sign changes preserve supports. Enumerating without the positivity or greedy-order constraints only enlarges the domain.
+- $n=15$ (regression): rank 2 has one profile $(3,3)$, 10 vectors, and max $4.0685<\delta$. Rank 3 reproduces Allikvere's table exactly: 8,867 vectors, the same nine maxima.
+- $n=17$, with $\delta_{17}\in(7.581718,7.581719)$:
 
-**$n=17$.** Running; the next step is to exclude the low ranks with our own complete-section enumeration (the rank-3 code generalised to rank $r$ and $n$ columns).
+| rank | profiles | multiplicity vectors | $\max S_O$ | excluded |
+| --- | --- | --- | --- | --- |
+| 1 | none survive ($w(3)<\delta$) | — | — | yes |
+| 2 | $(3,3)$ | 10 | $5.2909$ | yes |
+| 3 | $(3,3,3),\dots,(3,3,17),(3,5,5)$ (9) | 5,050 | $6.4886$ at $(3,3,3)$ | yes |
+
+  The same result holds when support-two lines are also rejected, which is valid because the speeds of a counterexample are distinct.
+
+**Per-rank factors $J_r$ at $n=17$ (coarse, `relrank_n.py`).**
+
+| $r$ | $C_r\le$ | $J_r$ |
+| --- | --- | --- |
+| 4 | $2.3710$ | $3.4868$ |
+| 5 | $3.0098$ | $14.53$ |
+| 6 | $3.8377$ | $48.47$ |
+| 7 | $4.9171$ | $215.9$ |
+| 8 | $6.3343$ | $1328$ |
+| $\ge9$ | | $\ge1.29\cdot10^4$ |
+
+**Result.** With ranks $1$–$3$ excluded, $\min_rJ(r)=J_4=3.48680$, and the gain is $\tfrac{17}2\ln J_4=10.61637$. The new $n=17$ target is
+$$670.281725-10.616372=659.665353.$$
+For $n=15$ the same coarse method gives $J_4=3.69942$ and $473.42745$. Allikvere's fine classification gives $445.596$ after the same divisor, so the coarse value is consistent and weaker.
+
+**Label.** Proved, given LRC($m$) for $m<n$.
+
+- The analytic inputs are Allikvere's general lemmas, re-derived for general $n$ and checked by reading (§4). The affine density lemma cites Barthe/JLT25 for the realisation of base-polytope points.
+- The finite inputs are exact, with $\delta$ and $C_r$ by interval arithmetic converted to rational bounds.
+- Lemma H (§2) is *not* combined with this bound. They improve different flags, and combining them would need a new argument.
+
+**Next lever.** A rank-4 complete-section classification at $n=17$, with 40 column types, needs a C implementation.
+
+- If rank 4 is excluded, $J_5=14.53$ gives a gain of about $22.7$, a target near $647.5$.
+- If it is not, the classified $g$ values replace the coarse $g\le\prod s_j$. At $n=15$ the classification cuts $g$ from $2025$ to $225$.
 
 ## 6. Other routes (heuristic or failed, kept)
 

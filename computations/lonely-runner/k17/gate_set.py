@@ -23,13 +23,13 @@ Selection: admissible primes sorted by cost / ln p, taken until sum ln p >
 target.  This is the greedy solution of the knapsack "minimise cost subject
 to sum ln p >= target"; it is optimal up to the last prime taken (the
 fractional relaxation is solved exactly by the same order).
-Usage: python3 gate_set.py K TARGET [TARGET2 ...]
+Usage: python3 gate_set.py K TARGET [TARGET2 ...]   (env GATE_DATA = data directory, default: this one)
 """
 import math
 import os
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+HERE = os.environ.get("GATE_DATA") or os.path.dirname(os.path.abspath(__file__))
 RATE = 1.8e6
 
 

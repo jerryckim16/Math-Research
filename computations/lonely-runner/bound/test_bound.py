@@ -123,3 +123,20 @@ def test_pooling_negative_control():
     F = [Fr(1), Fr(1) + Fr(1, 2)]
     d = AR.pooled(F)
     assert d == [Fr(3, 7) * Fr(3, 2), Fr(4, 7) * Fr(3, 2)]
+
+
+def test_rank_exclusion_regression_and_n17():
+    import rank_exclusion as X
+    ex, total, rep, _ = X.exclude(15, 3)
+    assert ex and total == 8867
+    assert rep[(3, 3, 3)][0] == 354 and rep[(5, 5, 5)][0] == 4378
+    assert X.exclude(17, 2)[0] and X.exclude(17, 3)[0]
+
+
+def test_relrank_n17_target():
+    import relrank_n as R
+    res = R.final_with_exclusions(17, {1, 2, 3})
+    assert res["argmin"] == 4
+    assert abs(float(res["new target"]) - 659.6653528463155) < 1e-9
+    # without the exclusions, rank 2 blocks any gain (negative control)
+    assert R.final(17)["J_min"] == 1
