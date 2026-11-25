@@ -24,12 +24,12 @@
 
 #define MAXK 24
 #define MAXC 8
-#define MAXW 128          /* N <= 8192 */
+#define MAXW 256          /* N <= 16384 */
 static int k, p, l, c, M, N, W, LL, ng;
 static uint64_t good[MAXK][MAXC][MAXW];
 static uint64_t always[MAXK + 1][MAXW];   /* always[i] = AND over t >= i, j of good[t][j] */
 static int b[MAXK], cur[MAXK], ord[MAXK];
-static int units[10000], nu, divs[64], nd;
+static int units[16384], nu, divs[64], nd;
 static unsigned long long nodes = 0, nwf = 0, ngcd = 0, nng = 0, nout = 0;
 
 static int gcd(int a, int e) { while (e) { int t = a % e; a = e; e = t; } return a < 0 ? -a : a; }

@@ -56,11 +56,42 @@ def survives(k, l, e):
 
 
 def search(k, f, l):
+    """Exhaustive DFS over nondecreasing divisor patterns e_1 <= ... <= e_f (divisors of l).
+    Sound cut: if some chosen coordinate has d not dividing it (so E_d >= 1 in every
+    completion, and |E_d| < k since the s cover coordinates are 0 mod l) and the cost so far
+    plus (remaining coordinates) * (largest one-coordinate cost at d) is < d, then NG
+    settles every completion at d, so the branch holds no survivor."""
     divs = divisors(l)
-    for e in itertools.combinations_with_replacement(divs, f):
-        if robust(l, e) and survives(k, l, e)[0]:
-            return e
-    return None
+    ds = divs[1:]
+    cst = {(x, d): (0 if gcd(x, d) == d else gcd(x, d) * (-(-2 * d // ((k + 1) * gcd(x, d)))))
+           for x in divs for d in ds}
+    mx = {d: max(cst[(x, d)] for x in divs) for d in ds}
+    best = [None]
+
+    def dfs(start, chosen, acc):
+        rem = f - len(chosen)
+        for d in ds:
+            # cut: some coordinate already has d not dividing it (so E_d >= 1 in every
+            # completion) and even maximal remaining costs cannot reach d
+            if acc[d][1] and acc[d][0] + rem * mx[d] < d:
+                return False
+        if rem == 0:
+            e = tuple(chosen)
+            if robust(l, e) and survives(k, l, e)[0]:
+                best[0] = e
+                return True
+            return False
+        for a in range(start, len(divs)):
+            x = divs[a]
+            nacc = {d: (acc[d][0] + cst[(x, d)], acc[d][1] or gcd(x, d) != d) for d in ds}
+            chosen.append(x)
+            if dfs(a, chosen, nacc):
+                return True
+            chosen.pop()
+        return False
+
+    dfs(0, [], {d: (0, False) for d in ds})
+    return best[0]
 
 
 def levels(lmax, primes=(2, 3)):
@@ -97,6 +128,15 @@ if __name__ == "__main__":
         sys.exit()
     k, f, lmax = map(int, sys.argv[1:4])
     primes = tuple(map(int, sys.argv[4].split(","))) if len(sys.argv) > 4 else (2, 3)
+    # survival is inherited by divisors (project a pattern: e_j -> gcd(e_j, l)), so a level
+    # is tested only if every l/q (q prime) survives; otherwise it is NG-closed a fortiori.
+    surv = {1: True}
     for l in levels(lmax, primes):
+        parents = [l // q for q in primes if l % q == 0]
+        if not all(surv.get(x, False) for x in parents):
+            surv[l] = False
+            print(f"k={k} f={f} l={l}: NG-CLOSED (inherited from a divisor)", flush=True)
+            continue
         e = search(k, f, l)
-        print(f"k={k} f={f} l={l}: " + (f"SURVIVES e={e}" if e else "NG-CLOSED (no robust pattern survives NG)"), flush=True)
+        surv[l] = e is not None
+        print(f"k={k} f={f} l={l}: " + (f"SURVIVES e={e}" if e else "NG-CLOSED (exhaustive: no robust pattern survives NG)"), flush=True)
