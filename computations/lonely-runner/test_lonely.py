@@ -227,6 +227,21 @@ class TestCoverGenAndLiftFree(unittest.TestCase):
                     parts += norm(subprocess.run([b, str(k), str(p)], capture_output=True, text=True, env=e).stdout)
                 self.assertEqual(sorted(parts), plain)
 
+    def test_covergen_twobranch_same_minimal_covers(self):
+        """LRC_TWOBRANCH=1 (|C| = k and |C| <= k-1 searched separately, step 11)
+        prints exactly the single-tree set of minimal covers, with and without
+        the private-time and irredundance cuts."""
+        import os, subprocess
+        b = sieve._covergen_bin()
+        run = lambda k, p, **e: sorted(subprocess.run([b, str(k), str(p)], capture_output=True, text=True,
+                                                      env=dict(os.environ, **e)).stdout.splitlines())
+        for k, p in ((5, 41), (7, 61), (8, 101), (9, 137), (14, 89)):
+            for pr, ir in (("0", "0"), ("1", "2"), ("2", "2")):
+                single = run(k, p, LRC_PRUNE=pr, LRC_IRR=ir)
+                two = run(k, p, LRC_PRUNE=pr, LRC_IRR=ir, LRC_TWOBRANCH="1")
+                self.assertEqual(single, two, (k, p, pr, ir))
+                self.assertTrue(single)
+
     def test_covergen_sharding(self):
         import os, subprocess
         b = sieve._covergen_bin()

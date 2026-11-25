@@ -1,0 +1,17 @@
+# Step 11: two-branch search (covergen.c, LRC_TWOBRANCH=1) vs single tree, k = 14.
+# Output equality: identical sorted minimal-cover output for (k,p) in (5,41),(7,61),(8,101),(9,137),(10,127),(14,89)
+#   x LRC_PRUNE 0/1/2 x LRC_IRR 0/2 (36 configurations).
+# Exact node counts (full runs, single core):
+#   (14,89)  PRUNE=2 IRR=2: single 4,629,123; two-branch 4,544,404 (branch 1, |C|=14) + 732,536 (branch 2, |C|<=13) = 5,276,940
+#   (14,113) PRUNE=2 IRR=2: single 229,333,830 (64.5 s); two-branch 227,304,940 + 18,585,560 = 245,890,500 (67.8 s); same 6,638,391 minimal covers
+# Knuth estimates (heuristic; 20000 probes, seed 1; probe applies gain bound, LRC_IRR cuts and the q-cut, not the locked-time rule):
+#   p=251 tb=0: knuth_estimate_nodes 4.707168e+10 stderr 1.094e+09 probes 20000 branch 0 prune 1 irr 2 
+#   p=251 tb=1: knuth_estimate_nodes 4.707168e+10 stderr 1.094e+09 probes 20000 branch 1 prune 1 irr 2 knuth_estimate_nodes 1.602663e+09 stderr 3.809e+07 probes 20000 branch 2 prune 1 irr 2 
+#   p=401 tb=0: knuth_estimate_nodes 7.363524e+11 stderr 2.145e+10 probes 20000 branch 0 prune 1 irr 2 
+#   p=401 tb=1: knuth_estimate_nodes 7.363524e+11 stderr 2.145e+10 probes 20000 branch 1 prune 1 irr 2 knuth_estimate_nodes 1.453999e+10 stderr 4.194e+08 probes 20000 branch 2 prune 1 irr 2 
+# Result: branch 1 equals the single tree to within 1% (the |U| >= k-|L| cut almost never fires); branch 2 adds 2-15%.
+# No node reduction from the two-branch split.
+# Cut fraction for the cost model (PRUNE=1 + IRR=2 Knuth vs plain Knuth from knuth_covergen_k14_k15.txt):
+#   p=251: 4.707e10 / 9.486e10 = 0.496;  p=401: 7.364e11 / 2.205e12 = 0.334
+# Allikvere's own engine (gates.json), irredundant branch: p=89 517,527 nodes / 110,720 rows (ours, branch 1: 4,544,404 / 238,039);
+#   p=251 1.00e10 nodes, 2,475 CPU-s;  p=401 1.60e11 nodes, 44,413 CPU-s.
