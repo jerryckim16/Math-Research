@@ -228,7 +228,7 @@ Our coarse re-computation (§5) quantifies how much those classifications carry:
 - With ranks $\le3$ excluded and *no* fine classification, rank 4 only gets $J_4\approx3.70$ (coarse $g\le2025$). That gives a bound near $496.67-7.5\ln3.70\approx486.9$ before divisors.
 - His $J_4\approx150$ is therefore almost entirely the fine rank-4 classification.
 
-## 5. Coarse relation-rank bound for general $n$: in progress
+## 5. Coarse relation-rank bound for general $n$: proved (coarse), rank-4 classification open
 
 `relrank_n.py` re-derives Allikvere's general lemmas for general $n$. The derivations are short; we state the changes.
 

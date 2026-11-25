@@ -137,7 +137,7 @@ These do not affect our check, which trusts none of his executables.
 ## 6. What remains unchecked
 
 - **Level-one completeness at all 59 gates.** This is the substantive gap. It includes the covering-number precondition $\tau(p) \ge 14$. His logs record that precondition only as "covers on $\le 13$ classes = 0", with node counts; the search itself is not stored.
-  - At the larger gates the stored family is tiny: one row at $p = 607$, only $(1..15)$, and at most 10 rows for every $p \ge 569$.
+  - At the larger gates the stored family is tiny. At $p = 607$ the only stored row is $(1..15)$. Sixteen gates (509, 541, 569, 571, 587, 599, 601, 607, 617, 619, 631, 641, 643, 647, 653, 659) store at most 10 rows, and every gate $p \ge 509$ stores at most 60.
   - So there the certificate's content is almost entirely the completeness of a search of about $10^{13}$ nodes, which we have not reproduced. Our cascade check is necessary but nearly trivial there.
   - Reproducing it needs a $k = 15$ generator run. At about $10^5$ CPU-h for the whole campaign (`problems/lonely-runner.md`, Next steps 3, heuristic), that is far beyond this session. The gates agent is running completeness at one gate.
 - **The preliminary primes $\mathcal Q_0$** (16 primes: 29, 31, 191, 211, 223, 233, 239, 241, 251, 257, 263, 271, 277, 283, 293, 307). They are in separate packages:
