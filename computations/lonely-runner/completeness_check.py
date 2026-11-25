@@ -29,6 +29,59 @@ sys.path.insert(0, HERE)
 from check_gate_full import binary, decode  # noqa: E402
 
 
+def compare_files(k, p, h, root, covers_path, t0):
+    """Disk-based comparison (LRC_COMPARE_FILES=1, step 17): the same orbit
+    sets as main(), but canonical forms are written to files and compared
+    with LC_ALL=C sort -u and comm, so memory does not grow with the orbit
+    count.  Report fields are the same as main()'s."""
+    tmpd = tempfile.mkdtemp(prefix="lrc_cmp_")
+    ours_f, theirs_f, rows_f = (os.path.join(tmpd, n) for n in ("ours", "theirs", "rows"))
+    t1 = time.time()
+    with open(covers_path) as fin, open(ours_f + ".raw", "w") as fo:
+        ours_p = subprocess.run([binary("canon"), str(k), str(p), "expand"], stdin=fin, stdout=fo,
+                                stderr=subprocess.PIPE, text=True, check=True)
+    t_ours = time.time() - t1
+    with open(rows_f, "w") as fo:
+        for fn in sorted(os.listdir(os.path.join(root, "rows_ir"))):
+            if fn.endswith(".txt"):
+                for r in decode(os.path.join(root, "rows_ir", fn), k):
+                    fo.write(" ".join(map(str, r)) + "\n")
+        km1 = set()
+        d = os.path.join(root, "rows_km1")
+        if os.path.isdir(d):
+            for fn in sorted(os.listdir(d)):
+                if fn.endswith(".txt"):
+                    km1 |= set(decode(os.path.join(d, fn), k - 1))
+        for c in sorted(km1):
+            for x in range(1, h + 1):
+                fo.write(" ".join(map(str, c + (x,))) + "\n")
+    with open(rows_f) as fin, open(theirs_f + ".raw", "w") as fo:
+        th = subprocess.run([binary("canon"), str(k), str(p), "rows"], stdin=fin, stdout=fo,
+                            stderr=subprocess.PIPE, text=True, check=True)
+    env = dict(os.environ, LC_ALL="C")
+    for f in (ours_f, theirs_f):
+        subprocess.run(["sort", "-u", "-S", "1G", "-T", tmpd, "-o", f, f + ".raw"], env=env, check=True)
+        os.remove(f + ".raw")
+    os.remove(rows_f)
+    count = lambda f: int(subprocess.run(["wc", "-l", f], capture_output=True, text=True).stdout.split()[0])
+    def comm(flag):
+        out = subprocess.run(["comm", flag, ours_f, theirs_f], capture_output=True, text=True, env=env).stdout.splitlines()
+        return len(out), [tuple(map(int, l.split())) for l in out[:10]]
+    n_ours, n_theirs = count(ours_f), count(theirs_f)
+    only_ours, ex_o = comm("-23")
+    only_cert, ex_c = comm("-13")
+    rep = {"p": p, "k": k, "covergen_stderr": "precomputed covers: %s" % covers_path, "canon_ours": ours_p.stderr.strip(),
+           "canon_theirs": th.stderr.strip(), "orbits_ours": n_ours, "orbits_cert": n_theirs,
+           "only_ours": only_ours, "only_cert": only_cert, "examples_only_ours": ex_o, "examples_only_cert": ex_c,
+           "equal": only_ours == 0 and only_cert == 0 and n_ours == n_theirs,
+           "seconds_ours_generation": round(t_ours, 1), "seconds_total": round(time.time() - t0, 1),
+           "comparison": "files (LC_ALL=C sort -u, comm)",
+           "pruning": "see covergen_stderr"}
+    for f in (ours_f, theirs_f):
+        os.remove(f)
+    print(json.dumps(rep), flush=True)
+
+
 def main():
     tgz = sys.argv[1]
     t0 = time.time()
@@ -40,6 +93,8 @@ def main():
     summ = json.load(open(os.path.join(root, "SUMMARY.json")))
     k, p = summ["gate"]["k"], summ["gate"]["p"]
     h = (p - 1) // 2
+    if os.environ.get("LRC_COMPARE_FILES") == "1" and len(sys.argv) > 2:
+        return compare_files(k, p, h, root, sys.argv[2], t0)
     # ours
     t1 = time.time()
     if len(sys.argv) > 2:
