@@ -825,8 +825,8 @@ The test is `test_lonely.py`, `test_covergen_order_same_minimal_covers`, which a
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 269 | **6,589,665 = 6,589,665** | 0 / 0 | 6,153,299 → 6,596,721 | 6,149,965 + 446,756 = 6,596,721 | $1.41\times10^{10}$ | 5,160 (22 min wall) | 26,741 |
 | 281 | **3,823,848 = 3,823,848** | 0 / 0 | 3,653,814 → 3,825,618 | 3,652,578 + 173,040 = 3,825,618 | $2.20\times10^{10}$ | 9,883 (41 min wall) | 49,672 |
-| 317 | **430,529 = 430,529** | 0 / 0 | 419,992 → 431,139 | 419,921 + 11,218 = 431,139 | $3.55\times10^{10}$ | 14,964 (64 min wall) | 90,460 |
 | 313 | **884,238 = 884,238** | 0 / 0 | 867,851 → 884,281 | 867,745 + 16,536 = 884,281 | $4.24\times10^{10}$ | 17,563 (75 min wall) | 128,618 |
+| 317 | **430,529 = 430,529** | 0 / 0 | 419,992 → 431,139 | 419,921 + 11,218 = 431,139 | $3.55\times10^{10}$ | 14,964 (64 min wall) | 90,460 |
 
 **Status.** At $p = 269, 281, 313, 317$ the $\mathrm{LRC}(15)$ gates' level-one families are **independently verified complete**. From $p = 317$ on, the orbit sets are compared on disk (`LRC_COMPARE_FILES=1`: `sort -u` and `comm`; validated at $(14,89)$ against the in-memory mode, including a negative control). $p = 311$ is in progress, and the other 54 gates are queued cheapest first by orderly Knuth estimates (`results/lrc15_gates/knuth_orderly_k15.txt`; heuristic): $p = 281$ about $2.1\times10^{10}$ nodes, up to $p = 641$ about $6.8\times10^{12}$.
 
