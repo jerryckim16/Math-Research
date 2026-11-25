@@ -327,11 +327,14 @@ static int need[R];            /* remaining row deficits */
 static int lastnz[R];          /* last type index with a nonzero entry in row i */
 static int *buf[MAXT + 2], *sbuf[MAXT + 2], *bbuf[MAXT + 2], *zbuf[MAXT + 2];
 
+/* list at depth k: ids cand[k], supports csup[k][i] + cv[k]*cz[k][i] */
+static int *cz[MAXT + 2], cv[MAXT + 2];
+
 static int prune_ub2(int k) {
     i128 A = 0, B = 0;
-    int c = ccount[k];
+    int c = ccount[k], v = cv[k], *bs = csup[k], *zf = cz[k];
     for (int i = 0; i < c; i++) {
-        int s = csup[k][i];
+        int s = bs[i] + v * zf[i];
         if (s < prof[0]) s = prof[0];
         s = oddceil(s);
         if (s > nn) continue;
@@ -341,6 +344,8 @@ static int prune_ub2(int k) {
     return excluded_AB(A, B);
 }
 
+static int *leafsup;
+
 static void dfs(int k, int rem) {
     if (k == SHARD_DEPTH) {
         ll o = prefix_ord++;
@@ -348,7 +353,11 @@ static void dfs(int k, int rem) {
     }
     if (k == NT) {
         for (int i = 0; i < R; i++) if (need[i]) return;
+        int c = ccount[k], v = cv[k], *bs = csup[k], *zf = cz[k];
+        for (int i = 0; i < c; i++) leafsup[i] = bs[i] + v * zf[i];
+        csup[k] = leafsup;
         leaf();
+        csup[k] = bs;
         return;
     }
     int mx = 0;
@@ -358,22 +367,23 @@ static void dfs(int k, int rem) {
     if (PRUNE && GREEDY && ccount[k] <= PRUNE_MAX && prune_ub2(k)) { n_pruned++; return; }
     /* m_k = 0 */
     m[k] = 0;
-    cand[k + 1] = cand[k]; csup[k + 1] = csup[k]; ccount[k + 1] = ccount[k];
+    cand[k + 1] = cand[k]; csup[k + 1] = csup[k]; cz[k + 1] = cz[k]; cv[k + 1] = cv[k]; ccount[k + 1] = ccount[k];
     dfs(k + 1, rem);
     /* m_k >= 1 */
     int cap = rem;
     for (int i = 0; i < R; i++) if (T[k][i] && need[i] < cap) cap = need[i];
     if (cap < 1) return;
-    int c = ccount[k], *src = cand[k], *ssrc = csup[k], *dst = buf[k + 1], *bs = bbuf[k + 1], *zf = zbuf[k + 1], *ns = sbuf[k + 1], nc_n = 0;
+    int c = ccount[k], *src = cand[k], *ssrc = csup[k], *zsrc = cz[k], pv = cv[k];
+    int *dst = buf[k + 1], *bs = bbuf[k + 1], *zf = zbuf[k + 1], nc_n = 0;
     for (int i = 0; i < c; i++) {
         int id = src[i];
-        if (bit(Ltern[id], k)) { dst[nc_n] = id; bs[nc_n] = ssrc[i]; zf[nc_n] = bit(Lnz[id], k); nc_n++; }
+        if (bit(Ltern[id], k)) { dst[nc_n] = id; bs[nc_n] = ssrc[i] + pv * zsrc[i]; zf[nc_n] = bit(Lnz[id], k); nc_n++; }
     }
+    cand[k + 1] = dst; csup[k + 1] = bs; cz[k + 1] = zf; ccount[k + 1] = nc_n;
     for (int v = 1; v <= cap; v++) {
         m[k] = v;
         for (int i = 0; i < R; i++) if (T[k][i]) need[i] -= v;
-        for (int i = 0; i < nc_n; i++) ns[i] = bs[i] + v * zf[i];
-        cand[k + 1] = dst; csup[k + 1] = ns; ccount[k + 1] = nc_n;
+        cand[k + 1] = dst; csup[k + 1] = bs; cz[k + 1] = zf; cv[k + 1] = v; ccount[k + 1] = nc_n;
         dfs(k + 1, rem - v);
         for (int i = 0; i < R; i++) if (T[k][i]) need[i] += v;
     }
@@ -397,7 +407,8 @@ int main(int argc, char **argv) {
         buf[d] = (int *)malloc(sizeof(int) * NL); sbuf[d] = (int *)malloc(sizeof(int) * NL);
         bbuf[d] = (int *)malloc(sizeof(int) * NL); zbuf[d] = (int *)malloc(sizeof(int) * NL);
     }
-    cand[0] = all; csup[0] = (int *)calloc(NL, sizeof(int)); ccount[0] = NL;
+    cand[0] = all; csup[0] = (int *)calloc(NL, sizeof(int)); cz[0] = (int *)calloc(NL, sizeof(int)); cv[0] = 0; ccount[0] = NL;
+    leafsup = (int *)malloc(sizeof(int) * NL);
     for (int i = 0; i < R; i++) { need[i] = prof[i]; lastnz[i] = -1; for (int k = 0; k < NT; k++) if (T[k][i]) lastnz[i] = k; }
     printf("TYPES");
     for (int k = 0; k < NT; k++) { printf(" "); for (int i = 0; i < R; i++) printf("%d%s", T[k][i], i + 1 < R ? "," : ""); }

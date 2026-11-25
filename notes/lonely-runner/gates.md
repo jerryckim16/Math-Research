@@ -226,6 +226,112 @@ $8.1\cdot 10^4$ CPU-h, at $1.8\cdot 10^6$ nodes/s. The cheapest of his gates:
 | 269 | about 12 |
 | 281 | about 20 |
 
-## 6. LRC(17) (18 runners)
+## 6. LRC(17) (18 runners): admissibility, cost, gate set
 
-(in progress)
+**Target.** The bound agent gives $\sum_{p\in P}\ln p > 659.66535$. Its label is
+proved, given LRC($m$) for $m \le 16$ and Allikvere's general lemmas, which were
+re-derived by reading. It comes from a coarse relation-rank bound. Earlier
+values were 670.28173 (plain flag bound, shape lemma $R_{17} < 0.4755$) and
+667.92857 (hyperplane lemma). A rank-4 classification may lower it by a further
+23–25.
+
+Every target includes $-\ln \operatorname{lcm}(2..18) = -\ln 12252240 = -16.321$,
+so the gate primes must satisfy $p > 18$.
+
+### 6.1 Admissibility screen $\tau_{17}(p) \ge 16$ (computed)
+
+Each prime was screened with `TAU_FROM=15 tau 17 p 15`, 60 s per prime, which
+asks "is there a cover on at most 15 classes?". Data: `k17/tau_k17.txt`.
+
+- **A cover on $\le 15$ classes was found (exact),** so $\tau_{17}(p) \le 15$
+  and, by Lemma T, the prime is near-gcd only:
+  - every prime $19 \le p \le 311$;
+  - $p = 331$ and $379$;
+  - TAU17_FOUND_EXTRA.
+- **The small-primes agent's exact values**
+  (`computations/lonely-runner/smallp/results/tau17.txt`; exhaustive DFS)
+  agree. Every prime 37–257 has $\tau_{17} \in [9, 14]$. For example
+  $\tau_{17}(71) = 14$, $\tau_{17}(173) = 14$, $\tau_{17}(257) = 14$.
+- **No small cover within 60 s:** TAU17_TIMEOUTS. These are *candidates* only.
+  Proving $\tau_{17}(p) \ge 16$ means exhausting the 15-class search. That took
+  60 s for $\tau_{15}(239) \ge 14$, and Allikvere's $k = 15$ precondition took
+  8 h at $p = 659$, so for $k = 17$ it is far beyond this session. A full
+  level-one run would settle it anyway, since `covergen` prints every minimal
+  cover with $\le k$ classes.
+
+### 6.2 Cost per prime (heuristic)
+
+**Data.** Knuth estimates of our tree at $k = 17$ (`LRC_PRUNE=2 LRC_IRR=2 LRC_ORDER=1`,
+20,000 probes) for all 244 primes 19–1597 (`k17/knuth_k17.txt`). They agree within
+a few percent with the cloud session's independent probes (`LRC_PRUNE=1`):
+
+| $p$ | 307 | 401 | 503 | 601 | 701 | 797 |
+| --- | --- | --- | --- | --- | --- | --- |
+| $N_{17}$ (ours) | $1.12\cdot10^{13}$ | $6.52\cdot10^{13}$ | $1.24\cdot10^{14}$ | $7.65\cdot10^{14}$ | $1.29\cdot10^{15}$ | $6.60\cdot10^{15}$ |
+| $N_{17}/N_{15}$ | 25 | 27 | 22 | 47 | 40 | 101 |
+
+**Fit.** Over the candidate range $313 \le p \le 1597$,
+
+$$N_{17}(p) \approx 2.9\cdot 10^{-4}\, p^{6.62} \quad (\text{scatter} \times 1.3).$$
+
+The exponent is $6.90$ over 313–797, $6.11$ over 797–1597, and $7.41$ over
+151–311.
+
+**Rate.** Cost is $N_{17}/(1.8\cdot10^{6}\ \text{nodes/s})$, level one only. The
+rate is from the exact $k = 14$, $p = 251$ run; the cloud session measures
+2–3$\cdot10^6$ per core. The tau precondition, cascade and kill are not
+included; at $k = 15$ they were a small fraction of Allikvere's total.
+
+| band | primes | $\sum \ln p$ | CPU-h per gate (median) | band total, CPU-h |
+| --- | --- | --- | --- | --- |
+| 19–150 | 28 | 118.5 | $7\cdot10^{-4}$ | 12 |
+| 151–311 | 29 | 156.8 | $1.0\cdot10^{2}$ | $8.2\cdot10^{3}$ |
+| 313–401 | 15 | 88.2 | $2.7\cdot10^{3}$ | $6.9\cdot10^{4}$ |
+| 409–503 | 17 | 104.0 | $1.9\cdot10^{4}$ | $3.3\cdot10^{5}$ |
+| 509–601 | 14 | 88.6 | $8.0\cdot10^{4}$ | $1.2\cdot10^{6}$ |
+| 607–701 | 16 | 103.6 | $1.9\cdot10^{5}$ | $3.1\cdot10^{6}$ |
+| 709–797 | 13 | 86.1 | $5.8\cdot10^{5}$ | $7.6\cdot10^{6}$ |
+| 809–907 | 16 | 107.9 | $1.3\cdot10^{6}$ | $2.2\cdot10^{7}$ |
+| 911–1021 | 17 | 116.9 | $3.2\cdot10^{6}$ | $5.8\cdot10^{7}$ |
+| 1031–1201 | 25 | 175.3 | $6.6\cdot10^{6}$ | $1.9\cdot10^{8}$ |
+
+### 6.3 Cheapest admissible gate set (heuristic)
+
+**Method.** `k17/gate_set.py` sorts the admissible primes by
+$\text{cost}/\ln p$ and takes them until $\sum \ln p$ exceeds the target. This
+order solves the fractional knapsack "minimise cost subject to
+$\sum \ln p \ge T$" exactly, so the greedy set is optimal up to its last prime.
+"Admissible" means not shown to have $\tau_{17} \le 15$.
+
+GATESET_TABLE
+
+**Reading.**
+
+- The $J$-empty route needs about 100 gates from 313 to about 1020, at roughly
+  $10^{4}$ CPU-years. The top band, 900–1021, is about 75% of the cost.
+- **The lever is the near-gcd primes.** The 57 primes 19–311 give
+  $\sum \ln p \approx 275$ for about $8\cdot10^{3}$ CPU-h of level one.
+  - If they could all be closed by divisibility (Lemma S with a 3-adic kill), the
+    optimistic set to 659.67 would be 119 gates 19–719 at about
+    $4.6\cdot10^{6}$ CPU-h, about 16× cheaper. At target − 25 it would be about
+    $3.8\cdot10^{6}$ CPU-h.
+  - Against that, the small-primes agent found at $p = 71$ (381,083 level-one
+    orbits) that the cascade blows up even with the shift lemma. So the
+    smallest primes, $p \approx 4k$, almost certainly fail.
+  - Which of 150–311 close is the open question. Their cascades, not their level
+    one, will dominate.
+- **No $J$-empty $k = 17$ gate is feasible here.** The cheapest candidate, 313,
+  is about $2.7\cdot10^{3}$ CPU-h. Only near-gcd primes $\lesssim 150$ have level
+  one under about 1 CPU-h. They need the $\times 3$/$\times 9$ kill: the structure
+  agent showed that the class of $(1..17)$ stays improper at every dyadic level,
+  because $18$ is not a power of $2$. That tool was deliberately not built here,
+  to avoid duplication (coordinator).
+
+### 6.4 Failed or limited routes (kept)
+
+- **The $k = 15$ pilot at 239 was stopped** before any shard finished (§4).
+- **The 60 s $\tau$ screen proves nothing at the candidate primes.** It is an
+  upper-bound screen only.
+- **`covergen.c`'s Knuth probe ignores the `LRC_PRUNE=2` locked-time rule.**
+  The estimates therefore describe a slightly larger tree. At $k = 14$,
+  $p = 251$, this made no measurable difference ($1.34$ vs $1.35\cdot10^{10}$).

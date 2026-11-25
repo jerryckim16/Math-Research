@@ -93,7 +93,11 @@ The format was read from the archives and agrees with his `SUMMARY.json` fields.
   - The 14-class covers are tested with the $k = 15$ threshold. So every extension $c + x$ is in $I(15,p,1)$.
   - Every 14-class cover is irredundant, as $\tau(p) \ge 14$ requires.
   - The dedup covers represent exactly the unit orbits of the rooted covers (`canon.c`), one cover per orbit.
-  - A `dedup_<i>.txt` file holds one cover at most gates and two at some, for example $p = 317$. A first version of our script assumed one per file, flagged $p = 317$, and was corrected; the corrected run is the one reported.
+  - A `dedup_<i>.txt` file may hold several covers: one at most gates, but 2 at $p = 317$ and 3–4 at $p = 331$.
+  - **Bug in our own checker, now fixed; not a problem with his data.** The first version of `check_gate15.py` assumed one cover per dedup file and extended only the first.
+    - At $p = 313$ and $p = 317$ it therefore reported a cascade mismatch: one survivor line of the certificate absent from our run, and totals off by one.
+    - The fixed script extends every cover in the file. Both gates were re-run with it, and the reported records are the re-runs.
+    - The 46 gates run before the fix were unaffected. A file with more than one cover made the old script flag a mismatch, and none of them did.
   - All counts equal `SUMMARY.json`.
 - **C. Cascade**, by `gatecheck.c cascade` with $k = 15$, on every irredundant row and every extension row (dedup cover $+\,x$, $x = 1..h$).
   - Per input file, the multiset of $(\text{row}, \lvert S_2\rvert, \lvert S_4\rvert, \lvert S_8\rvert, \lvert S_{16}\rvert, \lvert S_{32}\rvert)$ over rows with $S_2 \ne \varnothing$ equals the certificate's `.out` file. Rows and survivors equal the `.stats` file. The set of `filt` files equals the set of stored input files.
