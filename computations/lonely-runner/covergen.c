@@ -220,12 +220,59 @@ static int irr_cuts(const bs *U, const bs *A, bs *Aout) {
     return 1;
 }
 
+/* Orderly-root rule (LRC_ORDERLY=1, step 16; Toner, "Seventeen lonely
+ * runners, assuming sixteen", Zenodo 10.5281/zenodo.23552885, Appendix B,
+ * Lemma B.1, reimplemented from the paper's text; his code was not run).
+ * At the root the branching time and its candidate list R = (r_0, r_1, ...)
+ * (in the child order used) are fixed.  For a cover S containing 1 let
+ * rho(S) = least i with r_i in S; the DFS finds S in the subtree of r_rho(S).
+ * S is canonical iff the pair (rho(S), sorted(S)) is lexicographically least
+ * among the pairs of s^-1 S (folded), s in S.  Each unit orbit of minimal
+ * covers has exactly one canonical member, and one member per orbit suffices
+ * for the multiset expansion (u maps C + extras to u C + u extras).
+ * Cut: at a node in the subtree of r_rho with selection T, if s^-1 T contains
+ * some r_i with i < rho (s in T), every completion S has rho(s^-1 S) <= i <
+ * rho(S), so S is not canonical.  The class-1 private-time quota is not
+ * invariant under rescaling, so LRC_ORDERLY requires LRC_PRUNE=0. */
+static int orderly = 0, rho = -1;
+static int ridx[2048], invt[2048];
+static unsigned short *quot;   /* quot[a*(h+1)+b] = fold(a * b^-1), built when LRC_ORDERLY is set */
+static inline int fold(long x) { x %= p; if (x < 0) x += p; return x < p - x ? (int)x : (int)(p - x); }
+static void orderly_root(const int *R, int nr) {
+    for (int c = 0; c <= h; c++) ridx[c] = 1 << 30;
+    for (int i = 0; i < nr; i++) ridx[R[i]] = i;
+}
+/* may class c join L[0..nL-1] in the subtree of r_rho? */
+static int orderly_ok(int c) {
+    for (int i = 0; i < nL; i++) {
+        int t = L[i];
+        if (ridx[quot[c * (h + 1) + t]] < rho) return 0;
+        if (ridx[quot[t * (h + 1) + c]] < rho) return 0;
+    }
+    return 1;
+}
+static int orderly_canonical(void) {
+    int S[MAXK + 1], T[MAXK + 1], n = nL, rs = 1 << 30;
+    for (int i = 0; i < n; i++) { S[i] = L[i]; if (ridx[S[i]] < rs) rs = ridx[S[i]]; }
+    for (int i = 1; i < n; i++) { int x = S[i], j = i - 1; while (j >= 0 && S[j] > x) { S[j + 1] = S[j]; j--; } S[j + 1] = x; }
+    for (int a = 0; a < n; a++) {
+        int s0 = L[a], rt = 1 << 30;
+        for (int i = 0; i < n; i++) { T[i] = quot[L[i] * (h + 1) + s0]; if (ridx[T[i]] < rt) rt = ridx[T[i]]; }
+        if (rt > rs) continue;
+        if (rt < rs) return 0;
+        for (int i = 1; i < n; i++) { int x = T[i], j = i - 1; while (j >= 0 && T[j] > x) { T[j + 1] = T[j]; j--; } T[j + 1] = x; }
+        for (int i = 0; i < n; i++) { if (T[i] < S[i]) return 0; if (T[i] > S[i]) break; }
+    }
+    return 1;
+}
+
 /* Leaf processing for L[0..nL-1] covering every time (others = union of
  * cov over L[1..]): the normalisation filters, then minimality, then print. */
 static void leaf(void) {
         if (nshards > 1 && sharddepth == 2 && nL <= 2 && shard != 0) return;
         leaves++;
         if (exactk && nL != kmax) return;
+        if (orderly && !orderly_canonical()) return;
         if (prune && priv1(&others) < qs(nL)) return;
         if (prune >= 2) {
             int p1 = priv1(&others);
@@ -371,6 +418,7 @@ static void dfs(const bs *U, const bs *A, int depth) {
             ch[j + 1] = c; chg[j + 1] = g;
         }
     }
+    if (orderly && depth == 0) orderly_root(ch, nch);
     for (int ci = 0; ci < nch; ci++) {
         int c = ch[ci];
         if (order && chg[ci] + bsum < need) break;
@@ -383,6 +431,7 @@ static void dfs(const bs *U, const bs *A, int depth) {
         for (int w = 0; w < W; w++) others.w[w] |= cov[c].w[w];
         if (prune && priv1(&others) < qk) { others = saveO; continue; }
         if ((irr & 4) && !irr4_add(nL, c, U)) { others = saveO; continue; }
+        if (orderly) { if (depth == 0) rho = ci; if (!orderly_ok(c)) { others = saveO; continue; } }
         bs U2; for (int w = 0; w < W; w++) U2.w[w] = U->w[w] & ~cov[c].w[w];
         L[nL++] = c;
         if (finish && left == 2 && !isempty(&U2)) finish2(&U2, &A2);
@@ -427,15 +476,18 @@ static double probe(bs U, bs A) {
                 oc[j + 1] = c; og[j + 1] = g;
             }
         }
+        if (orderly && nL == 1) orderly_root(oc, no);
         for (int oi = 0; oi < no; oi++) {
             int c = oc[oi];
             if (order && og[oi] + bsum < need) break;
+            if (orderly) { int sv = rho; if (nL == 1) rho = oi; int ok = orderly_ok(c); if (nL == 1) rho = sv; if (!ok) { cand[nc++] = c; continue; } }
             if (prune) { bs O2; for (int w = 0; w < W; w++) O2.w[w] = O.w[w] | cov[c].w[w]; if (priv1(&O2) < qk) { cand[nc++] = c; continue; } }
             if ((irr & 4) && !irr4_add(nL, c, &U)) { cand[nc++] = c; continue; }
             kept[nk++] = nc; cand[nc++] = c;
         }
         if (nk == 0) return est;
         int i = kept[(int)(xs() % (unsigned long long)nk)];
+        if (orderly && nL == 1) rho = i;
         if (irr & 4) irr4_add(nL, cand[i], &U);   /* recompute the chosen child's state */
         for (int j = 0; j <= i; j++) clr(&A, cand[j]);
         for (int w = 0; w < W; w++) { U.w[w] &= ~cov[cand[i]].w[w]; O.w[w] |= cov[cand[i]].w[w]; }
@@ -453,6 +505,8 @@ int main(int argc, char **argv) {
     if (getenv("LRC_IRR")) irr = atoi(getenv("LRC_IRR"));
     if (getenv("LRC_ORDER")) order = atoi(getenv("LRC_ORDER"));
     if (getenv("LRC_FINISH")) finish = atoi(getenv("LRC_FINISH"));
+    if (getenv("LRC_ORDERLY")) orderly = atoi(getenv("LRC_ORDERLY"));
+    if (orderly && prune) { fprintf(stderr, "LRC_ORDERLY requires LRC_PRUNE=0 (the class-1 quota is not unit-invariant)\n"); return 2; }
     int twob = getenv("LRC_TWOBRANCH") ? atoi(getenv("LRC_TWOBRANCH")) : 0;
     if (getenv("LRC_SHARD_DEPTH")) sharddepth = atoi(getenv("LRC_SHARD_DEPTH"));
     if (getenv("LRC_NSHARDS")) { nshards = atol(getenv("LRC_NSHARDS")); shard = getenv("LRC_SHARD") ? atol(getenv("LRC_SHARD")) : 0; }
@@ -470,6 +524,11 @@ int main(int argc, char **argv) {
             long r = ((long)a * v) % p, d = r < p - r ? r : p - r;
             if ((long)(k + 1) * d < p) cov[v].w[a >> 6] |= 1ULL << (a & 63);
         }
+    for (int v = 1; v <= h; v++) { long r = 1, b = v, e = p - 2; while (e) { if (e & 1) r = r * b % p; b = b * b % p; e >>= 1; } invt[v] = (int)r; }
+    if (orderly) {
+        quot = malloc(sizeof(unsigned short) * (size_t)(h + 1) * (h + 1));
+        for (int a = 1; a <= h; a++) for (int b = 1; b <= h; b++) quot[a * (h + 1) + b] = (unsigned short)fold((long)a * invt[b]);
+    }
     mcov = (p - 1) / (k + 1);
     for (int v = 1; v <= h; v++) { int c = popc(&cov[v]); if (c > maxcov) maxcov = c; }
     qk = qs(k);
