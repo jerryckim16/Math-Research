@@ -2,45 +2,45 @@
 
 **Area:** combinatorial geometry
 **Status:** in progress. Done so far:
-- χ ≥ 5 is reproduced end to end with our own pipeline: exact unit edges, our own CNF, and an LRAT proof checked by our own checker.
-- The claimed χ ≥ 6 (OpenAI preprint, Sept 2026) is located and mapped. It is an analytic proof with no finite graph. Its one finite certificate (Lemma 8.9) is re-checked exactly here.
+- $\chi \ge 5$ is reproduced end to end with our own pipeline: exact unit edges, our own CNF, and an LRAT proof checked by our own checker.
+- The claimed $\chi \ge 6$ (OpenAI preprint, Sept 2026) is located and mapped. It is an analytic proof with no finite graph. Its one finite certificate (Lemma 8.9) is re-checked exactly here.
 - **Its published Lean proof was re-run here from source.**
   - Mathlib was built from scratch, because the cache host is blocked.
   - All 70 OAI modules compile.
-  - A from-scratch restatement of "no proper 5-colouring of R²" is proved by the OAI theorem and depends only on [propext, Classical.choice, Quot.sound].
-  - So χ ≥ 6 is **Lean-verified (re-run here)**, modulo trust in the Lean 4.34.1 kernel and the faithfulness of the restated statement.
+  - A from-scratch restatement of "no proper 5-colouring of $\mathbb{R}^{2}$" is proved by the OAI theorem and depends only on [propext, Classical.choice, Quot.sound].
+  - So $\chi \ge 6$ is **Lean-verified (re-run here)**, modulo trust in the Lean 4.34.1 kernel and the faithfulness of the restated statement.
   - **Kernel replay (`leanchecker`).** The compiled `.olean` files were re-checked by the kernel, independently of the elaborator:
     - all 70 OAI modules, one at a time;
     - the whole 787,391-constant environment (core, Mathlib, OAI) from scratch with `--fresh`: exit 0, 41 min.
   - The paper's analytic argument itself was not audited by a human.
-  - The SAT-style verification criteria (exact edges, LRAT-checked non-5-colourability) **do not apply and are not met**, because no finite 6-chromatic graph exists in the source. The evidence for χ ≥ 6 is the re-run formal proof, not a certificate.
+  - The SAT-style verification criteria (exact edges, LRAT-checked non-5-colourability) **do not apply and are not met**, because no finite 6-chromatic graph exists in the source. The evidence for $\chi \ge 6$ is the re-run formal proof, not a certificate.
 
 **Started:** 2026-11-24
 **ProofAtlas:** rank 206, "open". Its 2026-10-07 note: the OpenAI release "narrows the answer to six or seven … proofs not independently audited … Lean artifacts not executed".
 
 ## Statement
 
-Let χ(R²) be the least k such that there is a function c : R² → {1, …, k}
-with c(x) ≠ c(y) whenever |x − y| = 1. Colour classes are arbitrary
+Let $\chi(\mathbb{R}^{2})$ be the least $k$ such that there is a function $c : \mathbb{R}^{2} \to \{1, \dots, k\}$
+with $c(x) \ne c(y)$ whenever $\lvert x - y\rvert = 1$. Colour classes are arbitrary
 (no measurability), and we work in ZFC.
 
-**Problem.** Determine χ(R²).
+**Problem.** Determine $\chi(\mathbb{R}^{2})$.
 
-- By the de Bruijn–Erdős compactness theorem (ZFC), χ(R²) ≥ k iff some *finite* unit-distance graph has chromatic number ≥ k.
-- So a lower bound k can be certified by a finite graph, even when the proof does not exhibit one.
+- By the de Bruijn–Erdős compactness theorem (ZFC), $\chi(\mathbb{R}^{2}) \ge k$ iff some *finite* unit-distance graph has chromatic number $\ge k$.
+- So a lower bound $k$ can be certified by a finite graph, even when the proof does not exhibit one.
 
 ## Known results
 
-- **4 ≤ χ ≤ 7.** The lower bound is the Moser spindle (Moser–Moser 1961). The upper bound is Isbell's hexagonal 7-colouring. [classical]
-- **χ ≥ 5.** A. de Grey, arXiv:1804.02385 (1,581-vertex graph). Also Exoo–Ismailescu, arXiv:1805.00157.
+- **$4 \le \chi \le 7$.** The lower bound is the Moser spindle (Moser–Moser 1961). The upper bound is Isbell's hexagonal 7-colouring. [classical]
+- **$\chi \ge 5$.** A. de Grey, arXiv:1804.02385 (1,581-vertex graph). Also Exoo–Ismailescu, arXiv:1805.00157.
 - **Smaller 5-chromatic graphs.**
   - M. Heule, arXiv:1805.12181 (553 vertices) and arXiv:1907.00929 (529/510).
   - J. Parts, arXiv:2010.12665: 509 vertices, 2,442 edges. This is still the smallest according to MathWorld (seen via search snippet only).
   - Parts' and Heule's minimal graphs list vertices only on the Polymath16 wiki (asone.ai), which is blocked here; see "Blocked".
-- **Measurable version.** χ_m ≥ 5 (Falconer 1981). [cited in the OpenAI preprint; not read]
-- **Claimed: χ ≥ 6** (OpenAI, "The Euclidean plane is not five-colorable", September 23, 2026). Details below.
+- **Measurable version.** $\chi_{m} \ge 5$ (Falconer 1981). [cited in the OpenAI preprint; not read]
+- **Claimed: $\chi \ge 6$** (OpenAI, "The Euclidean plane is not five-colorable", September 23, 2026). Details below.
 
-## The χ ≥ 6 claim: source pinned down (2026-11-24)
+## The $\chi \ge 6$ claim: source pinned down (2026-11-24)
 
 **Source.**
 - ProofAtlas `top500-v35.json`, record `problem.chromatic-number-of-the-plane-hadwiger-nelson-problem`.
@@ -51,18 +51,18 @@ with c(x) ≠ c(y) whenever |x − y| = 1. Colour classes are arbitrary
 - **[read]**: §§1, 2.1–2.2, 3.3, 4 (start and §4.2), 5.4, 6.2 (Lemma 6.4), 8 in full. The rest was skimmed.
 
 **Exact claims.**
-- *Theorem 1.1.* There is no proper 5-colouring of R², with arbitrary colour classes. Hence 6 ≤ χ ≤ 7.
-- *Theorem 1.3 (transfer, every k, ZFC).* A proper k-colouring of R² exists iff a *weak measurable k-colouring* exists. That is a Lebesgue-measurable c with Σ_i ∫_{B(0,R)} ∫_{S¹} 1_{A_i}(x) 1_{A_i}(x+u) dσ(u) dx = 0 for all R.
+- *Theorem 1.1.* There is no proper 5-colouring of $\mathbb{R}^{2}$, with arbitrary colour classes. Hence $6 \le \chi \le 7$.
+- *Theorem 1.3 (transfer, every $k$, ZFC).* A proper $k$-colouring of $\mathbb{R}^{2}$ exists iff a *weak measurable $k$-colouring* exists. That is a Lebesgue-measurable $c$ with $\sum_{i} \int_{B(0,R)} \int_{S^{1}} 1_{A_{i}}(x) 1_{A_{i}}(x+u)\, d\sigma(u)\, dx = 0$ for all $R$.
 - *Theorem 1.4.* No weak measurable 5-colouring exists.
-- A measurable proper colouring is weak, so Theorem 1.4 alone would also give **χ_m ≥ 6**. That is a claim beyond Falconer's χ_m ≥ 5.
+- A measurable proper colouring is weak, so Theorem 1.4 alone would also give **$\chi_{m} \ge 6$**. That is a claim beyond Falconer's $\chi_{m} \ge 5$.
 
 **What kind of proof.** It is **analytic, not a finite certificate.**
-- *Transfer (⇒), §§2–4.*
-  - Average a proper colouring over the algebraic plane E = Q̄∩R(i) and its algebraic rotations K.
-  - Prove a rigidity theorem (Thm 2.3): every K-invariant probability on the character group of E that gives the continuous characters measure 0 is Haar.
+- *Transfer $(\Rightarrow)$, §§2–4.*
+  - Average a proper colouring over the algebraic plane $E = \overline{\mathbb{Q}}\cap\mathbb{R}(i)$ and its algebraic rotations $K$.
+  - Prove a rigidity theorem (Thm 2.3): every $K$-invariant probability on the character group of $E$ that gives the continuous characters measure 0 is Haar.
   - This uses Furstenberg–Zimmer compact towers, an invariant-mean line average, and a radial difference inequality.
   - Then project onto the continuous factor.
-- *Transfer (⇐), §4.2.* Density points plus de Bruijn–Erdős.
+- *Transfer $(\Leftarrow)$, §4.2.* Density points plus de Bruijn–Erdős.
 - *Theorem 1.4, §§5–8.*
   - Angular "palettes" of at most 2 labels; cyclic centres form a locally finite set.
   - Disk-average smoothing and a planar cover obstruction extract a label cycle of length 3, 4 or 5, with common exclusion continua.
@@ -81,7 +81,7 @@ with c(x) ≠ c(y) whenever |x − y| = 1. Colour classes are arbitrary
     ∀ point otherPoint : ℂ, ‖point - otherPoint‖ = 1 → coloring point ≠ coloring otherPoint
   theorem no_proper_five_coloring : ¬ ∃ coloring : ℂ → Fin 5, ProperColoring 5 coloring
   ```
-  This is exactly Theorem 1.1, with ℂ ≅ R² and the complex norm equal to the Euclidean distance.
+  This is exactly Theorem 1.1, with $\mathbb{C} \cong \mathbb{R}^{2}$ and the complex norm equal to the Euclidean distance.
 - We fetched the transitive OAI imports of `Five.lean`: 70 modules, 30,336 lines, depending only on Mathlib.
   - The pins are Lean `v4.34.1` and Mathlib `d13f23b723b8a846827a245b89c10fc7d3f11612`.
   - `grep` finds no `sorry`, `admit`, `axiom`, `native_decide`, `implemented_by`, `extern` or `unsafe`.
@@ -93,77 +93,77 @@ with c(x) ≠ c(y) whenever |x − y| = 1. Colour classes are arbitrary
   | --- | --- | --- |
   | `OAI/MeasureTheory/CompactFactors` | 14 / 7,728 | §§2.3–3.2: compact towers, relative centres, conditional limits, Lemma 2.7 |
   | `OAI/Analysis/PlaneSpectrum` | 19 / 8,466 | §§2.1–2.2, 3.3–3.4: characters, invariant mean, wild laws, Haar rigidity (Thm 2.3) |
-  | `OAI/Geometry/PlaneColoring` | 37 / 14,142 | §4 (`BorelTransfer.proper_to_borel_weak`, Thm 1.3 ⇒) and §§5–8 (`Palettes`, `Transitions`, `CyclicCore`, `DiskAverages`, `ContinuumLimits`, `FourTransport`, `FiveSupport`, `Moser`, `Mesh`, …) |
+  | `OAI/Geometry/PlaneColoring` | 37 / 14,142 | §4 (`BorelTransfer.proper_to_borel_weak`, Thm 1.3 $\Rightarrow$) and §§5–8 (`Palettes`, `Transitions`, `CyclicCore`, `DiskAverages`, `ContinuumLimits`, `FourTransport`, `FiveSupport`, `Moser`, `Mesh`, …) |
 
-  - `Five.lean` combines `proper_to_borel_weak` (proper ⇒ Borel weak colouring) with `no_measurable_weak_five_coloring`.
+  - `Five.lean` combines `proper_to_borel_weak` (proper $\Rightarrow$ Borel weak colouring) with `no_measurable_weak_five_coloring`.
   - The final step goes through `FullApprox` and a planar-cover lemma (`graph_map_small_mesh_impossible`), not literally through the paper's §8 case split.
   - The converse transfer (§4.2) is not needed for Theorem 1.1, and it is not on the path to `Five.lean`.
-  - Lean's `WeakColoring` is "AE-measurable, and c(p) ≠ c(p + e^{iθ}) for (volume × Haar)-a.e. (p, θ)". This is equivalent to Definition 1.2.
+  - Lean's `WeakColoring` is "AE-measurable, and $c(p) \ne c(p + e^{i\theta})$ for (volume $\times$ Haar)-a.e. $(p, \theta)$". This is equivalent to Definition 1.2.
   - `Moser.lean` uses the same placement as (8.6), *with* the parentheses: `moserRotation*(moserPoint i+(-290+149*I)/250)`. This matches our corrected reading.
 - **We have not compiled it.** See Approach 3.
 
 ## Approaches
 
-### 1. Pipeline validation: χ ≥ 5 with our own certificate (worked)
+### 1. Pipeline validation: $\chi \ge 5$ with our own certificate (worked)
 
 - **Graph.** Heule's explicit construction, arXiv:1805.12181 §4.1, read from the LaTeX source.
-  - θ_i is the rotation by arccos((2i−1)/(2i)).
-  - V31 = {0} ∪ {θ₁^j θ₃^k (1,0) : j = 0..5, k ∈ {−1, −½, 0, ½, 1}}. This is de Grey's five 7-wheels.
-  - V151 = (V31 ⊕ V31) ∩ {|p| ≤ 1}, and V1939 = V31 ⊕ V151.
-  - G = V1939 ∪ θ₄(V1939). Heule reports χ(G) = 5.
+  - $\theta_{i}$ is the rotation by $\arccos((2i-1)/(2i))$.
+  - $V31 = \{0\} \cup \{\theta_{1}^{j} \theta_{3}^{k} (1,0) : j = 0\dots 5, k \in \{-1, -\tfrac{1}{2}, 0, \tfrac{1}{2}, 1\}\}$. This is de Grey's five 7-wheels.
+  - $V151 = (V31 \oplus V31) \cap \{\lvert p\rvert \le 1\}$, and $V1939 = V31 \oplus V151$.
+  - $G = V1939 \cup \theta_{4}(V1939)$. Heule reports $\chi(G) = 5$.
   - We do not use the published minimal 509/553-vertex graphs, because their data host is blocked.
-- **Exact coordinates.** All points lie in Q(√3, √5, √11). `qfield.py` uses exact rational coefficients on the basis {√m : m | 165 squarefree}, which is Q-linearly independent (Besicovitch).
-- **Edges.** A float grid search proposes candidates, and every edge is then confirmed exactly (|p−q|² = 1 in the field).
+- **Exact coordinates.** All points lie in $\mathbb{Q}(\sqrt{3}, \sqrt{5}, \sqrt{11})$. `qfield.py` uses exact rational coefficients on the basis $\{\sqrt{m} : m \mid 165 \text{ squarefree}\}$, which is $\mathbb{Q}$-linearly independent (Besicovitch).
+- **Edges.** A float grid search proposes candidates, and every edge is then confirmed exactly ($\lvert p-q\rvert^{2} = 1$ in the field).
   - Missing edges could only weaken the claim, never make it unsound.
   - 0 float candidates failed the exact test.
   - A second, independent exact pass re-checks the final list.
-- **Counts reproduce Heule.** |V31| = 31 with 60 edges, |V151| = 151 with 510 edges, |V1939| = 1939. G has **3,877 vertices and 26,814 edges** (2·1939 − 1, sharing the origin).
+- **Counts reproduce Heule.** $\lvert V31\rvert = 31$ with 60 edges, $\lvert V151\rvert = 151$ with 510 edges, $\lvert V1939\rvert = 1939$. $G$ has **3,877 vertices and 26,814 edges** ($2\cdot 1939 - 1$, sharing the origin).
 - **Encoding** (`encode.py`).
-  - Variables x(v,c). Clauses: at least one colour per vertex, and ¬x(u,c) ∨ ¬x(v,c) per edge and colour.
+  - Variables $x(v,c)$. Clauses: at least one colour per vertex, and $\neg x(u,c) \vee \neg x(v,c)$ per edge and colour.
   - No at-most-one clauses.
-  - Symmetry breaking: a unit triangle (0, (1,0), (½, √3/2)) is fixed to colours 0, 1, 2.
+  - Symmetry breaking: a unit triangle $(0, (1,0), (\tfrac{1}{2}, \sqrt{3}/2))$ is fixed to colours 0, 1, 2.
 - **Soundness.**
   - A proper colouring gives distinct colours on the clique, so a colour permutation maps them to 0, 1, 2. The permuted colouring satisfies every clause.
-  - Hence UNSAT ⇒ not k-colourable.
+  - Hence UNSAT $\Rightarrow$ not $k$-colourable.
   - `test_chromatic_plane.py` checks equisatisfiability with brute force on 150 random small graphs.
-- **Result: certificate-checked χ(G) ≥ 5, i.e. χ(R²) ≥ 5.**
+- **Result: certificate-checked $\chi(G) \ge 5$, i.e. $\chi(\mathbb{R}^{2}) \ge 5$.**
   - CNF: 15,508 variables, 111,136 clauses, sha256 `f012031c…992f`.
   - CaDiCaL 1.7.3 UNSAT in 13.4 s.
   - LRAT proof: 57.0 MB, 145,301 lemmas. Checked by our `lrat_check.py` in 6.4 s, then deleted.
 - **Sanity checks.**
   - Moser spindle: 3-colouring UNSAT (LRAT-checked), 4-colouring SAT.
   - V1939 is 4-colourable (colouring decoded and checked).
-  - G is 5-colourable (found in 126 s, decoded and checked).
+  - $G$ is 5-colourable (found in 126 s, decoded and checked).
   - A tampered LRAT proof is rejected.
 
-### 2. Exact re-check of the finite parts of the χ ≥ 6 paper (worked; partial coverage)
+### 2. Exact re-check of the finite parts of the $\chi \ge 6$ paper (worked; partial coverage)
 
 `cert_section8.py` checks the following, all passing.
-- **(A) Moser graph (8.5).** 0, A = (√3+i)/2, B = (√3−i)/2, T = √3, and u·{A, B, T} with u = (5+i√11)/6.
-  - |u| = 1, and all 11 edges have length exactly 1.
-  - Not 3-colourable (exhaustive over 3⁷).
-- **(B) Placement (8.6).** z_g = ((35+12i)/37)·(g + (−290+149i)/250).
+- **(A) Moser graph (8.5).** 0, $A = (\sqrt{3}+i)/2$, $B = (\sqrt{3}-i)/2$, $T = \sqrt{3}$, and $u\cdot\{A, B, T\}$ with $u = (5+i\sqrt{11})/6$.
+  - $\lvert u\rvert = 1$, and all 11 edges have length exactly 1.
+  - Not 3-colourable (exhaustive over $3^{7}$).
+- **(B) Placement (8.6).** $z_{g} = ((35+12i)/37)\cdot(g + (-290+149i)/250)$.
   - The multiplier has modulus 1, and all placed edges stay exactly unit.
-  - *Pitfall:* `pdftotext` drops the large parentheses. The misread formula ((35+12i)/37)·g + (−290+149i)/250 puts 3 of the 7 vertices outside the region.
+  - *Pitfall:* `pdftotext` drops the large parentheses. The misread formula $((35+12i)/37)\cdot g + (-290+149i)/250$ puts 3 of the 7 vertices outside the region.
   - We first got that "failure". It was traced to the misreading by comparing against Table 1, and the formula was confirmed on the rendered page 57.
   - The test suite keeps this as a has-teeth check.
-- **(C) Lemma 8.9.** For each of the 7 placed vertices, 0 < l < 4 and P = υ²(3ξ²−υ²)² < P′ = l³(1−l/4)(l−1)², where l = |z|².
-  - Each quantity is computed exactly as an element of Q(√3, √11).
-  - Signs are decided by rigorous rational enclosures of √3, √11 and √33 (width 10⁻⁴⁰).
-  - The smallest margin is P′−P ≈ 6.97·10⁻⁴, at z_B.
-- **(D) The paper's own Tables 1–2.** Centres are within h = 0.00011 of the exact coordinates, and the chain P < P₊ < P′₋ < P′ holds. Every row re-checked with Fractions.
+- **(C) Lemma 8.9.** For each of the 7 placed vertices, $0 < l < 4$ and $P = \upsilon^{2}(3\xi^{2}-\upsilon^{2})^{2} < P' = l^{3}(1-l/4)(l-1)^{2}$, where $l = \lvert z\rvert^{2}$.
+  - Each quantity is computed exactly as an element of $\mathbb{Q}(\sqrt{3}, \sqrt{11})$.
+  - Signs are decided by rigorous rational enclosures of $\sqrt{3}$, $\sqrt{11}$ and $\sqrt{33}$ (width $10^{-40}$).
+  - The smallest margin is $P'-P \approx 6.97\cdot 10^{-4}$, at $z_{B}$.
+- **(D) The paper's own Tables 1–2.** Centres are within $h = 0.00011$ of the exact coordinates, and the chain $P < P_{+} < P'_{-} < P'$ holds. Every row re-checked with Fractions.
 - **(E) Identities** (sympy).
-  - Lemma 8.8: sin²3φ = υ²(3ξ²−υ²)²/l³; sin 3δ = sin δ(4cos²δ−1) = √(1−l/4)(l−1) when cos δ = r/2; sin3(φ−δ)·sin3(φ+δ) = sin²3φ − sin²3δ; e^{i(φ−δ)} + e^{i(φ+δ)} = 2cos δ·e^{iφ}.
-  - Lemma 8.6: F = r² − 2r cos θ, with ∂_θF(1, π/3) = √3.
-  - Lemma 6.4: cos γ = 5/6 and |1 − e^{iγ}|² = 1/3 for γ = 2 arcsin(1/(2√3)).
+  - Lemma 8.8: $\sin^{2}3\varphi = \upsilon^{2}(3\xi^{2}-\upsilon^{2})^{2}/l^{3}$; $\sin 3\delta = \sin \delta(4\cos^{2}\delta-1) = \sqrt{1-l/4}(l-1)$ when $\cos \delta = r/2$; $\sin 3(\varphi-\delta)\cdot\sin 3(\varphi+\delta) = \sin^{2}3\varphi - \sin^{2}3\delta$; $e^{i(\varphi-\delta)} + e^{i(\varphi+\delta)} = 2\cos \delta\cdot e^{i\varphi}$.
+  - Lemma 8.6: $F = r^{2} - 2r \cos \theta$, with $\partial_{\theta}F(1, \pi/3) = \sqrt{3}$.
+  - Lemma 6.4: $\cos \gamma = 5/6$ and $\lvert 1 - e^{i\gamma}\rvert^{2} = 1/3$ for $\gamma = 2 \arcsin(1/(2\sqrt{3}))$.
 - **(F) Prop. 8.2 (five-cycle), brute force.**
-  - Every sign vector with I, O ≠ ∅ is one + run and one − run, of lengths {2, 3}.
+  - Every sign vector with $I, O \ne \emptyset$ is one $+$ run and one $-$ run, of lengths $\{2, 3\}$.
   - No six-position palette word exists, even allowing arbitrary independent sign vectors at the three non-antipodal positions. That is a superset of the paper's configurations.
-- **(G) Hexagonal 7-colouring.** 2r < 1 and (√21 − 2)r > 1 for r = 2/5.
+- **(G) Hexagonal 7-colouring.** $2r < 1$ and $(\sqrt{21} - 2)r > 1$ for $r = 2/5$.
 - **(H) §§2–3 algebra** (sympy and Fractions).
-  - Identity (3.14): |A − Bu²|² = (A−B)² + 4AB(Im u)² = |−L + (A−B)u + Lu²|², with L = √(AB) and |u| = 1.
-  - The unit decomposition x = k + k′ in Lemma 2.7, with k = x/2 + i√(1−x²/4).
-  - The explicit numerics in Lemma 2.7: 18τ²/s² = 0.0018 at s = 100τ, and the Jensen step 0.95² − 0.1 > 1/4.
+  - Identity (3.14): $\lvert A - Bu^{2}\rvert^{2} = (A-B)^{2} + 4AB(\operatorname{Im} u)^{2} = \lvert-L + (A-B)u + Lu^{2}\rvert^{2}$, with $L = \sqrt{AB}$ and $\lvert u\rvert = 1$.
+  - The unit decomposition $x = k + k'$ in Lemma 2.7, with $k = x/2 + i\sqrt{1-x^{2}/4}$.
+  - The explicit numerics in Lemma 2.7: $18\tau^{2}/s^{2} = 0.0018$ at $s = 100\tau$, and the Jensen step $0.95^{2} - 0.1 > 1/4$.
 
 What this does **not** cover:
 - The analytic core: Theorem 2.3 rigidity, the transfer Theorem 1.3, palettes (§5), local finiteness (§6), continuum extraction (§7), and the four-cycle parity argument (§8.3).
@@ -209,7 +209,7 @@ What this does **not** cover:
   #print axioms CNPRecheck.plane_not_five_colourable
   ```
   - Output: `'CNPRecheck.plane_not_five_colourable' depends on axioms: [propext, Classical.choice, Quot.sound]`. The same holds for `OAI.EuclideanFiveColor.no_proper_five_coloring`.
-  - The statement is exactly Theorem 1.1, with ℂ = R² and the complex norm equal to the Euclidean distance.
+  - The statement is exactly Theorem 1.1, with $\mathbb{C} = \mathbb{R}^{2}$ and the complex norm equal to the Euclidean distance.
   - Negative control: a `sorry`-proved theorem in the same environment reports `[sorryAx]`.
 - **Trust base.** The Lean 4.34.1 kernel and elaborator (official release binary), Mathlib `d13f23b`, and our 5-line restatement.
   - The kernel replay below removes the elaborator and the `.olean` writer from the trust base for the 70 OAI modules.
@@ -267,13 +267,13 @@ What this does **not** cover:
 
 | Claim | Evidence level | Where |
 | --- | --- | --- |
-| χ(R²) ≥ 4 (Moser spindle) | certificate-checked (exact edges; LRAT, our checker) | `run_pipeline.py moser 3` |
-| χ(R²) ≥ 5 (Heule's G, 3,877 vertices, 26,814 edges) | certificate-checked (exact edges; LRAT, 145,301 lemmas, our checker) | `run_pipeline.py heule 4` |
-| χ(R²) ≤ 7 | proved (classical); inequalities re-checked | `cert_section8.py` (G) |
+| $\chi(\mathbb{R}^{2}) \ge 4$ (Moser spindle) | certificate-checked (exact edges; LRAT, our checker) | `run_pipeline.py moser 3` |
+| $\chi(\mathbb{R}^{2}) \ge 5$ (Heule's $G$, 3,877 vertices, 26,814 edges) | certificate-checked (exact edges; LRAT, 145,301 lemmas, our checker) | `run_pipeline.py heule 4` |
+| $\chi(\mathbb{R}^{2}) \le 7$ | proved (classical); inequalities re-checked | `cert_section8.py` (G) |
 | OpenAI Lemma 8.9 (Moser placement lies in region (8.4)) | checked exactly (algebraic arithmetic plus rigorous intervals) | `cert_section8.py` (A–D) |
 | OpenAI Prop. 8.2 finite combinatorics | computed (exhaustive, superset of cases) | `cert_section8.py` (F) |
-| **χ(R²) ≥ 6 (OpenAI, Thm 1.1)** | **Lean-verified (OpenAI's formalization, re-run here from source), and kernel-replayed with `leanchecker`**: 70/70 OAI modules in default mode (4,273 constants), plus `--fresh` replay of the whole 787,391-constant environment from scratch. Statement independently restated; axioms are only propext, Classical.choice, Quot.sound. Not refereed, the analytic text is not human-audited, and no finite certificate exists | `lean_recheck/` (`lean_recheck.sh`, `kernel_replay.sh`) |
-| χ(R²) ∈ {6, 7} | Lean-verified lower bound (above) plus the classical upper bound | — |
+| **$\chi(\mathbb{R}^{2}) \ge 6$ (OpenAI, Thm 1.1)** | **Lean-verified (OpenAI's formalization, re-run here from source), and kernel-replayed with `leanchecker`**: 70/70 OAI modules in default mode (4,273 constants), plus `--fresh` replay of the whole 787,391-constant environment from scratch. Statement independently restated; axioms are only propext, Classical.choice, Quot.sound. Not refereed, the analytic text is not human-audited, and no finite certificate exists | `lean_recheck/` (`lean_recheck.sh`, `kernel_replay.sh`) |
+| $\chi(\mathbb{R}^{2}) \in \{6, 7\}$ | Lean-verified lower bound (above) plus the classical upper bound | — |
 
 ## Next steps
 

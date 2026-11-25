@@ -91,10 +91,72 @@ def fix_links(text, depth):
     return re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", repl, text)
 
 
+MATH_RE = re.compile(r"(\$\$.+?\$\$|\\\[.+?\\\]|\\\(.+?\\\)|(?<![\\$\w])\$(?=\S)[^$\n]+?(?<=\S)\$(?![\w$]))", re.S)
+CODE_RE = re.compile(r"(```.*?```|`[^`\n]+`)", re.S)
+
+
+def protect_math(text):
+    """Replace LaTeX math spans by placeholders so Markdown does not mangle them
+    (underscores, asterisks, backslashes). Code spans are left untouched."""
+    stash = []
+
+    def keep(m):
+        stash.append(m.group(0))
+        return f"MATHPH{len(stash) - 1}ZZ"
+
+    parts = CODE_RE.split(text)
+    for i in range(0, len(parts), 2):
+        parts[i] = MATH_RE.sub(keep, parts[i])
+    return "".join(parts), stash
+
+
+def restore_math(html_text, stash):
+    return re.sub(r"MATHPH(\d+)ZZ", lambda m: html.escape(stash[int(m.group(1))], quote=False), html_text)
+
+
+def widen_list_indent(text):
+    """The sources nest lists with 2-space indents; Python-Markdown needs 4.
+    Double the leading spaces of every indented line that belongs to a list
+    (list items and their continuation lines), outside fenced code."""
+    out, in_fence, in_list, fence_ind = [], False, False, 0
+    for line in text.split("\n"):
+        if line.lstrip().startswith("```"):
+            # fenced_code only recognises fences at column 0: dedent fences
+            # nested in list items (they then render as a block after the item)
+            if not in_fence:
+                fence_ind = len(line) - len(line.lstrip(" "))
+                if out and out[-1].strip():
+                    out.append("")
+            in_fence = not in_fence
+            out.append(line[fence_ind:] if line[:fence_ind].strip() == "" else line)
+            if not in_fence:
+                out.append("")
+            continue
+        if in_fence:
+            out.append(line[fence_ind:] if line[:fence_ind].strip() == "" else line)
+            continue
+        stripped = line.lstrip(" ")
+        ind = len(line) - len(stripped)
+        if re.match(r"([-*+]|\d+[.)])\s", stripped):
+            # Python-Markdown needs a blank line between a paragraph and a list
+            if ind == 0 and not in_list and out and out[-1].strip() and not out[-1].lstrip().startswith("|"):
+                out.append("")
+            in_list = True
+        elif not stripped:
+            pass
+        elif ind == 0:
+            in_list = False
+        out.append(" " * (2 * ind) + stripped if in_list and ind else line)
+    return "\n".join(out)
+
+
 def render_md(text, depth):
     # keep the "**Field:** value" header lines on separate lines
     text = re.sub(r"^(\*\*(?:Area|Status|Started|ProofAtlas):\*\*.*)$", r"\1  ", text, flags=re.M)
-    return markdown.markdown(fix_links(text, depth), extensions=["tables", "fenced_code", "sane_lists", "toc"])
+    text, stash = protect_math(text)
+    text = fix_links(widen_list_indent(text), depth)
+    out = markdown.markdown(text, extensions=["tables", "fenced_code", "sane_lists", "toc"])
+    return restore_math(out, stash)
 
 
 CSS = """
@@ -150,7 +212,12 @@ def page(title, body, depth=0, desc="Live progress on open math problems"):
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{html.escape(title)}</title>
 <meta name="description" content="{html.escape(desc)}">
-<style>{CSS}</style></head>
+<style>{CSS}</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.body,{{delimiters:[{{left:'$$',right:'$$',display:true}},{{left:'\\\\[',right:'\\\\]',display:true}},{{left:'\\\\(',right:'\\\\)',display:false}},{{left:'$',right:'$',display:false}}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false}})"></script>
+</head>
 <body><header><div class="wrap"><a class="brand" href="{up}index.html">Math Research</a>
 <nav><a href="{up}index.html#problems">Problems</a><a href="{up}index.html#activity">Activity</a><a href="{up}notes/ai-feasible-open-problems.html">Shortlist</a><a href="{REPO_URL}">GitHub</a></nav></div></header>
 <main><div class="wrap">{body}</div></main>
@@ -164,7 +231,8 @@ def first_bullet(text):
 
 
 def inline(text):
-    return markdown.markdown(text).removeprefix("<p>").removesuffix("</p>")
+    text, stash = protect_math(text)
+    return restore_math(markdown.markdown(text), stash).removeprefix("<p>").removesuffix("</p>")
 
 
 def build():
@@ -186,12 +254,16 @@ def build():
                f'<a href="{REPO_URL}/commits/{BRANCH}/problems/{p.name}">history</a></p></div>'
         (OUT / "problems" / f"{p.stem}.html").write_text(page(m["title"], body, depth=1))
 
-    for n in sorted((ROOT / "notes").glob("*.md")):
+    for n in sorted((ROOT / "notes").rglob("*.md")):
+        rel = n.relative_to(ROOT / "notes")
+        depth = len(rel.parts)
         text = n.read_text()
         title = meta(text)["title"]
-        body = f'<div class="doc">{render_md(text, 1)}<p class="meta">Last updated {last_updated(n)} · ' \
-               f'<a href="{REPO_URL}/blob/{BRANCH}/notes/{n.name}">source</a></p></div>'
-        (OUT / "notes" / f"{n.stem}.html").write_text(page(title, body, depth=1))
+        body = f'<div class="doc">{render_md(text, depth)}<p class="meta">Last updated {last_updated(n)} · ' \
+               f'<a href="{REPO_URL}/blob/{BRANCH}/notes/{rel.as_posix()}">source</a></p></div>'
+        dest = OUT / "notes" / rel.with_suffix(".html")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(page(title, body, depth=depth))
 
     problems.sort(key=lambda m: m["updated"], reverse=True)
     cards = []
