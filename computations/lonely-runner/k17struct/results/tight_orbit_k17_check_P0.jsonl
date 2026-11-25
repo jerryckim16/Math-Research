@@ -1,0 +1,4 @@
+{"k": 17, "p": 353, "chain": [3, 2, 3], "trace_level_wf_orbits": [[3, 3, 1], [6, 2, 1], [18, 0, 0]], "dies_by": 18, "survivors": []}
+{"k": 17, "p": 359, "chain": [3, 2, 3], "trace_level_wf_orbits": [[3, 3, 1], [6, 2, 1], [18, 0, 0]], "dies_by": 18, "survivors": []}
+{"k": 17, "p": 421, "chain": [3, 2, 3], "trace_level_wf_orbits": [[3, 3, 1], [6, 2, 1], [18, 0, 0]], "dies_by": 18, "survivors": []}
+{"k": 17, "p": 421, "chain": [2, 3, 3], "trace_level_wf_orbits": [[2, 2, 1], [6, 3, 1], [18, 0, 0]], "dies_by": 18, "survivors": []}

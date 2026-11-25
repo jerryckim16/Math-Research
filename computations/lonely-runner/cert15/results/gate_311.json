@@ -1,0 +1,113 @@
+{
+ "archive": "evidence15_311_s0.tgz",
+ "cascade_rows": 2811763,
+ "cascade_seconds": 621.6,
+ "cascade_totals_ours": {
+  "died_l16": 1,
+  "died_l4": 894,
+  "level2_improper_lifts_total": 967,
+  "survivor_rows": 895
+ },
+ "claim_type": "J(K,p) empty (framework only)",
+ "dedup_covers_per_file": [
+  [
+   11,
+   30
+  ],
+  [
+   12,
+   18
+  ]
+ ],
+ "dedup_files": 48,
+ "fibers_nonempty_at_16": 0,
+ "filt_files": 333,
+ "filt_files_mismatch": 0,
+ "ir_rowcheck": {
+  "bad_format": 0,
+  "gatecheck_rows": 2727133,
+  "gatecheck_with_witness": 0,
+  "no_class1": 0,
+  "not_cover": 0,
+  "not_distinct": 0,
+  "out_of_range": 0,
+  "redundant": 0,
+  "rows": 2727133
+ },
+ "ir_rows": 2727133,
+ "kill_files": 0,
+ "km1_dedup": 546,
+ "km1_dedup_orbits_equal_rooted_orbits": true,
+ "km1_dedup_rowcheck": {
+  "bad_format": 0,
+  "gatecheck_rows": 546,
+  "gatecheck_with_witness": 0,
+  "no_class1": 0,
+  "not_cover": 0,
+  "not_distinct": 0,
+  "out_of_range": 0,
+  "redundant": 0,
+  "rows": 546
+ },
+ "km1_rooted": 4607,
+ "km1_rooted_orbits": 546,
+ "km1_rooted_rowcheck": {
+  "bad_format": 0,
+  "gatecheck_rows": 4607,
+  "gatecheck_with_witness": 0,
+  "no_class1": 0,
+  "not_cover": 0,
+  "not_distinct": 0,
+  "out_of_range": 0,
+  "redundant": 0,
+  "rows": 4607
+ },
+ "level2_survivor_rows_ir_ext_ours": [
+  557,
+  338
+ ],
+ "manifest_entries": 1327,
+ "manifest_executables": {
+  "../bgk15": "bd8965aec3033619",
+  "../cascade_k15": "17103cd24c688db6",
+  "../tight_lift_16": "6f4745bf1816823d"
+ },
+ "manifest_executables_equal_BUILD_SHA256": false,
+ "manifest_mismatch": 0,
+ "mismatches": [],
+ "p": 311,
+ "pass": true,
+ "persistent_orbits_cert": 0,
+ "precondition_claimed": {
+  "covers_upto_smax": 0,
+  "nodes": 386772824,
+  "secs": 160.623,
+  "smax": 13,
+  "variant": "decomposition"
+ },
+ "rows_first_empty_at_16": 1,
+ "rows_first_empty_at_16_only_tight_orbit": true,
+ "rows_first_empty_at_16_trace": [
+  [
+   1,
+   2,
+   4,
+   0
+  ]
+ ],
+ "seconds": 651.1,
+ "sha256": "c1857c8a99713c0ea6c16bc07aeb4d9bfc26a9ce7fc95de3d441dfe3fc6257d8",
+ "sha256_ok": true,
+ "status": "GATE_CLOSED",
+ "tight_marked_rows": 1,
+ "timing_claimed": {
+  "gen_cascade_wall_secs": 0.2,
+  "ir_cascade_wall_secs": 0.0,
+  "ir_gen_cpu_secs": 130462.2,
+  "kill_wall_secs": 0.0,
+  "km1_cascade_wall_secs": 0.0,
+  "km1_gen_cpu_secs": 2920.7,
+  "orbit_canon_wall_secs": 0.0,
+  "precondition_secs": 160.6
+ }
+}
