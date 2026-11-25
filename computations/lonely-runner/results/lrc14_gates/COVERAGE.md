@@ -14,7 +14,7 @@
 | 197 | near-gcd | not downloaded | full (46411987 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 312041) | not checked | PASS |
 | 199 | near-gcd | not downloaded | full (25180487 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 196288) | not checked | PASS |
 | 211 | near-gcd | not downloaded | full (45883385 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 165061) | not checked | PASS |
-| 223 | near-gcd | OK | full | sampled (3000) | sampled (3000) | not checked | PASS |
+| 223 | near-gcd | OK | full | full | sampled (3000 of 48071) | not checked | PASS |
 | 227 | near-gcd | not downloaded | full (28242035 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 44974) | not checked | PASS |
 | 229 | near-gcd | not downloaded | full (19201544 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 62072) | not checked | PASS |
 | 233 | near-gcd | OK | full | sampled (3000) | sampled (3000) | not checked | PASS |
