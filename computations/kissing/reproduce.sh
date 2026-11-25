@@ -231,6 +231,10 @@ if [ "$with4043" = 1 ]; then
   for k in 0 1; do  # second implementation for 40D (about 24 min per half)
     python3 "$here/kiss_check_np.py" "$K/krav40_x.i8" 40 --partner "$K/krav40_xg.i8" --part $k 2 | grep -E "^part|contacts|RESULT"
   done
+  for k in 0 1 2 3 4; do  # second implementation for 41D: five tile parts (about 15 min each), which cover every pair once
+    python3 "$here/kiss_check_np.py" "$K/krav41_x.i8" 40 --classes "$K/krav41.lab" "$K/krav41.tab" \
+      --partner "$K/krav41_xg.i8" --part $k 5 | tee "$K/np41_p$k.txt" | grep -E "^part|contacts|max_excess|RESULT"
+  done
   for d in 41 42 43; do
     for k in 0 1 2 3; do  # four parts (each under 25 min); together they cover every pair once
       "$CHK" "$K/krav${d}_x.i8" 40 "$K/krav$d.lab" "$K/krav$d.tab" --partner "$K/krav${d}_xg.i8" --part $k 4 \

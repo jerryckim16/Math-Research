@@ -326,4 +326,46 @@ Costs (wall time on 4 cores, `kiss_check.c`):
   - (a) A second implementation for 41–43D. `kiss_check_np.py` already supports class + partner mode with uint16 labels (`test_kissing.py` §10). At the rate measured on 40D (2.2·10⁸ pairs/s on 4 processes) it would take about 1.4 h for 41D, 2.5 h for 42D and 5.4 h for 43D, split with `--part` into pieces of under 25 min. It did not fit in this session's CPU budget.
   - (b) Antipodal symmetry would cut the work about fourfold: for S = −S, it suffices to check |t| bounds on one point of each antipodal pair. This needs a two-sided threshold. Not implemented.
   - (c) The values checked are those at commit 907f9b1f.
-- **Kravatskiy 44–46D: not run.** The repository's values are 4,940,961, 7,655,056 and 13,387,797 points (1.2·10¹³–9·10¹³ pairs; about 3.4–25 h of C at 10⁹ pairs/s). Their packages (`dim44-d4-section`, `dim41-46-p48-heads`) were listed but not read here, so we do not know whether `build_kravatskiy4043.py` extends to them. A structure-aware check, like the author's difference-shell argument, would be far cheaper than all pairs.
+- **Kravatskiy 44–46D: scoped 2026-11-25, not run.**
+  - **Values.** The repository's README table at 907f9b1f lists 44: 4,940,961 (package `dim44-d4-section`, "updated 2026-11-22"), 45: 7,655,056 and 46: 13,387,797 (package `dim41-46-p48-heads`, "since 2026-10-23").
+  - **Method.** We fetched these files from `raw.githubusercontent.com` at that commit into fresh scratch directories and read them only with our own `np.load(allow_pickle=False)` code. No repository code was run. We read the READMEs, `final.py` and `verify.py` only to learn the formats.
+  - **Caveat on populations.** For all three packages the author's populations are not full enumerations:
+    - 44D's come from spherical-design moment identities (its README, "Why the populations are exact").
+    - The 45D and 46D ledger (`bounds.json`) says "inherited tables; no fresh enumeration of the latest body shells".
+
+    So a rebuild with our enumerator would also be the first full count of every family.
+  - **44D (4,940,961), a different format: `build_kravatskiy4043.py` cannot handle it.**
+    - *Data.* `ambient.npz` (sha256 cf9f1a47…31ff) and `families.npz` (b4b6cadb…f8c3).
+      - `gram` is a 48 × 48 integer matrix. We computed exactly that it is symmetric and even, with determinant 1; it is P48m in an integral basis.
+      - `normals` B has 4 rows. K = BGBᵀ = [[6,−3,−3,−3],[−3,6,0,0],[−3,0,6,0],[−3,0,0,6]], with det 324 (computed here).
+      - `section_points` holds 1,656 norm-6 rows. They form the author's calibration slice and are not configuration points.
+      - There are 17 families. Each has a label v·adj(K) mod 324, a squared radius r ∈ {6, 11/3 (×6), 4, 5 (×9)} and a population: 4,127,904; 142 (×3); 134 (×3); 825; 90,156 (×9). These sum to 4,940,961.
+    - *Points.* A family consists of the projections x − vK⁻¹B of all x ∈ ℤ⁴⁸ with xGBᵀ = v and xGxᵀ = r + a, where v is a shortest representative of the label and a = vK⁻¹vᵀ. Two points have inner product xGyᵀ − v_aK⁻¹v_bᵀ: an integer body product plus a class-pair constant with denominator dividing 324. So the checker's class + partner mode applies unchanged, with 48 columns and 17 classes.
+    - *Missing.*
+      - (1) An enumerator for {x ∈ ℤ⁴⁸ : xGBᵀ = v, xGxᵀ = m}. This means an integral basis of the rank-44 kernel lattice {y : yGBᵀ = 0}, a particular solution, and Fincke–Pohst on that affine coset; `enum_affine.c` handles only x ≡ c (mod 3) in rank 40.
+      - (2) A class table with rational corrections: T(a,b) is the largest integer t with t − c_ab ≤ 0 or 4(t − c_ab)² ≤ r_a r_b, computed and checked in Fractions.
+      - (3) A check of the int8 and int16 bounds for the 48-column rows.
+    - *Cost.* C(n,2) = 12,206,545,331,280 pairs. That is about 2.1–2.3 h of C at the 43D class + partner rate (1.5–1.6·10⁹ pairs/s on 4 cores, 40 columns). The 48 columns will cost somewhat more; this is a projection, not measured. It would also be about 14 h of numpy.
+  - **45D (7,655,056): the 41–43 family format with class indices; the builder is close.**
+    - *Data.* `coordinated45/configuration.npz` (bb4bddd2…68b5, equal to the author's `data/SHA256SUMS.txt` and `replay.json`).
+      - There are 2,187 families, with keys `classes` (an index 0…6560 into the 3⁸ discriminant classes), `r3` ∈ {10, 12, 14, 16, 18}, `weights` (the populations), `head_numerators` (2,187 × 8, |·| ≤ 9.6·10¹¹) and `head_denominator` 3.84·10¹¹.
+      - It also has 16 `pure_directions`. The head span has rank 5 (computed exactly here), so the dimension is 45.
+      - Residues and the Gram matrix come from `coordinated45/geometry.npz` (6c854f55…444f). Its `body_residues` has 6,561 distinct rows, all with Gc ≡ 0 (mod 3) (checked). Its `body_gram` is not entrywise equal to the 40D `gram.json`; we did not test whether the two are isometric.
+    - *Convention.* The README writes the body norm as r/3 and the head as z/(D√3). That is the 41–43 convention scaled by 1/3, and its angle condition (P_ij = b_ijD² + 2z_i·z_j, N = rD² + |z|²) is ours. So the class table formula is unchanged.
+    - *Sample check.* We ran `enum_affine` on `body_gram` for four shells (r3 = 10, 12, 14, 16) and the core (r3 = 18, class 199). They give exactly the published weights: 30; 495; 9,180; 115,275; 1,084,590. Max |x|² is 29,847 and max |xG|² 1,332, with entries ≤ 90 and 15. So int8 rows and the int16 partner bound (√(29,847·1,332) ≈ 6,305 ≤ 32,767) hold on these shells.
+    - *Missing.*
+      - (1) A loader for these keys: class index → residue through `geometry.npz`; no tiny bodies; pure heads with D = 1. Pins in `fetch_kravatskiy.py` are also needed.
+      - (2) `kiss_check.c` has `MAXCLS` = 1024, but 45D has 2,203 classes (2,187 families + 16 pure; 1,807 distinct (r, z) if equal head classes are merged). The limit must be raised or made dynamic.
+      - (3) `write_rows` forms X·G in int64, which is 2.4 GB here, so it should be chunked to stay within a 6 GB budget.
+      - (4) The table has 4.9·10⁶ entries in Python integers, which takes minutes.
+    - *Build cost.* There are 1,563 distinct shells, about 32 min of single-thread enumeration (from the per-shell times 0.1 / 0.7 / 3.7 / 17 / 72 s for r3 = 10 … 18).
+    - *Check cost.* C(n,2) = 29,299,937,354,040 pairs, about 5.1–5.4 h of C (at least 13 parts of 25 min).
+  - **46D (13,387,797): same format as 45D.**
+    - *Data.* `data/candidate_46.npz` (fba56776…9928, equal to the author's SHA256SUMS). It has the same keys plus a float64 `heads` copy, which is to be ignored. D = 24. There are 4,394 families (2,834 distinct shells, 13,387,770 body points) and 27 pure heads. The head rank is 6 (exact).
+    - *Class indexing.* There is no geometry file of its own, so the class indices are read through the 45D `geometry.npz`. Four 46D shells absent from 45D (r3 = 10, 12, 14, 16) give exactly the published weights that way.
+    - *Missing.*
+      - Everything listed for 45D.
+      - There are 4,421 classes (2,585 if heads are merged), so the table has up to 1.95·10⁷ entries. The C checker can read that, but `kiss_check_np.py`'s text loader would not fit in memory.
+      - X·G in int64 is 4.3 GB, so chunking is required.
+    - *Build cost.* About 1 h of single-thread enumeration.
+    - *Check cost.* C(n,2) = 89,616,547,562,706 pairs, about 15.6–16.6 h of C (about 40 parts). A second implementation in numpy, at the 2.4·10⁸ pairs/s measured here, would take about 105 h. Antipodal symmetry (open item (b) above) or a structure-aware argument would be needed to make 46D practical.
