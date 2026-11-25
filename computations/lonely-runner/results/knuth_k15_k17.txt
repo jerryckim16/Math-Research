@@ -1,0 +1,15 @@
+# Step 15: Knuth estimates (heuristic) of the level-one tree for k = 15 and k = 17, covergen.c LRC_PRUNE=1 LRC_IRR=2 LRC_ORDER=1,
+# 20000 probes, seed 2 (the probe models the q-cut, gain bounds and LRC_ORDER, not LRC_PRUNE=2's locked-time rule or LRC_FINISH).
+k=15 p=307 knuth_estimate_nodes 4.213886e+11 stderr 1.060e+10
+k=17 p=307 knuth_estimate_nodes 1.112566e+13 stderr 4.208e+11
+k=15 p=401 knuth_estimate_nodes 2.533631e+12 stderr 7.871e+10
+k=17 p=401 knuth_estimate_nodes 6.275716e+13 stderr 1.878e+12
+k=15 p=503 knuth_estimate_nodes 5.880734e+12 stderr 1.150e+11
+k=17 p=503 knuth_estimate_nodes 1.271854e+14 stderr 3.448e+12
+k=15 p=601 knuth_estimate_nodes 1.680804e+13 stderr 5.838e+11
+k=17 p=601 knuth_estimate_nodes 7.460916e+14 stderr 1.689e+13
+k=15 p=701 knuth_estimate_nodes 3.196248e+13 stderr 6.593e+11
+k=17 p=701 knuth_estimate_nodes 1.337566e+15 stderr 2.863e+13
+k=15 p=797 knuth_estimate_nodes 6.670003e+13 stderr 1.501e+12
+k=17 p=797 knuth_estimate_nodes 6.422294e+15 stderr 1.569e+14
+# ratio N17/N15: 307 26.4, 401 24.8, 503 21.6, 601 44.4, 701 41.8, 797 96.3 (each +-3-5%)
