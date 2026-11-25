@@ -78,18 +78,22 @@ def main():
               f"estimated level-one+kill CPU ~ {tot:,.0f} h ({tot/8766:.1f} CPU-years)")
 
 
-    # Second model (step 11): OUR generator.  Level one only (no kill, no
-    # cascade).  Our k = 15 plain tree N15(p) (Knuth, fitted as a power law),
-    # times the node fraction left by LRC_PRUNE=1 + LRC_IRR=2 as measured at
-    # k = 14 (0.496 at p = 251, 0.334 at p = 401; Knuth, results/
-    # knuth_twobranch_k14.txt), fitted log-linearly in p, at the measured
-    # 1.7e6 nodes/s per core.  Heuristic: assumes the k = 14 cut fraction
-    # carries over to k = 15.
+    # Second model: OUR generator.  Level one only (no kill, no cascade).  Our
+    # k = 15 plain tree N15(p) (Knuth, fitted as a power law), times the node
+    # fraction left by the cuts as measured at k = 14, fitted log-linearly in
+    # p, at a measured nodes/s rate.  Heuristic: assumes the k = 14 cut
+    # fraction carries over to k = 15.
+    #   step 11 (LRC_PRUNE=1, LRC_IRR=2): fractions 0.496 (p = 251), 0.334
+    #     (p = 401), 1.7e6 nodes/s  ->  ~9.5e5 CPU-h.
+    #   step 13 (LRC_PRUNE=2, LRC_IRR=2, LRC_ORDER=1): 0.1425 at p = 251
+    #     (exact run, 1.3515e10 nodes / plain Knuth 9.486e10), 0.0837 at
+    #     p = 401 (Knuth 1.845e11 / 2.205e12), at 1.80e6 nodes/s (the exact
+    #     p = 251 run: 1.3515e10 nodes in 7,505 CPU-s, 4 processes on 4 cores).
     b15, a15 = fit(ps, [N[(15, p)] for p in ps])
-    fr = {251: 0.496, 401: 0.334}
+    fr = {251: 0.1425, 401: 0.0837}
     bf = (log(fr[401]) - log(fr[251])) / (log(401) - log(251))
     af = log(fr[251]) - bf * log(251)
-    rate = 1.7e6
+    rate = 1.80e6
     s, tot, gates = 0.0, 0.0, []
     for p in primes(251, 5000):
         if s > 496.7268 - log(lcm16):
@@ -98,7 +102,7 @@ def main():
         n15 = N[(15, p)] if (15, p) in N else exp(a15) * p ** b15
         tot += n15 * min(1.0, exp(af) * p ** bf) / rate / 3600
         gates.append(p)
-    print(f"our covergen (LRC_PRUNE=1, LRC_IRR=2), level one only, proved target: {len(gates)} gates "
+    print(f"our covergen (LRC_PRUNE=2, LRC_IRR=2, LRC_ORDER=1), level one only, proved target: {len(gates)} gates "
           f"{gates[0]}..{gates[-1]}: ~ {tot:,.0f} CPU-h ({tot/8766:.1f} CPU-years); N15 ~ p^{b15:.2f}, cut fraction ~ p^{bf:.2f}")
 
 
