@@ -223,6 +223,33 @@ Pair counts are N(N−1)/2. Our C checker runs at about 7–10·10⁸ pairs/s on
 
     The whole earlier suite passes with the modified checker.
 
+### 3e. Kravatskiy's 45D record: builder done, full check not run (partial)
+
+- **Why.** The repository's README table at 907f9b1f lists 45: 7,655,056 (package `dim41-46-p48-heads`, "since 2026-10-23"), above Dorofeev–Sun–Wang's 7,379,838 (§Survey) and Qiushi's 7,380,090 (Next steps). Unrefereed. The author's `coordinated45/verify.py` (read, not run) checks head angles against coset-distance bounds per family pair (2,427,690 family-level checks). It does not take the inner products of point pairs, and the populations of the old large families are "inherited", not freshly enumerated (`replay.json`: "Inherited K40 population identities; no new full enumeration").
+- **Data.** `fetch_kravatskiy.py --with-45` pins `dim41-46-p48-heads/coordinated45/configuration.npz` (bb4bddd2…68b5) and `coordinated45/geometry.npz` (6c854f55…444f). Both sha256 values equal the author's `data/SHA256SUMS.txt`, and a fresh fetch into an empty directory reproduces them. The files are read with `allow_pickle=False`; their keys and dtypes are asserted. No repository code is run.
+- **Format** (`coordinated45/README.txt`, `coordinates.py`; documented in `build_kravatskiy45.py`):
+  - `configuration.npz` holds 2,187 families. Each has a class index (0…6560, one of the 3⁸ discriminant classes), r3 ∈ {10, 12, 14, 16, 18}, a weight (its population), and 8 head numerators over one denominator D = 3.84·10¹¹ (|z| ≤ 9.6·10¹¹). It also holds 16 integer pure directions.
+  - `geometry.npz` holds `body_gram` G (40 × 40) and `body_residues` (6,561 × 40).
+  - Family i is every x ∈ ℤ⁴⁰ with x ≡ body_residues[class_i] (mod 3) and xGxᵀ = 3·r3_i, each with the head z_i/D. The author's exact coordinates are (xL/√3, h)/√(r + |h|²) with LLᵀ = G and h = z_i/D. So this is exactly the 41–43D convention (body metric G/3, N = rD² + |z|², §3d) with r = r3, and the class table formula is unchanged.
+- **Our rebuild** (`build_kravatskiy45.py`, reusing `build_kravatskiy4043.py`'s enumerator wrapper, table entry function and checks):
+  - G is symmetric and positive definite (exact Gaussian elimination over ℚ). Every family residue satisfies Gc ≡ 0 (mod 3). The 2,187 heads plus 16 pure directions have rational rank exactly 5. So the points lie in ℝ⁴⁰ ⊕ ℝ⁵ = ℝ⁴⁵.
+  - Each of the 1,563 distinct shells (class, r3) is enumerated once by `enum_affine.c` (4 single-threaded runs at a time). Every row's residue and norm is re-checked in numpy int64, with no repeated row in a shell.
+  - Every one of the 2,187 enumerated shells has exactly the published weight. So the "inherited" populations are confirmed here by full enumeration, for this body Gram matrix and these residues.
+  - The layer table (r3: families, points) is 10: 1,200, 18,900; 12: 778, 385,110; 14: 168, 1,542,240; 16: 40, 4,624,200; 18: 1, 1,084,590. It equals the author's `replay.json`. Total 7,655,040 family points + 16 pure = 7,655,056.
+  - There are 2,203 classes (one per family, one per pure point), with uint16 labels. The table has 2,203² = 4,853,209 entries. Each is computed and checked (T passes, T + 1 fails) in Python integers, by the same `entry()` used for 41–43D, on the upper triangle and then mirrored. T lies in [−55, 55], and 243,594 entries admit a contact.
+  - Row bounds: max |x|² = 29,847 (entries ≤ 90) and max |xG|² = 1,332 (entries ≤ 15). So √(29,847 · 1,332) ≈ 6,305 ≤ 32,767, and the int16 partner path is exact; `kiss_check.c` re-checks this bound. Body norms: 0 (16 pure), 30, 36, 42, 48, 54.
+  - Output sha256: `.lab` f34e2242…cf4e, `.tab` 0a407b26…1a33, `_x.i8` cbd5e05d…1b60, `_xg.i8` d8117e7b…6d90.
+  - `write_rows` now forms X·G in chunks of 2¹⁸ rows (the whole product would be 2.4 GB in int64). On the 42D rows it writes byte-identical files for two chunk sizes.
+- **Checker extension.** `kiss_check.c` had a fixed `MAXCLS` = 1024. It now allocates its class arrays (thresholds, contact values, per-thread class-pair maxima) for the table's k, up to `MAXTAB` = 8192 (enough for 46D's 4,421). With more than 1,024 classes it prints only the class pairs whose maximum reaches the threshold, plus a count of the others. Other modes are unchanged: the old and new binaries give byte-identical output on 42D `--part 3 300`, at the same speed. `test_kissing.py` §11 uses 2,300 classes, with most used labels above 2,048:
+  - a random affine set fails and a greedy subset passes, both with C (whole, and as 3 parts covering C(n,2)) equal to a Fraction reference;
+  - E₈ over 2,300 zero-head classes passes with 6,720 contacts;
+  - negative controls fail: a duplicated row, and one lowered table entry (labels 1,105 and 1,028);
+  - a table with k = 8,193 is rejected.
+
+  The whole suite passes.
+- **Negative controls** (`--retable`, C checker with `KISS_STOP_AT_FIRST=1`, so the counts are lower bounds): head list shifted by one family (wrong order), ≥ 16,019,528 violations; family heads doubled (read over D/2), ≥ 539,081,404. Both are rejected.
+- **The check.** C(n, 2) = 29,299,937,354,040 pairs. `kiss_check.c --part K 16` splits them into 16 parts, the column blocks ≡ K (mod 16) of 3,738 blocks of 2,048 rows. Pairs per part: 1,829,945,235,456; 1,830,926,702,592; 1,831,908,169,728; 1,832,889,636,864; 1,833,871,104,000; 1,834,852,571,136; 1,835,834,038,272; 1,836,815,505,408; 1,837,796,972,544; 1,835,961,311,544; 1,824,079,502,336; 1,825,056,775,168; 1,826,034,048,000; 1,827,011,320,832; 1,827,988,593,664; 1,828,965,866,496. They sum to exactly C(n, 2), computed with the checker's own block formula. Only the calibration parts were run (§Results).
+
 ### 4. Dims 11 and 12: the 604- and 841-point records (worked)
 
 - **11D, τ₁₁ ≥ 604 (EinsteinArena, arXiv:2606.10402v2).** `build_einstein11.py` builds the configuration from the appendix text alone (the hosts with the authors' coordinates are refused here). The backbone has 496 points: ±2eᵢ (i < 8) and all signs on 30 four-point supports. There are 96 points ±e_a ± e_b ± √2 u_j for the pairs (a,b) ∈ {(0,6), (1,4), (2,5), (3,7)}, and 12 points √2(±u_i ± u_j), where u₁, u₂, u₃ = (2,1,2)/3, (2,−2,−1)/3, (1,2,−2)/3 sit in coordinates 8–10.
