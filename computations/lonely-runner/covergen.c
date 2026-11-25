@@ -113,6 +113,18 @@ static int priv1(const bs *O) { int s = 0; for (int i = 0; i < W; i++) s += __bu
  *       must sum to at least |U| (the plain bound uses left * max gain).
  * irr_cuts returns 0 to cut; otherwise *Aout is the reduced allowed set. */
 static int irr = 0, maxcov = 0;   /* maxcov = max |cov(c)| (gains are <= it) */
+/* Two-branch search (Allikvere, arXiv:2609.02604v2 Sec. 4.1), enabled with
+ * LRC_TWOBRANCH=1 (step 11).  The minimal covers C with 1 in C, |C| <= k are
+ * split by size and searched in two trees:
+ *   branch 1: |C| = k exactly.  Depth limit k; leaves with |L| < k are not
+ *     printed; extra cut |U| >= k - |L|: each class of C not yet chosen has a
+ *     private time (C is minimal), that time is not covered by L, and private
+ *     times of distinct classes are distinct.
+ *   branch 2: |C| <= k-1.  Depth limit k-1, so the gain bound and the
+ *     private-time node cut use k-1: with LRC_PRUNE the cut is q_{k-1} >= q_k.
+ * Every cut removes only nodes with no admissible leaf below, so the union of
+ * the two outputs is exactly the single-tree output (tested). */
+static int kmax = 0, exactk = 0;
 static int irr_cuts(const bs *U, const bs *A, bs *Aout) {
     *Aout = *A;
     if (nL >= 2 && (irr & 1)) {
@@ -143,7 +155,7 @@ static int irr_cuts(const bs *U, const bs *A, bs *Aout) {
         int hist[2049]; int mx = 0;
         memset(hist, 0, (maxcov + 1) * sizeof(int));
         for (int c = 1; c <= h; c++) if (has(Aout, c)) { int g = popand(&cov[c], U); hist[g]++; if (g > mx) mx = g; }
-        long need = popc(U), got = 0; int left = k - nL;
+        long need = popc(U), got = 0; int left = kmax - nL;
         for (int g = mx; g > 0 && left > 0; g--) {
             int take = hist[g] < left ? hist[g] : left;
             got += (long)take * g; left -= take;
@@ -158,6 +170,7 @@ static void dfs(const bs *U, const bs *A, int depth) {
     if (nodecap && nodes >= nodecap) return;
     if (isempty(U)) {
         leaves++;
+        if (exactk && nL != kmax) return;
         if (prune && priv1(&others) < qs(nL)) return;
         if (prune >= 2) {
             int p1 = priv1(&others);
@@ -180,10 +193,11 @@ static void dfs(const bs *U, const bs *A, int depth) {
         }
         return;
     }
-    if (nL == k) return;
+    if (nL == kmax) return;
+    if (exactk && popc(U) < kmax - nL) return;
     static bs Airr[MAXK + 2];
     if (irr) { if (!irr_cuts(U, A, &Airr[nL])) return; A = &Airr[nL]; }
-    int need = popc(U), left = k - nL, maxg = 0;
+    int need = popc(U), left = kmax - nL, maxg = 0;
     /* gain bound (implied by the sharper bound in irr_cuts when irr & 2) */
     if (!(irr & 2)) {
         for (int c = 1; c <= h; c++) if (has(A, c)) { int g = popand(&cov[c], U); if (g > maxg) maxg = g; }
@@ -249,10 +263,12 @@ static void dfs(const bs *U, const bs *A, int depth) {
 static double probe(bs U, bs A) {
     double est = 1.0, mult = 1.0;
     nL = 1;
+    bs O; memset(&O, 0, sizeof O);
     for (;;) {
-        if (isempty(&U) || nL == k) return est;
+        if (isempty(&U) || nL == kmax) return est;
+        if (exactk && popc(&U) < kmax - nL) return est;
         if (irr) { bs A3; if (!irr_cuts(&U, &A, &A3)) return est; A = A3; }
-        int need = popc(&U), left = k - nL, maxg = 0;
+        int need = popc(&U), left = kmax - nL, maxg = 0;
         for (int c = 1; c <= h; c++) if (has(&A, c)) { int g = popand(&cov[c], &U); if (g > maxg) maxg = g; }
         if ((long)left * maxg < need) return est;
         int besta = -1, bestm = 1 << 30;
@@ -261,13 +277,19 @@ static double probe(bs U, bs A) {
             if (m < bestm) { bestm = m; besta = a; if (m <= 1) break; }
         }
         if (bestm == 0) return est;
-        int cand[2048], nc = 0;
-        for (int c = 1; c <= h; c++) if (has(&cov[besta], c) && has(&A, c)) cand[nc++] = c;
-        int i = (int)(xs() % (unsigned long long)nc);
+        /* children = candidates not removed by the private-time node cut (a
+         * skipped candidate still excludes its class for later siblings) */
+        int cand[2048], nc = 0, kept[2048], nk = 0;
+        for (int c = 1; c <= h; c++) if (has(&cov[besta], c) && has(&A, c)) {
+            if (prune) { bs O2; for (int w = 0; w < W; w++) O2.w[w] = O.w[w] | cov[c].w[w]; if (priv1(&O2) < qk) { cand[nc++] = c; continue; } }
+            kept[nk++] = nc; cand[nc++] = c;
+        }
+        if (nk == 0) return est;
+        int i = kept[(int)(xs() % (unsigned long long)nk)];
         for (int j = 0; j <= i; j++) clr(&A, cand[j]);
-        for (int w = 0; w < W; w++) U.w[w] &= ~cov[cand[i]].w[w];
+        for (int w = 0; w < W; w++) { U.w[w] &= ~cov[cand[i]].w[w]; O.w[w] |= cov[cand[i]].w[w]; }
         L[nL++] = cand[i];
-        mult *= nc;
+        mult *= nk;
         est += mult;
     }
 }
@@ -278,6 +300,7 @@ int main(int argc, char **argv) {
     if (argc > 3) maxtop = atol(argv[3]);
     if (getenv("LRC_PRUNE")) prune = atoi(getenv("LRC_PRUNE"));
     if (getenv("LRC_IRR")) irr = atoi(getenv("LRC_IRR"));
+    int twob = getenv("LRC_TWOBRANCH") ? atoi(getenv("LRC_TWOBRANCH")) : 0;
     if (getenv("LRC_NSHARDS")) { nshards = atol(getenv("LRC_NSHARDS")); shard = getenv("LRC_SHARD") ? atol(getenv("LRC_SHARD")) : 0; }
     long probes = 0;
     if (argc > 6) { probes = atol(argv[4]); rng ^= (unsigned long long)atol(argv[5]) * 2654435761ULL; nodecap = strtoull(argv[6], 0, 10); maxtop = -1; quiet = 1; }
@@ -291,6 +314,7 @@ int main(int argc, char **argv) {
     mcov = (p - 1) / (k + 1);
     for (int v = 1; v <= h; v++) { int c = popc(&cov[v]); if (c > maxcov) maxcov = c; }
     qk = qs(k);
+    kmax = k;
     memset(&others, 0, sizeof others);
     bs U, A; memset(&U, 0, sizeof U); memset(&A, 0, sizeof A);
     for (int a = 1; a <= h; a++) { U.w[a >> 6] |= 1ULL << (a & 63); A.w[a >> 6] |= 1ULL << (a & 63); }
@@ -298,10 +322,15 @@ int main(int argc, char **argv) {
     clr(&A, 1);
     L[0] = 1; nL = 1;
     if (probes > 0) {
-        double sum = 0, sum2 = 0;
-        for (long r = 0; r < probes; r++) { double e = probe(U, A); sum += e; sum2 += e * e; }
-        double mean = sum / probes, var = sum2 / probes - mean * mean;
-        fprintf(stderr, "knuth_estimate_nodes %.6e stderr %.3e probes %ld\n", mean, var > 0 ? sqrt(var / probes) : 0.0, probes);
+        int nb = twob ? 2 : 1;
+        for (int b = 1; b <= nb; b++) {
+            if (twob) { exactk = (b == 1); kmax = b == 1 ? k : k - 1; qk = qs(kmax); }
+            double sum = 0, sum2 = 0;
+            for (long r = 0; r < probes; r++) { double e = probe(U, A); sum += e; sum2 += e * e; }
+            double mean = sum / probes, var = sum2 / probes - mean * mean;
+            fprintf(stderr, "knuth_estimate_nodes %.6e stderr %.3e probes %ld branch %d prune %d irr %d\n", mean, var > 0 ? sqrt(var / probes) : 0.0, probes, twob ? b : 0, prune, irr);
+        }
+        if (twob) { exactk = 1; kmax = k; qk = qs(k); }
         nL = 1;
         struct timespec t0, t1; clock_gettime(CLOCK_MONOTONIC, &t0);
         dfs(&U, &A, 0);
@@ -310,7 +339,16 @@ int main(int argc, char **argv) {
         fprintf(stderr, "capped_dfs nodes %llu secs %.3f nodes_per_sec %.3e\n", nodes, secs, nodes / secs);
         return 0;
     }
-    dfs(&U, &A, 0);
-    fprintf(stderr, "nodes %llu leaves %llu minimal_covers %llu prune %d q_k %d m %d irr %d\n", nodes, leaves, printed, prune, qk, mcov, irr);
+    if (twob) {
+        unsigned long long n1, c1;
+        exactk = 1; kmax = k; qk = qs(k);
+        dfs(&U, &A, 0);
+        n1 = nodes; c1 = printed;
+        fprintf(stderr, "branch 1 (|C| = %d): nodes %llu minimal_covers %llu q %d\n", k, n1, c1, qk);
+        exactk = 0; kmax = k - 1; qk = qs(k - 1); nL = 1; memset(&others, 0, sizeof others);
+        dfs(&U, &A, 0);
+        fprintf(stderr, "branch 2 (|C| <= %d): nodes %llu minimal_covers %llu q %d\n", k - 1, nodes - n1, printed - c1, qk);
+    } else dfs(&U, &A, 0);
+    fprintf(stderr, "nodes %llu leaves %llu minimal_covers %llu prune %d q_k %d m %d irr %d twobranch %d\n", nodes, leaves, printed, prune, qs(k), mcov, irr, twob);
     return 0;
 }
