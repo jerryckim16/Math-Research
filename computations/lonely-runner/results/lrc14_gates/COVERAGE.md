@@ -17,7 +17,7 @@
 | 223 | near-gcd | OK | full | full | sampled (3000 of 48071) | not checked | PASS |
 | 227 | near-gcd | not downloaded | full (28242035 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 44974) | not checked | PASS |
 | 229 | near-gcd | not downloaded | full (19201544 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 62072) | not checked | PASS |
-| 233 | near-gcd | OK | full | sampled (3000) | sampled (3000) | not checked | PASS |
+| 233 | near-gcd | OK | full | full | sampled (3000 of 13457) | not checked | PASS |
 | 239 | J empty | OK | full | full | full | full (1441284 orbits, equal) | PASS |
 | 241 | near-gcd | not downloaded | full (22356624 rows) | sampled (500 ir rows + 500 ext survivor lines) | sampled (500 of 14401) | not checked | PASS |
 | 251 | J empty | OK | full | full | full | full (2404346 orbits, equal) | PASS |
