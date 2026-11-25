@@ -61,7 +61,8 @@ def binary(name):
         if not os.path.exists(src):
             src = os.path.join(PARENT, name + ".c")
         out = os.path.join(tempfile.mkdtemp(prefix="c15_"), name)
-        subprocess.run(["cc", "-O3", "-o", out, src, "-lm"], check=True)
+        # -march=native: hardware popcount (about 5x faster; same output, checked on 20,000 rows at p = 367)
+        subprocess.run(["cc", "-O3", "-march=native", "-o", out, src, "-lm"], check=True)
         _BIN[name] = out
     return _BIN[name]
 
@@ -89,12 +90,22 @@ def run(args, text):
     return r.stdout
 
 
-def rowcheck(p, n, hexrows):
-    out = run([binary("rowcheck15"), str(K), str(p), str(n)], "\n".join(hexrows) + "\n")
+def run_file(args, inpath):
+    with open(inpath) as fi:
+        r = subprocess.run(args, stdin=fi, capture_output=True, text=True, check=True)
+    return r.stdout
+
+
+def rowcheck(p, n, hexrows=None, path=None):
+    if path is None:
+        path = os.path.join(tempfile.mkdtemp(prefix="c15r_"), "rows.hex")
+        with open(path, "w") as o:
+            o.write("\n".join(hexrows) + "\n")
+    out = run_file([binary("rowcheck15"), str(K), str(p), str(n)], path)
     last = out.strip().splitlines()[-1].split()
     stats = {last[i]: int(last[i + 1]) for i in range(0, len(last), 2)}
     bad = [l for l in out.splitlines() if l.startswith("BAD")]
-    out2 = run([binary("gatecheck"), "hexrows", str(K), str(p), str(n)], "\n".join(hexrows) + "\n")
+    out2 = run_file([binary("gatecheck"), "hexrows", str(K), str(p), str(n)], path)
     m = re.search(r"rows (\d+) with_witness (\d+)", out2)
     stats["gatecheck_rows"] = int(m.group(1))
     stats["gatecheck_with_witness"] = int(m.group(2))
@@ -179,9 +190,22 @@ def check(tgz, sums, work):
     # B. rows
     irdir = os.path.join(root, "rows_ir")
     irfiles = sorted([f for f in os.listdir(irdir) if f.endswith(".txt")], key=fkey)
-    irrows_by_file = {f: decode_lines(os.path.join(irdir, f)) for f in irfiles}
-    allhex = [s for f in irfiles for s in irrows_by_file[f]]
-    st, bad = rowcheck(p, K, allhex)
+    scratch = tempfile.mkdtemp(prefix="c15w_")
+    irhex = os.path.join(scratch, "ir.hex")
+    casin = os.path.join(scratch, "cascade.in")
+    file_ranges = []          # (cascade-file-name, number of rows), in input order
+    with open(irhex, "w") as oh, open(casin, "w") as oc:
+        for f in irfiles:
+            nrow = 0
+            for s_ in open(os.path.join(irdir, f)):
+                s_ = s_.strip()
+                if not s_:
+                    continue
+                oh.write(s_ + "\n")
+                oc.write(" ".join(map(str, hex_to_tuple(s_, K))) + "\n")
+                nrow += 1
+            file_ranges.append(("ir_" + f[3:-4], nrow))
+    st, bad = rowcheck(p, K, path=irhex)
     rep["ir_rows"] = st["rows"]
     rep["ir_rowcheck"] = st
     if bad:
@@ -230,31 +254,38 @@ def check(tgz, sums, work):
         mis.append({"what": "extension count differs", "cert": [bf["extensions_per_cover"], bf["km1_extension_rows"]],
                     "ours": [h, len(dt) * h]})
     # C. cascade: every ir row and every extension row, one process
-    inputs = []   # (cascade-file-name, row tuple)
-    for f in irfiles:
-        for s in irrows_by_file[f]:
-            inputs.append(("ir_" + f[3:-4], hex_to_tuple(s, K)))
-    for f, dl in dedup_files:
-        c = hex_to_tuple(dl[0], K - 1)
-        for x in range(1, h + 1):
-            inputs.append(("ext_" + f[6:-4], c + (x,)))
+    with open(casin, "a") as oc:
+        for f, dl in dedup_files:
+            c = hex_to_tuple(dl[0], K - 1)
+            for x in range(1, h + 1):
+                oc.write(" ".join(map(str, c + (x,))) + "\n")
+            file_ranges.append(("ext_" + f[6:-4], h))
     tc = time.time()
-    out = run([binary("gatecheck"), "cascade", str(K), str(p)],
-              "\n".join(" ".join(map(str, r)) for _, r in inputs) + "\n")
-    cas = [None] * len(inputs)
-    for line in out.splitlines():
-        xs = list(map(int, line.split()))
-        cas[xs[0]] = tuple(xs[1:])
-    assert all(c is not None for c in cas)
-    rep["cascade_rows"] = len(inputs)
+    casout = os.path.join(scratch, "cascade.out")
+    with open(casin) as fi, open(casout, "w") as fo:
+        subprocess.run([binary("gatecheck"), "cascade", str(K), str(p)], stdin=fi, stdout=fo, check=True)
     rep["cascade_seconds"] = round(time.time() - tc, 1)
+    # walk input and output in lockstep; keep only rows with an improper level-2 lift
     ours_by_file = collections.defaultdict(collections.Counter)
-    rows_by_file = collections.Counter({"ir_" + f[3:-4]: 0 for f in irfiles})
-    rows_by_file.update({"ext_" + f[6:-4]: 0 for f, _ in dedup_files})
-    for (fn, r), c in zip(inputs, cas):
-        rows_by_file[fn] += 1
-        if c[0] > 0:
-            ours_by_file[fn][(r, c[:4] + (c[4],))] += 1
+    rows_by_file = collections.Counter()
+    surv = []
+    ntot = 0
+    with open(casin) as fi, open(casout) as fo:
+        for fn, nrow in file_ranges:
+            rows_by_file[fn] += nrow
+            for _ in range(nrow):
+                r = tuple(map(int, fi.readline().split()))
+                xs = list(map(int, fo.readline().split()))
+                assert xs and xs[0] == ntot and len(r) == K
+                ntot += 1
+                c = tuple(xs[1:])
+                if c[0] > 0:
+                    ours_by_file[fn][(r, c)] += 1
+                    surv.append((fn, r, c))
+        assert fi.readline() == "" and fo.readline() == ""
+    rep["cascade_rows"] = ntot
+    import shutil
+    shutil.rmtree(scratch)
     fdir = os.path.join(root, "filt")
     cert_files = sorted({f[:-4] for f in os.listdir(fdir) if f.endswith(".out")}, key=fkey)
     stats_files = sorted({f[:-6] for f in os.listdir(fdir) if f.endswith(".stats")}, key=fkey)
@@ -283,7 +314,6 @@ def check(tgz, sums, work):
     if file_mis:
         mis.append({"what": "cascade output differs", "files": file_mis[:20]})
     # totals
-    surv = [(fn, r, c) for (fn, r), c in zip(inputs, cas) if c[0] > 0]
     died = collections.Counter()
     for _, _, c in surv:
         e = next((i for i in range(5) if c[i] == 0), None)
