@@ -33,7 +33,9 @@
  *      (its private set w.r.t. a subset of C contains its private set w.r.t.
  *      C), so a node where some chosen class has no private time is cut.
  *
- * Usage: tau k p smax     prints "k p h m tau T nodes N" where T is the least
+ * Usage: [TAU_FROM=s0] tau k p smax   (with TAU_FROM, only limits s0..smax
+ *        are searched: a cover found then proves tau <= its size, but tau
+ *        itself is only reported exactly when s0 = 1)  prints "k p h m tau T nodes N" where T is the least
  *        cover size if <= smax, else ">smax" (then no cover of size <= smax
  *        exists), and the cover found.
  */
@@ -116,7 +118,8 @@ int main(int argc, char **argv) {
     if (getenv("TAU_CUTS")) cuts = atoi(getenv("TAU_CUTS"));
     mcov = (p - 1) / (k + 1);
     int tau = -1;
-    for (lim = 1; lim <= smax; lim++) { qlim = qs(lim); L[0] = 1; nL = 1; if (dfs(&U, &A)) { tau = lim; break; } }
+    int from = getenv("TAU_FROM") ? atoi(getenv("TAU_FROM")) : 1;   /* screening: search only sizes >= from */
+    for (lim = from; lim <= smax; lim++) { qlim = qs(lim); L[0] = 1; nL = 1; if (dfs(&U, &A)) { tau = lim; break; } }
     if (tau > 0) { printf("k %d p %d h %d m %d tau %d nodes %llu cover", k, p, h, (p - 1) / (k + 1), tau, nodes); for (int i = 0; i < nfound; i++) printf(" %d", found[i]); printf("\n"); }
     else printf("k %d p %d h %d m %d tau >%d nodes %llu\n", k, p, h, (p - 1) / (k + 1), smax, nodes);
     return 0;

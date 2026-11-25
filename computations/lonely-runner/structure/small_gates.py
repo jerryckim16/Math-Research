@@ -11,7 +11,7 @@ clause at level 2l, reduce the survivors to unit orbits of Z_{2lp} (permutation,
 sign and unit invariance, F2), repeat.  If some level is empty, J(k,p) is empty
 (F1 + Lemma E), so by Lemma D (needs LRC(k-1)) p divides v_1...v_k for every
 counterexample v.
-Usage: python3 small_gates.py [k] p [p ...]
+Usage: python3 small_gates.py k p [p ...]   (SG_DUMP=prefix: write orbit reps per level)
 """
 import itertools
 import json
@@ -90,9 +90,12 @@ def lift_by_2(k, M, reps):
         yield tuple(map(int, line.split()[1:]))
 
 
-def run(k, p, lmax=64, check_level1=True):
+def run(k, p, lmax=64, check_level1=True, dump=None):
     t0 = time.time()
     reps = level_one(k, p)
+    if dump:
+        with open(f"{dump}_k{k}_p{p}_l1.txt", "w") as f:
+            f.writelines(" ".join(map(str, r)) + "\n" for r in reps)
     rec = {"k": k, "p": p, "level1_orbits": len(reps)}
     if check_level1:   # every listed row really is witness-free at level 1
         rec["level1_rows_improper"] = all(not has_witness(r, p, k) for r in reps)
@@ -110,6 +113,9 @@ def run(k, p, lmax=64, check_level1=True):
                 continue
             nxt.add(canon(w, N, U))
         reps = sorted(nxt)
+        if dump:
+            with open(f"{dump}_k{k}_p{p}_l{l}.txt", "w") as f:
+                f.writelines(" ".join(map(str, r)) + "\n" for r in reps)
         trace.append({"level": l, "witness_free_lifts": nwf, "gcd_proper": ngcd,
                       "improper_orbits": len(reps)})
         print(json.dumps({"p": p, **trace[-1]}), file=sys.stderr, flush=True)
@@ -121,8 +127,7 @@ def run(k, p, lmax=64, check_level1=True):
 
 
 if __name__ == "__main__":
-    args = list(map(int, sys.argv[1:]))
-    k = args[0] if len(args) > 1 and args[0] < args[1] and args[0] <= 30 and args[0] < 17 else 15
-    ps = args[1:] if k == args[0] and len(args) > 1 else args
+    # usage: small_gates.py k p [p ...]   (env SG_DUMP=prefix writes orbit reps per level)
+    k, ps = int(sys.argv[1]), list(map(int, sys.argv[2:]))
     for p in ps:
-        print(json.dumps(run(k, p)), flush=True)
+        print(json.dumps(run(k, p, dump=os.environ.get("SG_DUMP"))), flush=True)
