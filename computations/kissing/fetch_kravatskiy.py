@@ -2,7 +2,9 @@
 17 Nov 2026 snapshot of Cohn's table kept in the same repository, or newer),
 and pin them by sha256: complete coordinate files for 26, 27, 28, 30, 31;
 the exact witness for 25, the parent file plus trade for 29, and the
-compact witnesses for 32 and 33.
+compact witnesses for 32 and 33; with --with-34-39, the parent files and
+edit recipes from which build_kravatskiy34.py ... build_kravatskiy39.py
+rebuild the 34-39D records.
 
 Source: https://github.com/alexlegeartis/KissingNumbers at commit
 907f9b1f4c5f8bb4196ea03775f60cc260189789 (2026-11-23), fetched 2026-11-24
@@ -11,7 +13,7 @@ The files are treated as untrusted data: each is checked against the sha256
 pinned below before load_kravatskiy.py parses it (numpy, allow_pickle=False).
 None of the repository's code is run.
 
-Usage: python3 -I fetch_kravatskiy.py OUTDIR
+Usage: python3 -I fetch_kravatskiy.py OUTDIR [--with-34-39]
 """
 import hashlib
 import os
@@ -51,6 +53,66 @@ EXTRA = [
      "90d130ba1bb96172fae7b7ae10d1169747b76f2e720946bc2350c99a08d427c9"),
 ]
 
+# 34-39D: every file the chain rebuilders read (local name, repository path
+# under verifications/improved/, sha256). Where the author's own scripts pin
+# a hash for a file, it is the same as the one below.
+EXTRA_34_39 = [
+    # 34D: parent certificate (390,992 points) and the edit recipe
+    ("k34_parent_rotated34.json", "dim32-35-signed-layers/rotated34/certificate.json",
+     "36a9017be6de898d16bdfdad1b686db1d991a9be8a77a804134d770794a5f7ea"),
+    ("k34_witness.json", "dim34-octad-switches/witness.json",
+     "87da7c9bab1f0a0f3dc627b8e88a5cfde3815745a1c74e7ce70c405c2e6d1dd3"),
+    # 35D: code data (dense code, 2,202 supports with parities), dense
+    # positions and heads, 7 octad switches, final stars/roots/heads
+    ("k35_code_data.json", "dim35-shared-root-heads/code_data.json",
+     "0f44ca2ff564941d58f92cbb0c47ada139612196fd3d69a547d5318f78009d05"),
+    ("k35_full_parities.json", "dim35-shared-root-heads/full_parities.json",
+     "e156ae604938772d9d41e9b2a39af5602fcc7f8bf7f242c35695a4f2a9218c24"),
+    ("k35_shared_positive.npz", "dim35-shared-root-heads/shared_positive.npz",
+     "9d4b35ac5d18f40011282ec2e83753bdffee947351584a77a910baef875768cf"),
+    ("k35_switch_witness.json", "dim35-octad-switches/witness.json",
+     "3e8a212b8a8ee4c6d81a45134dae67b99fbfbc4a4f990fc174c42af987e01e16"),
+    ("k35_replacement.npz", "dim35-joint-star-root/replacement.npz",
+     "ffb73e3082a0ed5a1f94ce8e5c32febb0683e151bcd1aee3838eb52a6e76320c"),
+    # 36D: Coxeter-Todd base certificate and the three edit steps
+    ("k36_nonlocal.json", "dim36-ct-nonlocal/certificate.json",
+     "c4598a0dfc49365ae2b082745454c38b53b76703e5eef5dafbd71e2d06c59180"),
+    ("k36_triangle.json", "dim36-ct-triangle-refill/certificate.json",
+     "8ef795fd0b034e913e28c05b36f43c80cf274f78dd2af2bb8a07b1488bc8c306"),
+    ("k36_double.json", "dim36-ct-double-trine/witness.json",
+     "ad81a8abdfb10889b7f7826b5f4823fa355f415e7cca4083d092167faed13b08"),
+    ("k36_final.json", "dim36-ct-neutral-reheat/witness.json",
+     "5327877dfd99b826787391c9ecdb76db9f58747ae693f8540ef03f0b3b678c93"),
+    # 37D: Yang et al.'s length-38 code, 168 radical six-supports, flat refill
+    ("k37_dense_parent38.json", "dim37-qr-flat-repack/dense_parent38.json",
+     "addcc62d2757f68c31fda2af630e1f41a46948c58d42a24d981e2b8291336108"),
+    ("k37_six.txt", "dim37-qr-flat-repack/six.txt",
+     "f8f9fbe495ae1696b8b1d4f34ad0f001a066390d7886d2cd360ca8bb75122f39"),
+    ("k37_win.txt", "dim37-qr-flat-repack/win.txt",
+     "956a00ddc257713eabaff9f05d14e0f050d87591d317eba2cbb6db3cedb1d532"),
+    # 38D: Lin's 3,088 supports, Yang et al.'s length-39 code, fibre syndromes,
+    # 10 octad switches and 18 star templates
+    ("k38_supports_3088.txt", "dim37-38-qr-merge/supports_3088.txt",
+     "ccb530f90e914df84cbc8d19a71d30c79146d23a2e8e86e7a813d4d92a5a6a8b"),
+    ("k38_dense_parent39.json", "dim37-38-qr-merge/dense_parent39.json",
+     "72877e1101a4d33f96646f43d64a6688c3bb2baa56ada85df3c76017c4d14365"),
+    ("k38_offset_witness.txt", "dim38-qr-free-offsets/offset_witness.txt",
+     "5aa1467c25cf81d6cd6c7b813719a378e4c35f105b1725e49b727dfcdec1c9d4"),
+    ("k38_witness.json", "dim38-qr-octad-switches/witness.json",
+     "44ccacbe5d4b5a27f54c236e58c78629e02a5136c90db1e65bf7c32943b54a0e"),
+    # 39D: length-39 code and fibres, 7 support switches and 4 stars, heads;
+    # the gzipped supports decompress to Lin's supports_3424.txt (sha256
+    # 5e750c76..., the file pinned in fetch_lin.py)
+    ("k39_parent39.json", "dim39-qr-three-coordinate-heads/parent39.json",
+     "72877e1101a4d33f96646f43d64a6688c3bb2baa56ada85df3c76017c4d14365"),
+    ("k39_base_certificate.json", "dim39-qr-three-coordinate-heads/base_certificate.json",
+     "2c7188449cd0b93bd0e9eec3d408e087b3e4763d22202ed63adf4403bc08ecd9"),
+    ("k39_certificate.json", "dim39-qr-three-coordinate-heads/certificate.json",
+     "38ca2a117f325bc919bd8f9649ae664b87c4d1ff81b6bf9fbbf1b458b17835a8"),
+    ("k39_supports_3424.txt.gz", "dim39-qr-three-coordinate-heads/supports_3424.txt.gz",
+     "105c2bc72b3e30129841fdc59ae2c2000d3841cae63d83f34fb8c2cdcbc3bcce"),
+]
+
 
 def sha256(path):
     h = hashlib.sha256()
@@ -60,7 +122,7 @@ def sha256(path):
     return h.hexdigest()
 
 
-def main(out):
+def main(out, with3439=False):
     os.makedirs(out, exist_ok=True)
     for n, d, rel, digest in FILES:
         path = os.path.join(out, f"krav{d}_{n}.npz")
@@ -70,7 +132,7 @@ def main(out):
         if got != digest:
             raise SystemExit(f"{rel}: sha256 {got} != pinned {digest}")
         print(f"{d} {n} sha256 OK -> {path}")
-    for name, rel, digest in EXTRA:
+    for name, rel, digest in EXTRA + (EXTRA_34_39 if with3439 else []):
         path = os.path.join(out, name)
         if not os.path.exists(path) or sha256(path) != digest:
             urllib.request.urlretrieve(RAW + rel, path)
@@ -80,4 +142,4 @@ def main(out):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1], "--with-34-39" in sys.argv)

@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # Reproduce the exact pairwise checks of the 2026 kissing-number lower bounds
 # (Yang et al., arXiv:2609.35051v1 "Qiushi Engine"; Q. Lin, arXiv:2611.03682v1;
-# A. Kravatskiy's repository records in 25-33D; 11D 604, arXiv:2606.10402v2;
+# A. Kravatskiy's repository records in 25-39D; 11D 604, arXiv:2606.10402v2;
 # 12D 841, arXiv:2606.18984v2). See problems/kissing-numbers.md.
 #
 # Needs: gcc with OpenMP, python3 with numpy, network access to github.com
 # release assets, raw.githubusercontent.com and zenodo.org. About 1.5 h wall
-# on 4 cores; peak RAM < 1 GB (25D/27D field checks: < 2 GB).
+# on 4 cores, plus about 1.5-2 h for section 7c (Kravatskiy 34-39D); peak RAM
+# < 1 GB (25D/27D field checks: < 2 GB; 39D build and class mode: < 3 GB).
 # Usage: reproduce.sh [WORKDIR] [--with-43]   (downloads and logs go to WORKDIR)
 # --with-43 adds the Qiushi 43D export (2,553,792 points; about 75 min more).
 set -euo pipefail
@@ -142,6 +143,72 @@ if "$CHK" "$work/neg/k32_dup.i8" 32 > "$work/neg/k32_dup.txt"; then echo "NEGATI
 for d in 32 33; do
   python3 -I "$here/compare_rows.py" "$K/krav$d.i8" "LIN$d:$L32:$L33" "$d" --mirror-lin-octads
 done
+
+# 7c. Kravatskiy 34-39D, rebuilt from their edit chains with our own code; integer
+#     rows by kiss_check.c and kiss_check_np.py, 34D heads and 37D sqrt2 rows by
+#     kiss_check_field.py, 36D (K12^3, lattice basis) by the partner (Gram) mode,
+#     39D by the class mode (class_table.py)
+python3 -I "$here/fetch_kravatskiy.py" "$K" --with-34-39
+python3 -I "$here/build_kravatskiy34.py" "$K" "$K/krav34"      # asserts the final sha256 4b605a02...
+python3 -I "$here/build_kravatskiy35.py" "$K" "$K/krav35.i8"
+python3 -I "$here/build_kravatskiy36.py" "$K" "$K/krav36"
+python3 -I "$here/build_kravatskiy37.py" "$K" "$K/krav37"
+python3 -I "$here/build_kravatskiy38.py" "$K" "$K/krav38.i8"
+python3 -I "$here/build_kravatskiy39.py" "$K" "$K/krav39"      # about 3 min
+python3 -I "$here/class_table.py" "$K/krav39_classes.json" "$K/krav39_table.txt"
+for d in 34 35 37 38; do
+  "$CHK" "$K/krav$d.i8" "$d" | tee "$K/check$d.txt" | grep -E "^rows|^pairs|class_pair|contacts|RESULT"
+  python3 "$here/kiss_check_np.py" "$K/krav$d.i8" "$d" | grep -E "contacts|RESULT"
+done
+"$CHK" "$K/krav36_x.i8" 36 --partner "$K/krav36_xg.i8" | tee "$K/check36.txt" | grep -E "^pairs|class_pair|contacts|RESULT"
+python3 "$here/kiss_check_np.py" "$K/krav36_x.i8" 36 --partner "$K/krav36_xg.i8" | grep -E "contacts|RESULT"
+"$CHK" "$K/krav39_body.i8" 36 "$K/krav39_labels.u8" "$K/krav39_table.txt" | tee "$K/check39.txt" \
+  | grep -E "^rows|^pairs|contacts|max_excess|RESULT"
+python3 "$here/kiss_check_np.py" "$K/krav39_body.i8" 36 --classes "$K/krav39_labels.u8" "$K/krav39_table.txt" \
+  | grep -E "contacts|max_excess|RESULT"
+"$CHK" "$K/krav39_sparse.i8" 39 | grep -E "^pairs|contacts|RESULT"   # sparse rows alone, norm mode
+for m in float interval; do
+  python3 "$here/kiss_check_field.py" "$K/krav34.i8" "$K/krav34_field.json" --mode $m | grep -E "pairs_checked|contacts|RESULT"
+  python3 "$here/kiss_check_field.py" "$K/krav37.i8" "$K/krav37_field.json" --mode $m | grep -E "pairs_checked|contacts|RESULT"
+done
+# negative controls (wrong parent, wrong chain stage or order, wrong layout): each must FAIL
+# (KISS_STOP_AT_FIRST=1: the C checker stops at the first violation)
+export KISS_STOP_AT_FIRST=1
+neg() {  # neg NAME FILE d [field.json]
+  if "$CHK" "$2" "$3" > "$work/neg/$1.txt"; then
+    if [ -z "${4:-}" ] || python3 "$here/kiss_check_field.py" "$2" "$4" --mode float >> "$work/neg/$1.txt"; then
+      echo "NEGATIVE CONTROL $1 WAS ACCEPTED"; exit 1
+    fi
+  fi
+  grep -E "^violations|RESULT" "$work/neg/$1.txt" | head -2
+}
+for v in unswitched oldroots; do
+  python3 -I "$here/build_kravatskiy34.py" "$K" "$work/neg/k34_$v" --variant $v
+  neg "k34_$v" "$work/neg/k34_$v.i8" 34 "$work/neg/k34_${v}_field.json"
+done
+for v in unswitched oldparity; do
+  python3 -I "$here/build_kravatskiy35.py" "$K" "$work/neg/k35_$v.i8" --variant $v; neg "k35_$v" "$work/neg/k35_$v.i8" 35
+done
+for v in keepflat geometry; do
+  python3 -I "$here/build_kravatskiy37.py" "$K" "$work/neg/k37_$v" --variant $v; neg "k37_$v" "$work/neg/k37_$v.i8" 37
+done
+for v in unswitched halfswitch; do
+  python3 -I "$here/build_kravatskiy38.py" "$K" "$work/neg/k38_$v.i8" --variant $v; neg "k38_$v" "$work/neg/k38_$v.i8" 38
+done
+for v in noflip identity unswitched; do
+  python3 -I "$here/build_kravatskiy39.py" "$K" "$work/neg/k39_$v" --variant $v
+  python3 -I "$here/class_table.py" "$work/neg/k39_${v}_classes.json" "$work/neg/k39_$v.tab"
+  if "$CHK" "$work/neg/k39_${v}_body.i8" 36 "$work/neg/k39_${v}_labels.u8" "$work/neg/k39_$v.tab" > "$work/neg/k39_$v.txt"; then
+    echo "NEGATIVE CONTROL k39_$v WAS ACCEPTED"; exit 1
+  fi
+done
+for v in noremove stale phase; do
+  python3 -I "$here/build_kravatskiy36.py" "$K" "$work/neg/k36_$v" --variant $v
+  if "$CHK" "$work/neg/k36_${v}_x.i8" 36 --partner "$work/neg/k36_${v}_xg.i8" > "$work/neg/k36_$v.txt"; then
+    echo "NEGATIVE CONTROL k36_$v WAS ACCEPTED"; exit 1
+  fi
+done
+unset KISS_STOP_AT_FIRST
 
 # 8. 11D: 604 points from the EinsteinArena appendix (arXiv:2606.10402v2), our build
 python3 -I "$here/build_einstein11.py" "$work/small/e11"
