@@ -1,0 +1,9 @@
+k=7 c=3: 401 vectors, translation and reflection identities hold
+min over these of max_r len = 1/96 = 1/96
+compared with /tmp/claude-0/-home-user-Math-Research/be776001-e76c-5b41-aa84-912e1d1444ca/scratchpad/lr-k17struct/sgs eval: 401 vectors, 0 mismatches
+k=17 c=2: 202 vectors, translation and reflection identities hold
+min over these of max_r len = 4/1683 = 1/1683/4
+compared with /tmp/claude-0/-home-user-Math-Research/be776001-e76c-5b41-aa84-912e1d1444ca/scratchpad/lr-k17struct/sgs eval: 202 vectors, 0 mismatches
+k=17 c=3: 202 vectors, translation and reflection identities hold
+min over these of max_r len = 1/352 = 1/352
+compared with /tmp/claude-0/-home-user-Math-Research/be776001-e76c-5b41-aa84-912e1d1444ca/scratchpad/lr-k17struct/sgs eval: 202 vectors, 0 mismatches

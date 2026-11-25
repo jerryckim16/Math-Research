@@ -140,3 +140,127 @@ def test_relrank_n17_target():
     assert abs(float(res["new target"]) - 659.6653528463155) < 1e-9
     # without the exclusions, rank 2 blocks any gain (negative control)
     assert R.final(17)["J_min"] == 1
+
+
+# ---------------------------------------------------------------- rank-4 classification (rank4/)
+import json  # noqa: E402
+import subprocess  # noqa: E402
+import pytest  # noqa: E402
+
+RANK4 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rank4")
+sys.path.insert(0, RANK4)
+
+
+@pytest.fixture(scope="module")
+def sect_bins(tmp_path_factory):
+    d = tmp_path_factory.mktemp("sect")
+    bins = {}
+    for r in (3, 4):
+        b = str(d / f"sect{r}")
+        subprocess.run(["gcc", "-O2", f"-DR={r}", "-o", b, os.path.join(RANK4, "sect.c")], check=True)
+        bins[r] = b
+    return bins
+
+
+def _run(binary, n, prof, rej=2, env=None, delta=None):
+    import relrank_n as RN
+    lo, hi = RN.delta_bounds(n) if delta is None else delta
+    QD = 10 ** 6
+    assert (lo * QD).denominator == 1 and (hi * QD).denominator == 1
+    e = dict(os.environ)
+    e.update(env or {})
+    out = subprocess.run([binary, str(n), str((lo * QD).numerator), str((hi * QD).numerator), str(QD), str(rej)]
+                         + [str(x) for x in prof], capture_output=True, text=True, check=True, env=e).stdout
+    return out
+
+
+def _parse_text(text, tmp):
+    import classes as CL
+    p = tmp / "o.txt"
+    p.write_text(text)
+    return CL.parse(str(p))
+
+
+def test_sect_rank3_reproduces_allikvere_table(sect_bins):
+    # n = 15, rank 3, no greedy filter, no pruning: counts and exact max S_O of his table
+    table = {(3, 3, 3): (354, Fr(5, 8), Fr(14, 8)), (3, 3, 5): (545, Fr(9, 16), Fr(29, 16)),
+             (3, 3, 7): (561, Fr(33, 64), Fr(103, 64)), (3, 3, 9): (561, Fr(37, 64), Fr(81, 64)),
+             (3, 3, 11): (554, Fr(513, 1024), Fr(1547, 1024)), (3, 3, 13): (449, Fr(2049, 4096), Fr(6157, 4096)),
+             (3, 3, 15): (112, Fr(8193, 16384), Fr(24591, 16384)), (3, 5, 5): (1353, Fr(1, 2), Fr(13, 8)),
+             (5, 5, 5): (4378, Fr(7, 16), Fr(27, 16))}
+    for prof, (cnt, al, be) in table.items():
+        out = _run(sect_bins[3], 15, prof, rej=1, env={"NOGREEDY": "1", "NOPRUNE": "1"})
+        w = int(out.split("leaves_weighted=")[1].split()[0])
+        A = int(out.split("MAXS A=")[1].split()[0])
+        B = int(out.split("MAXS A=")[1].split("B=")[1].split()[0])
+        assert w == cnt
+        assert (Fr(A, 2 ** 14), Fr(B, 2 ** 14)) == (al, be)
+        assert "admitted=0 " in out          # rank 3 excluded
+
+
+def test_sect_n15_high_gram_classes_match_allikvere(sect_bins, tmp_path):
+    import classes as CL
+    import crosscheck as CC
+    data = json.load(open(os.path.join(RANK4, "data", "allikvere_n15_rank4_high_gram_classes.json")))
+    ours = []
+    for prof in [(3, 3, 3, 7), (3, 3, 5, 5)]:
+        types, recs, p = _parse_text(_run(sect_bins[4], 15, prof), tmp_path)
+        for rec in recs:
+            CC.check(types, rec, p, 15)
+        for key, rs in CL.classes(types, [r for r in recs if r["g"] >= 168], p).items():
+            ours.append((p, rs[0]["g"], key))
+    index = {t: k for k, t in enumerate(types)}
+    his = []
+    for c in data["classes"]:
+        prof = tuple(c["profile"])
+        m = CL.matrix_to_counts(types, list(zip(*c["columns"])))
+        key = min(CL.act(types, index, m, pp, s) for pp, s in CL.group(prof))
+        his.append((prof, c["gram"], key))
+    assert len(his) == 16
+    assert sorted(ours) == sorted(his)
+
+
+@pytest.fixture(scope="module")
+def census17(sect_bins, tmp_path_factory):
+    import relrank_n as RN
+    d = tmp_path_factory.mktemp("c17")
+    for prof in RN.survivors(17, 4, RN.delta_bounds(17)):
+        (d / f"n17_r4_{'_'.join(map(str, prof))}.txt").write_text(_run(sect_bins[4], 17, prof))
+    return str(d)
+
+
+def test_rank4_n17_classification_and_target(census17):
+    import rank4_bound as RB
+    import classes as CL
+    import crosscheck as CC
+    res = RB.classified(17, census17)
+    assert res["files"] == 49 and res["admitted"] == 34
+    assert res["gmax"] == {6: 133}                 # every admitted section has support 6, g <= 133
+    for f in os.listdir(census17):
+        types, recs, p = CL.parse(os.path.join(census17, f))
+        for rec in recs:
+            CC.check(types, rec, p, 17)            # independent Fraction re-check of every admitted record
+    assert res["argmin"] == 5 and res["J(r)"][4] > res["J(r)"][5]
+    assert abs(float(res["J4_classified"]) - 16.385347558343323) < 1e-12
+    assert abs(float(res["target"]) - 647.5346823292391) < 1e-9
+
+
+def test_rank4_negative_controls(sect_bins, census17, tmp_path, monkeypatch):
+    import rank4_bound as RB
+    import classes as CL
+    import crosscheck as CC
+    # (1) the coarse g bound at a = 6 (625) must give back the coarse J_4 = 3.4868
+    monkeypatch.setattr(RB, "census_gmax", lambda n, outdir, r=4: ({6: 625}, 1, 49))
+    res = RB.classified(17, census17)
+    assert abs(float(res["J4_classified"]) - 3.486802) < 1e-5 and res["argmin"] == 4
+    monkeypatch.undo()
+    # (2) the Riesz test is load-bearing: with the smaller n = 15 delta the
+    #     (3,3,5,5) census at n = 17 admits sections with g > 133
+    import relrank_n as RN
+    types, recs, p = _parse_text(_run(sect_bins[4], 17, (3, 3, 5, 5), delta=RN.delta_bounds(15)), tmp_path)
+    assert max(r["g"] for r in recs) > 133
+    # (3) a tampered record is rejected by the independent checker
+    types, recs, p = CL.parse(os.path.join(census17, "n17_r4_3_3_5_5.txt"))
+    bad = dict(recs[0], g=recs[0]["g"] + 1)
+    with pytest.raises(AssertionError):
+        CC.check(types, bad, p, 17)
