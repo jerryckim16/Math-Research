@@ -1,0 +1,13 @@
+# Step 14: Knuth estimates (heuristic) of the k = 14 level-one tree, covergen.c LRC_PRUNE=1 LRC_IRR=2 LRC_ORDER=1 (probe applies the q-cut, not the locked-time rule), 5000 probes, seed 1.
+# Calibration: at p = 251 this estimator gave 1.34e10 (20000 probes) vs the exact LRC_PRUNE=2 run's 1.3515e10.
+# Effective wall rate on 4 cores (16 shards): about 6.9e6 nodes/s at 251, 5.6e6 at 269.
+p=257 knuth_estimate_nodes 2.928277e+10 stderr 1.253e+09 nodes_per_sec 2.200e+06 
+p=263 knuth_estimate_nodes 1.953322e+10 stderr 1.136e+09 nodes_per_sec 2.442e+06 
+p=269 knuth_estimate_nodes 1.097570e+10 stderr 3.828e+08 nodes_per_sec 2.492e+06 
+p=271 knuth_estimate_nodes 5.687205e+10 stderr 5.282e+09 nodes_per_sec 2.332e+06 
+p=277 knuth_estimate_nodes 3.569074e+10 stderr 1.504e+09 nodes_per_sec 1.935e+06 
+p=281 knuth_estimate_nodes 2.576165e+10 stderr 1.203e+09 nodes_per_sec 2.160e+06 
+p=283 knuth_estimate_nodes 2.276009e+10 stderr 1.756e+09 nodes_per_sec 1.958e+06 
+p=293 knuth_estimate_nodes 3.537944e+10 stderr 1.511e+09 nodes_per_sec 2.181e+06 
+p=307 knuth_estimate_nodes 6.782262e+10 stderr 3.162e+09 nodes_per_sec 1.986e+06 
+p=311 knuth_estimate_nodes 4.701073e+10 stderr 2.199e+09 nodes_per_sec 2.186e+06 
