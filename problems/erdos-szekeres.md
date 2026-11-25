@@ -170,13 +170,13 @@ convex position iff all of its 4-subsets are.
   Felsner–Weil clauses and the same symmetry breaking $X(0,b,c)$ as
   `encode.py`. The forbidden pattern uses auxiliary variables instead of one
   clause per $k$-subset and split:
-  - $U[l](a,c,d)$ means "there is an $l$-cup with first point $a$ and last two
-    points $c$, $d$" ($3 \le l \le k$). $C[l](a,c,d)$ is the same for caps.
-  - $\mathrm{EU}[l](a,d)$ and $\mathrm{EC}[l](a,d)$ mean "there is an $l$-cup ($l$-cap) from $a$ to $d$".
-  - Clauses: $X(a,c,d) \to U[3](a,c,d)$; $U[l](a,b,c) \wedge X(b,c,d) \to U[l+1](a,c,d)$;
-    $U[l](a,c,d) \to \mathrm{EU}[l](a,d)$; the same for caps with $\neg X$.
+  - $U[l]{}(a,c,d)$ means "there is an $l$-cup with first point $a$ and last two
+    points $c$, $d$" ($3 \le l \le k$). $C[l]{}(a,c,d)$ is the same for caps.
+  - $\mathrm{EU}[l]{}(a,d)$ and $\mathrm{EC}[l]{}(a,d)$ mean "there is an $l$-cup ($l$-cap) from $a$ to $d$".
+  - Clauses: $X(a,c,d) \to U[3]{}(a,c,d)$; $U[l]{}(a,b,c) \wedge X(b,c,d) \to U[l+1]{}(a,c,d)$;
+    $U[l]{}(a,c,d) \to \mathrm{EU}[l]{}(a,d)$; the same for caps with $\neg X$.
   - Prohibitions: $\neg U[k]$, $\neg C[k]$ (no $k$-cup or $k$-cap), and
-    $\neg\mathrm{EU}[l](a,d) \vee \neg\mathrm{EC}[k+2-l](a,d)$ for $3 \le l \le k-1$.
+    $\neg\mathrm{EU}[l]{}(a,d) \vee \neg\mathrm{EC}[k+2-l]{}(a,d)$ for $3 \le l \le k-1$.
   - Size is $O(N^{4}k)$. For $N = 17$, $k = 6$ it is 6,936 variables and 40,648
     clauses (old encoding: 680 variables, 217,176 clauses).
 - **Soundness** (full argument in the docstring). Set every auxiliary

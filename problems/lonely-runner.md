@@ -768,14 +768,14 @@ Scope: J. Allikvere's computer-assisted proofs of $\mathrm{LRC}(13)$ and $\mathr
 - **Stored level-one rows: all 71 gates, every row.** Every stored irredundant row is witness-free at level 1, i.e. lies in $I(14,p,1)$. Every stored km1 multiset is a cover. That is 495,538,971 stored irredundant rows in total.
 - **Binary cascade, levels 2–32.** In full at all 52 "$J(14,p) = \emptyset$" gates and at the near-gcd gates $p = 179$, 223 and 233 (step 8). At the other 16 near-gcd gates, on seeded uniform samples of stored rows (compared both ways) and of extension-survivor lines: 3,000 at $p = 89, 163, 173$; 500 at the 13 large archives. There were 0 mismatches.
 - **Level-15 kill records.** In full at the 52 "J empty" gates (one persistent orbit, $(1,\ldots,14)$, each) and at $p = 179$ (all 8,011 orbits) and $p = 233$ (all 13,457 orbits). At the other near-gcd gates, on seeded samples of the same sizes. Every record checked is reproduced exactly: level-3/5 witness-free lifts, CRT candidates, level-15 grid, gcd clause, and the few-exception shift Lemma 3.12. Improper after Lemma 3.12 is 0 everywhere, and improper after the gcd clause is 0 at the "J empty" gates. At the stream-checked gates, the number of kill files equals the certificate's persistent-orbit count.
-- **Level-one completeness at 6 gates ($p = 89, 239, 251, 263, 269, 283$).** At $p = 89$ (near-gcd), $p = 239, 251, 263, 269$ and 283 ("J empty"; 263, 269 and 283 in step 14), an independent minimal-cover enumeration reproduces exactly the certificate's set of level-one orbits: 687,016, 1,441,284, 2,404,346, 849,135 and 197,957 orbits. The runs at 89 and 239 are unpruned; the run at 251 uses our implementation of the private-time pruning (Approach 8).
+- **Level-one completeness at 6 gates ($p = 89, 239, 251, 263, 269, 283$).** At $p = 89$ (near-gcd), $p = 239, 251, 263, 269$ and 283 ("J empty"; 263, 269 and 283 in step 14), an independent minimal-cover enumeration reproduces exactly the certificate's set of level-one orbits: 687,016, 1,441,284, 2,404,346, 849,135, 197,957 and 480,781 orbits. The runs at 89 and 239 are unpruned; the run at 251 uses our implementation of the private-time pruning (Approach 8).
 - **Constants.** The flag-bound constants $K_{14}$, $A_{14}$, the log bound 414.779365 and the target 401.984506 were re-derived exactly. The 71 gates' $\sum \ln p = 408.8233$ exceeds the target, recomputed from the gate list.
 - **$\mathrm{LRC}(13)$.** At all 111 gate primes, the terminal level-14 kill of both persistent orbits was recomputed and matches, and the kill files' SHA-256 match the gate manifests.
 - **No discrepancy with any certificate was found.**
 
 **What remains unverified here:**
 
-- **Level-one completeness at the other 65 $\mathrm{LRC}(14)$ gates.** That every orbit of $I(14,p,1)$ is represented among the stored rows is checked only at 6 gates ($p = 89, 239, 251, 263, 269, 283$). At all other gates it rests on Allikvere's generator and its completeness proposition (his Prop. 4.2 with the private-time Lemma 4.1). We implemented Lemma 4.1 (Approach 8) and have run it to completeness at $p = 251$, 263 and 269 (step 14).
+- **Level-one completeness at the other 65 $\mathrm{LRC}(14)$ gates.** That every orbit of $I(14,p,1)$ is represented among the stored rows is checked only at 6 gates ($p = 89, 239, 251, 263, 269, 283$). At all other gates it rests on Allikvere's generator and its completeness proposition (his Prop. 4.2 with the private-time Lemma 4.1). We implemented Lemma 4.1 (Approach 8) and have run it to completeness at $p = 251$, 263, 269 and 283 (step 14).
 - **The sampled parts at the 19 near-gcd gates.** The unsampled cascade rows and kill records there were not re-computed.
 - **The analytic inputs.** The finite-checking bound (Malikiosis–Santos–Schymura, via Rosenfeld's Cor. 3) was not re-proved. Allikvere's flag bound (Thm 3.8) is now independently verified: the shape Lemma 3.7 is re-checked for $n = 13$ and 14 and extended to $n = 15$ (Approach 10), and its general-$n$ Lemmas 3.1–3.6 and assembly are checked in Approach 11, resting only on standard facts (KZ bases, Minkowski–Weyl, Schur-concavity). Not re-proved, beyond reading their proofs, are the prime-divisibility Lemma 2.2(ii) and the few-exception shift Lemma 3.12. The lower cases $\mathrm{LRC}(m)$, $m \le 12$, are taken from the literature.
 - **$\mathrm{LRC}(13)$.** The archive does not contain the $k = 13$ level-one rows, so the rows, cascade and completeness cannot be re-checked from it.
@@ -811,6 +811,34 @@ Scope: J. Allikvere's computer-assisted proofs of $\mathrm{LRC}(13)$ and $\mathr
 - the correctness of our code.
 
 Our code is tested against brute force, but not formally verified. These reproduce *known* cases only. Nothing new is claimed.
+
+## $\mathrm{LRC}(17)$ (18 runners): progress toward the first unclaimed case
+
+Started 2026-11-25. This is the current focus. The results below were reviewed by the coordinator, with key steps re-derived and the checks re-run. Details are in the linked notes. Pages under `notes/lonely-runner/` that are marked **Draft** are not yet reviewed.
+
+**Gate target.** Write $\ln(v_1\cdots v_{17}) < \text{bound}$. Any counterexample with 17 speeds needs gate primes with $\sum \ln p$ above the target, which is the bound minus $\ln \operatorname{lcm}(2,\ldots,18) = \ln 12252240$.
+
+| target | how | label | source |
+| --- | --- | --- | --- |
+| $670.28173$ | flag bound at $n = 17$; shape lemma $R_{17} < 951/2000$ | proved, given $\mathrm{LRC}(m)$ for $m \le 16$; exact arithmetic | `notes/lonely-runner/bound.md`, `bound/flag_n.py` |
+| $667.92857$ | plus Lemma H (hyperplane prefix) and Lemma M | proved, same assumptions | `bound.md`, `bound/hyperplane.py` |
+| $659.66535$ | coarse relation-rank bound; ranks 1–3 excluded by our own enumeration | proved, given also Allikvere's general lemmas as re-derived and **checked by reading** | `bound.md`, `bound/relrank_n.py`, `bound/rank_exclusion.py` |
+| $647.534682$ | complete rank-4 census at $n = 17$: 34 admitted orbit representatives, $J_4 = 16.385$, so rank 5 binds ($J_5 = 14.529$) | proved, same assumptions; the census is complete and exact (byte-identical with pruning off; DP leaf count matches; independent Fraction re-check). At $n = 15$ the same code reproduces Allikvere's rank-3 and rank-4 tables. | `notes/lonely-runner/bound-rank4.md`, `bound/rank4/` |
+
+`bound/test_bound.py` has 18 tests, including negative controls; all pass, and they rerun the full census. These targets assume $\mathrm{LRC}(15)$ and $\mathrm{LRC}(16)$, which are claimed (Zenodo) but **unrefereed**.
+
+**Structural lemmas** (`notes/lonely-runner/structure.md`):
+
+- **Lemma S (proved).** For a prime $k+2 \le p \le 2k+1$, a tuple is improper at level one iff its $\pm$ classes cover all $(p-1)/2$ classes. This gives tiny level-one sets at the smallest primes; for $k = 17$ the orbit counts are 1430, 728, 40, 8 at $p = 19, 23, 29, 31$. Allikvere has the same lemma for $k = 15$; ours was derived before we read it.
+- **Lemma T1 (proved).** For $p > k+1$, the class of $(1,\ldots,k)$ is improper at level $l$ iff $(k+1) \nmid l$. So $k = 17$ gates need a level divisible by $18$, i.e. lifts by 3 as well as 2.
+- **$J(15,31) = \emptyset$** (certificate-checked, two independent implementations, re-run by the coordinator). This is an independent re-derivation of one of Allikvere's 16-runner preliminary primes, not a new gate.
+
+**Cost (heuristic; draft page `notes/lonely-runner/gates.md`).**
+
+- At target $659.67$, "J empty" gates alone need about 103 primes $313$–$1021$, with level one costing about $7.6\cdot 10^{7}$ CPU-h. Port Toner's orderly-root rule and this falls by a further factor of about 5–6.
+- If the small and medium primes could also be closed, the estimate is about $4.6\cdot 10^{6}$ CPU-h.
+- **Either way this is far beyond a single 4-core machine.**
+- No prime below 258 can be a J-empty $k = 17$ gate. This follows from the exact $\tau_{17}$ table and Lemma N (`small-primes.md`, draft).
 
 ## Next steps: plan for LRC(15) (16 runners)
 

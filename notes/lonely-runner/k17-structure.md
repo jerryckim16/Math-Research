@@ -1,5 +1,7 @@
 # LRC(17) with cheap primes: tight-orbit rigidity and the Lemma S gates
 
+> **Draft, work in progress.** This page is written by a research agent and has not yet been reviewed by the coordinator. Treat its claims as unreviewed until this notice is removed.
+
 Working notes of the "k17-structure" track (2026-11-25). They continue
 `notes/lonely-runner/structure.md` (Lemma S, Lemma NG, Lemma T1, Lemma R,
 Corollary R), whose notation is used throughout:

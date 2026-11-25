@@ -704,7 +704,6 @@ Reproduce: `python3 estimate_tree.py data/m9_probe_n4.jsonl
        calls). At $m = 8$: 4.6 s, 184 allocations.
      - Branch (0,1,6): **timeout at 600 s** (753 calls). At $m = 8$: 8 s,
        254 allocations.
-
      So per region $m = 9$ costs **at least 30–$75\times$** $m = 8$. Even the
      easy-at-$m = 8$ types (two agents share a top good; distinct tops
      including good 0) no longer close at branch or cube level within

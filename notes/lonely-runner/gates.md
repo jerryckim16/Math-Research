@@ -1,5 +1,7 @@
 # Gate selection for LRC(15) and LRC(17): admissibility ($\tau$), cost per prime, pilot
 
+> **Draft, work in progress.** This page is written by a research agent and has not yet been reviewed by the coordinator. Treat its claims as unreviewed until this notice is removed.
+
 Track notes (gates agent, 2026-11-25). Companion to `problems/lonely-runner.md`
 (Approaches 7–13 and "Next steps: plan for LRC(15)"). Code:
 `computations/lonely-runner/k15/` and `computations/lonely-runner/k17/`. The

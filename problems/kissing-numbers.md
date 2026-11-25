@@ -367,7 +367,6 @@ Costs (wall time on 4 cores, `kiss_check.c`):
   - **Caveat on populations.** For all three packages the author's populations are not full enumerations:
     - 44D's come from spherical-design moment identities (its README, "Why the populations are exact").
     - The 45D and 46D ledger (`bounds.json`) says "inherited tables; no fresh enumeration of the latest body shells".
-
     So a rebuild with our enumerator would also be the first full count of every family.
   - **44D (4,940,961), a different format: `build_kravatskiy4043.py` cannot handle it.**
     - *Data.* `ambient.npz` (sha256 cf9f1a47…31ff) and `families.npz` (b4b6cadb…f8c3).

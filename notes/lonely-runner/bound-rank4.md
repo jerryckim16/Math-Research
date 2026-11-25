@@ -1,5 +1,6 @@
 # Lonely runner: rank-4 complete-section classification at $n=17$ (bound track)
 
+
 Scope: the relation-rank bound of `bound.md` §5 for LRC(17) (18 runners), with the coarse rank-4 determinant bound replaced by a complete classification of the admissible rank-4 odd relation spaces. The method follows Allikvere, "Sixteen lonely runners" (Zenodo 10.5281/zenodo.23304361), §"rank-four classification" and App. B. Everything here is our own code. None of his code was run; his `proof_sources.zip` was read as data only.
 
 Code is in `computations/lonely-runner/bound/rank4/`, and the tests are in `computations/lonely-runner/bound/test_bound.py` (the `rank4` block).
@@ -95,7 +96,11 @@ Admitted records (`ADM` lines) carry $a$, $g$, $\iota$, the raw determinant, $(A
 - Mapping his 16 matrices into our canonical class keys gives *the same 16 classes*. Test: `test_sect_n15_high_gram_classes_match_allikvere`.
 - His "72" counts records after a partial quotient in his census, so it is not comparable to our raw counts: we have 336 multiplicity vectors with $g\ge168$.
 
-[n=15 full census: see §5.]
+**Rank 4, $n=15$: support seven.** The Grams $>43$ of our admitted support-7 sections are exactly the values in his support-seven table:
+$$\{52,69,76,80,82,84,108,111,112,118,126,135,136,148,166,171,186,187,189,201,216\}.$$
+His table comes from a separate two-triple reduction. The value $148$ occurs in two classes, matching his "two spaces". Test: `test_sect_n15_support7_grams_match_allikvere_table`.
+
+The full $n=15$ census is in §5.
 
 ## 4. Result at $n=17$
 
@@ -113,7 +118,10 @@ A representative of the worst class ($g=133$) has row-sign orbit size 8:
 $$H=\begin{pmatrix}0&0&0&1&1&1\\1&0&0&0&1&-1\\-1&0&1&-1&1&-1\\0&1&-1&1&-1&-1\end{pmatrix}.$$
 Its section has line supports $3,3,5,5,5$. Then $2^{16}S_O=45056\,\delta+159744$, so $S_O-\delta=0.0682$ at $\delta_{\rm lo}$, a narrow pass.
 
-**Pruning was also checked.** The same census rerun with pruning switched off (`NOPRUNE=1`) gives the identical admitted set. [confirmed — see §5]
+**Completeness checks at $n=17$.**
+- *Pruning.* The same census rerun with pruning switched off (`NOPRUNE=1`) gives byte-identical admitted records for all 49 profiles.
+- *Domain.* The no-pruning run's orbit-weighted leaf count is $135{,}937{,}974$. An independent exact DP count of all multiplicity vectors over the 49 profiles gives the same $135{,}937{,}974$. So the symmetry quotient covers the domain exactly.
+- *Python enumeration.* The independent Python enumeration of $(3,3,3,3)$ agrees, as in §2.
 
 **Bound** (`rank4/rank4_bound.py`, exact). The interface is unchanged from `relrank_n.py`. It uses
 - $C_4\le2.37103$, from weighted AM–GM with interval arithmetic;
@@ -137,9 +145,20 @@ The heuristic estimate in `bound.md` §5 was "rank 4 excluded gives about $647.5
 2. With the smaller $n=15$ value of $\delta$, the $(3,3,5,5)$ census at $n=17$ admits sections with $g>133$. So the Riesz test is load-bearing.
 3. A record with $g$ altered by $1$ is rejected by the independent checker.
 
-## 5. Rank-4 census at $n=15$, and the pruning check
+## 5. Full rank-4 census at $n=15$ (validation)
 
-[to be filled]
+The census covers all 45 profiles, in about 3 min. Every admitted record passes the independent checker.
+
+- **Size.** 326 orbit representatives (2,403 multiplicity vectors) in 71 row-sign/permutation classes. Anything is admitted only in the profiles $(3,3,3,3)$, $(3,3,3,5)$, $(3,3,3,7)$ and $(3,3,5,5)$.
+- **$g_{\max}$ by support.** $a=5$: $100$; $a=6$: $225$; $a=7$: $216$; $a=8$: $225$; $a=9$: $135$. Supports $a\ge10$ admit nothing.
+- **His claims, confirmed.** We confirm Allikvere's
+  - $g\le225$;
+  - the sections with $g\ge168$ have support at most $8$;
+  - $a\ge9\Rightarrow g\le167$ (ours gives $\le135$).
+- **Profile domain.** His high-Gram census was restricted to the 43 profiles with $\prod s_j\ge168$. Ours covers all 45.
+- **Bound.** In our interface, which has no metric or quarter-point refinements, the classified $n=15$ factor is $J_4=10.276$, worst at $a=6$ with $g=225$. Then $\min_rJ(r)=J_4$ and the target is $465.765$.
+  - This compares with $473.427$ (coarse) and Allikvere's $445.596$.
+  - His additional gain is the metric work of `proof_rank4_geometry.tex`, which we did not redo.
 
 ## 6. What is still open, and the next levers
 
@@ -153,3 +172,20 @@ The heuristic estimate in `bound.md` §5 was "rank 4 excluded gives about $647.5
   - The global candidate set built from all $5$-subsets ($2\cdot10^8$) is too large to build naively. It should instead be generated per leaf, or from bases inside the present set.
   - The sign quotient is $16$.
 - The classes were not quotiented beyond row signs and row permutations, which is harmless for the bound.
+
+## 7. Reproduction, and routes that did not work
+
+**Reproduction.** Run these from `computations/lonely-runner/bound/rank4/`:
+
+- `gcc -O2 -DR=4 -o sect4 sect.c`
+- `python3 run_census.py 17 4 OUT ./sect4 2`: one process per profile, under `nice`. All profiles together take about 3 min.
+- `python3 rank4_bound.py 17 OUT`
+- `python3 -m pytest test_bound.py` from `bound/`: 18 tests, about 5 min. The tests compile `sect.c` and rerun the full $n=17$ census.
+
+**Implementation notes (kept so they are not retried).**
+
+- *Python is too slow for the full census.* The exact-`Fraction` enumerator `pyenum.py` takes 257 s for the 34,702 vectors of $(3,3,3,3)$ alone. It is used only as a cross-check.
+- *A naive C version was also slow.* The first C version took about $20\,\mu$s per leaf: it had no symmetry quotient and kept a per-node candidate list. The cost was in filtering the large candidate lists near the root. Three changes did not help: avoiding `malloc`, lazily stored supports, and precomputed feasibility tables.
+- *What did help.* The row-sign quotient gave a factor of about $5$ in time.
+- *The Riesz upper-bound prune is weak near the root.* Most of the $68260$ global candidates are still alive there. It cuts subtrees only once fewer than about $50$ candidates remain. It is still the main pruning for the large profiles, for example $5.4\cdot10^7$ cuts on $(5,7,7,7)$ at $n=15$.
+- *Rank 5 needs a different candidate generator.* Building the global candidate set from all $5$-subsets of the $121$ types means $2\cdot10^8$ subsets times $3^5$, which is too many. A per-leaf Cramer section, as in `pyenum.py`, together with the 16-element sign quotient is the obvious next design.

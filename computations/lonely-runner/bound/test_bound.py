@@ -264,3 +264,13 @@ def test_rank4_negative_controls(sect_bins, census17, tmp_path, monkeypatch):
     bad = dict(recs[0], g=recs[0]["g"] + 1)
     with pytest.raises(AssertionError):
         CC.check(types, bad, p, 17)
+
+
+def test_sect_n15_support7_grams_match_allikvere_table(sect_bins, tmp_path):
+    # his support-seven table (proof_rank4.tex): admitted Grams above 43 at a = 7
+    his = {52, 69, 76, 82, 84, 80, 108, 111, 112, 118, 126, 135, 136, 148, 166, 201, 216, 171, 186, 187, 189}
+    ours = set()
+    for prof in [(3, 3, 3, 3), (3, 3, 3, 5), (3, 3, 3, 7), (3, 3, 5, 5)]:   # the only n = 15 profiles admitting anything
+        types, recs, p = _parse_text(_run(sect_bins[4], 15, prof), tmp_path)
+        ours |= {r["g"] for r in recs if r["a"] == 7}
+    assert {g for g in ours if g > 43} == his

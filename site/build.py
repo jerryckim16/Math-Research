@@ -114,11 +114,48 @@ def restore_math(html_text, stash):
     return re.sub(r"MATHPH(\d+)ZZ", lambda m: html.escape(stash[int(m.group(1))], quote=False), html_text)
 
 
+def widen_list_indent(text):
+    """The sources nest lists with 2-space indents; Python-Markdown needs 4.
+    Double the leading spaces of every indented line that belongs to a list
+    (list items and their continuation lines), outside fenced code."""
+    out, in_fence, in_list, fence_ind = [], False, False, 0
+    for line in text.split("\n"):
+        if line.lstrip().startswith("```"):
+            # fenced_code only recognises fences at column 0: dedent fences
+            # nested in list items (they then render as a block after the item)
+            if not in_fence:
+                fence_ind = len(line) - len(line.lstrip(" "))
+                if out and out[-1].strip():
+                    out.append("")
+            in_fence = not in_fence
+            out.append(line[fence_ind:] if line[:fence_ind].strip() == "" else line)
+            if not in_fence:
+                out.append("")
+            continue
+        if in_fence:
+            out.append(line[fence_ind:] if line[:fence_ind].strip() == "" else line)
+            continue
+        stripped = line.lstrip(" ")
+        ind = len(line) - len(stripped)
+        if re.match(r"([-*+]|\d+[.)])\s", stripped):
+            # Python-Markdown needs a blank line between a paragraph and a list
+            if ind == 0 and not in_list and out and out[-1].strip() and not out[-1].lstrip().startswith("|"):
+                out.append("")
+            in_list = True
+        elif not stripped:
+            pass
+        elif ind == 0:
+            in_list = False
+        out.append(" " * (2 * ind) + stripped if in_list and ind else line)
+    return "\n".join(out)
+
+
 def render_md(text, depth):
     # keep the "**Field:** value" header lines on separate lines
     text = re.sub(r"^(\*\*(?:Area|Status|Started|ProofAtlas):\*\*.*)$", r"\1  ", text, flags=re.M)
-    text, stash = protect_math(fix_links(text, depth))
-    out = markdown.markdown(text, extensions=["tables", "fenced_code", "sane_lists", "toc"], tab_length=2)
+    text, stash = protect_math(text)
+    text = fix_links(widen_list_indent(text), depth)
+    out = markdown.markdown(text, extensions=["tables", "fenced_code", "sane_lists", "toc"])
     return restore_math(out, stash)
 
 

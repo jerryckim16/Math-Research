@@ -1,5 +1,7 @@
 # Re-check of Allikvere's LRC(15) gate certificates (16 runners)
 
+> **Draft, work in progress.** This page is written by a research agent and has not yet been reviewed by the coordinator. Treat its claims as unreviewed until this notice is removed.
+
 **Source.** J. Allikvere, *Sixteen lonely runners*, Zenodo doi:10.5281/zenodo.23304361 (created 2026-10-11, one version, unrefereed). We read the README, `SHA256SUMS.txt` and the manuscript source (`paper.tex`, §§2, 4–7) as data.
 
 **Scope of this note.** It covers the 59 gate primes of his set $\mathcal P$: all primes $269 \le p \le 659$ except $271, 277, 283, 293, 307$. Out of scope:

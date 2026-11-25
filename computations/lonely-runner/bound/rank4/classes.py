@@ -16,7 +16,7 @@ def parse(path):
         elif line.startswith("ADM"):
             f = dict(kv.split("=") for kv in line.split()[1:])
             recs.append({"a": int(f["a"]), "g": int(f["g"]), "idx": int(f["idx"]),
-                         "A": int(f["A"]), "B": int(f["B"]),
+                         "A": int(f["A"]), "B": int(f["B"]), "orb": int(f.get("orb", 1)),
                          "m": tuple(int(x) for x in f["m"].split(","))})
         elif line.startswith("SUMMARY"):
             prof = tuple(int(x) for x in line.split("prof=")[1].split()[0].split(","))
