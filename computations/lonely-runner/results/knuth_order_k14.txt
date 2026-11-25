@@ -16,3 +16,9 @@
 #   p=251 PRUNE=1 IRR=6 ORDER=1: knuth_estimate_nodes 1.343975e+10 stderr 4.647e+08 probes 20000 branch 0 prune 1 irr 6 capped_dfs nodes 20000080 secs 7.726 nodes_per_sec 2.589e+06 
 # p=251: ORDER=1 gives 3.52x fewer nodes at 0.76x the node rate: net ~2.7x.  IRR bit 4 gives no node saving at 251.
 # Projected (14,251) level one with PRUNE=1 IRR=2 ORDER=1: 1.34e10 / 3.0e6 ~ 4,500 CPU-s (Allikvere: 2,475 CPU-s, other machine).
+# Step 13: exact sharded run (14,251), LRC_PRUNE=2 LRC_IRR=2 LRC_ORDER=1, 16 shards on 4 cores:
+#   13,515,182,618 nodes (step 6, PRUNE=2 only: 89,333,704,808), 3,876,360 covers (same count), 7,505 CPU-s (step 6: ~30,500),
+#   wall 32 min 50 s; orbits 2,404,346 = certificate (results/lrc14_gates/regen_251_order.json).
+#   Rate 1.80e6 nodes/s per process.  Allikvere at 251: 2,475 (ir) + 104 (km1) = 2,579 CPU-s -> our real gap 2.9x (machines differ).
+# Knuth (14,401) PRUNE=1 IRR=2 ORDER=1: knuth_estimate_nodes 1.844587e+11 stderr 3.466e+09 probes 20000 branch 0 prune 1 irr 2 capped_dfs nodes 20000199 secs 14.302 nodes_per_sec 1.398e+06 
+#   fraction vs plain Knuth 2.205e12: 0.0837.  Projected (14,401): 1.845e11 / 1.8e6 ~ 1.0e5 CPU-s (Allikvere 45,577) -> ~2.2x.

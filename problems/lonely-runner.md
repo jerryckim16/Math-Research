@@ -368,6 +368,7 @@ Per-gate JSON files are in `results/lrc14_gates/`.
   - Generation: `covergen.c` **with `LRC_PRUNE=2`** (Lemma 4.1 plus max-private normalisation; Approach 8), sharded over 3 cores. It took 8.93·10¹⁰ search nodes and about 4 h 55 min wall time (the shards were uneven: 1 h 46 min, 1 h 47 min, 4 h 55 min), producing 3,876,360 covers. Those expand to 4,143,952 multisets.
   - Result: **2,404,346 orbits, exactly equal to the orbit set of the certificate's 2,405,962 stored rows.** No orbit appears on only one side.
   - Because this run is pruned, its completeness rests on the Lemma 4.1 / normalisation proof transcribed in Approach 8 (and its tests) as well as the minimal-cover argument. The p = 89 and 239 runs are unpruned and rely on the minimal-cover argument alone.
+- **p = 251 again (step 13)**, with the faster generator (`LRC_PRUNE=2 LRC_IRR=2 LRC_ORDER=1`, Approach 13): the same 3,876,360 covers and 2,404,346 orbits, equal to the certificate. 1.35·10¹⁰ nodes, 7,505 CPU-s, 33 min wall on 4 cores (`results/lrc14_gates/regen_251_order.json`).
 - Not done: completeness at the other 68 gates (a p = 179 run was lost in a step-3 restart).
 
 **LRC(13) archive** (Zenodo 10.5281/zenodo.22066772, `fourteen_lonely_runners_package.zip`).
@@ -731,7 +732,15 @@ The test is `test_lonely.py`, `test_covergen_order_same_minimal_covers`, which a
 - **Bit 4: worked at small p only.** It saves 22% of nodes at p = 89 and 23% at p = 113, but nothing at p = 251, where it only slows each node. Use `LRC_IRR=6` for small gates and `LRC_IRR=2` for large ones.
 - **The two-branch split** (Approach 12) still adds about 7% on top.
 
-**Remaining gap.** The projected k = 14 level one at p = 251 is now about 1.34·10¹⁰ / 3.0·10⁶ ≈ 4,500 CPU-s, against Allikvere's 2,475 CPU-s on another machine. So the gap is now about 1.8×, down from about 7×.
+**Remaining gap.** At step 12 the k = 14 level one at p = 251 was projected at about 1.34·10¹⁰ / 3.0·10⁶ ≈ 4,500 CPU-s (`LRC_PRUNE=1`, single process), which would be a gap of about 1.8×.
+
+**Exact confirmation at p = 251 (step 13).** `LRC_PRUNE=2 LRC_IRR=2 LRC_ORDER=1`, in 16 shards on 4 cores (`results/lrc14_gates/regen_251_order.json`):
+
+- **Same output as step 6.** Exactly **3,876,360 covers**, which expand to 4,143,952 multisets and give **2,404,346 orbits**. That is equal to the certificate's orbit set, with none only on one side, as in step 6.
+- **Nodes.** 1.3515·10¹⁰, against 8.93·10¹⁰ with `LRC_PRUNE=2` alone (6.6× fewer).
+- **Time.** **7,505 CPU-s**, against about 30,500 at step 6 (4.1× faster), and 32 min 50 s wall time.
+- **The real gap is 2.9×, not 1.8×.** Allikvere's two branches at p = 251 took 2,475 + 104 = 2,579 CPU-s, on another machine. The step-12 projection used `LRC_PRUNE=1` and an unloaded node rate. The real run used `LRC_PRUNE=2`, with its locked-time rule, and had 4 processes sharing 4 cores, giving 1.8·10⁶ nodes/s.
+- **At p = 401** (Knuth, `LRC_PRUNE=1`): 1.845·10¹¹ nodes, about 1.0·10⁵ CPU-s at that rate, against his 45,577. That is about 2.2×.
 
 - At p = 89 our tree still has 4× more nodes than his irredundant branch: 2.08M for both branches against 517k. His node counter may be defined differently.
 - Not yet tried from his change log:
@@ -783,9 +792,9 @@ Scope: J. Allikvere's computer-assisted proofs of LRC(13) and LRC(14), i.e. 14 a
 | LRC(14) certificates: independent re-check of 71/71 gates. All 52 "J empty" gates and near-gcd gates 179 and 233 in full; cascade also in full at 223. Near-gcd gates 89, 163, 173, 223 (sample 3,000) and 131, 149, 157, 167, 181, 191, 193, 197, 199, 211, 227, 229, 241 (sample 500): all rows, plus seeded samples of the cascade and kill. Level-one completeness at p = 89, 239 and 251. No discrepancy found. | independent re-computation of the certificates' claims; cascade sampled at 16 and kill at 17 of the 19 near-gcd gates; completeness at 3 gates only | `results/lrc14_gates/COVERAGE.md`, Approach 7 |
 | LRC(13) certificates: terminal level-14 kill of both persistent orbits re-computed at all 111 gate primes; kill-file SHA-256s match manifests | independent re-computation (cascade and level one not checkable: rows not archived) | `results/lrc13_kills.jsonl` |
 | (1..15) dies at level 16 at all 79 primes 251–743 | computed exactly (one orbit only) | `results/tight_orbit_k15.jsonl` |
-| Child ordering + cutoff (`LRC_ORDER=1`) and incremental redundancy cut (`LRC_IRR` bit 4): same minimal covers as the plain search; k = 14 nodes 2.75× fewer at p = 113 (58 s → 31.6 s), 3.5× fewer at p = 251 (Knuth) for about 2.7× net speed-up | validated computation; **worked** (Knuth figures heuristic) | Approach 13, `results/knuth_order_k14.txt` |
+| Child ordering + cutoff (`LRC_ORDER=1`) and incremental redundancy cut (`LRC_IRR` bit 4): same minimal covers as the plain search; k = 14 nodes 2.75× fewer at p = 113 (58 s → 31.6 s), 3.5× fewer at p = 251 (Knuth). Exact sharded run at p = 251 (step 13): 1.35·10¹⁰ nodes, 7,505 CPU-s (4.1× faster than step 6), same 3,876,360 covers and 2,404,346 orbits as the certificate | validated computation; **worked** (Knuth figures heuristic) | Approach 13, `results/knuth_order_k14.txt`, `results/lrc14_gates/regen_251_order.json` |
 | Two-branch level-one search (`LRC_TWOBRANCH=1`): same minimal covers as the single tree in 36 configurations; node change at k = 14 is +14% (p = 89), +7% (p = 113), +3.4% (p = 251), +2.0% (p = 401) | validated computation; **failed route** (no speed-up) | Approach 12, `results/knuth_twobranch_k14.txt` |
-| Cost of LRC(15) level one + kill with Allikvere-class code: about 1.75·10⁵ CPU-h (about 20 CPU-years) for 79 gates 251–743 under the flag target 483.24 (proved, Approaches 10–11); about 9.5·10⁵ CPU-h for level one with our generator (step 11); about 8.7·10⁶ CPU-h under the proved B_15 | **heuristic extrapolation from measurements** | `cost_estimate.py`, `results/knuth_covergen_k14_k15.txt` |
+| Cost of LRC(15) level one + kill with Allikvere-class code: about 1.75·10⁵ CPU-h (about 20 CPU-years) for 79 gates 251–743 under the flag target 483.24 (proved, Approaches 10–11); about 2.0·10⁵ CPU-h for level one with our generator (step 13; 9.5·10⁵ at step 11); about 8.7·10⁶ CPU-h under the proved B_15 | **heuristic extrapolation from measurements** | `cost_estimate.py`, `results/knuth_covergen_k14_k15.txt` |
 
 "Certificate-checked computation + cited B_k" means the following. The chain LRC(2) ⇒ … ⇒ LRC(9) is a proof *if* three things hold:
 
@@ -802,7 +811,7 @@ Our code is tested against brute force, but not formally verified. These reprodu
    - Without Theorem 3.8, the only target from MSS is ln B_15 − ln 720720 = 951.26. That needs about 147 gates up to 1223, which is roughly 50× the cost below.
 2. **Generator.**
    - Done: his Lemma 4.1 normalisation (Approach 8), sharper bounds (Approach 9), and the two-branch search (step 11, Approach 12). The two-branch split is validated but gives **no** node reduction (+2–14%).
-   - Step 12 (Approach 13): descending-gain child order with the child-gain cutoff (`LRC_ORDER=1`) and an incremental redundancy cut (`LRC_IRR` bit 4), taken from his generator's change log. Same output; about 2.7× faster at k = 14, p = 251, 1.8× at p = 113. The CPU gap at p = 251 is now about 1.8× (was about 7×).
+   - Step 12 (Approach 13): descending-gain child order with the child-gain cutoff (`LRC_ORDER=1`) and an incremental redundancy cut (`LRC_IRR` bit 4), taken from his generator's change log. Same output. Measured on an exact sharded run at p = 251 (step 13): 4.1× faster than step 6, with the same 3,876,360 covers and 2,404,346 orbits. The real CPU gap to his engine at p = 251 is now 2.9× (was about 7×), and about 2.2× projected at p = 401.
    - Next leads:
      - the lexicographic-minimum rule is an output filter (one row per orbit), not a node saving;
      - from his change log, not yet tried: the exact two-slot finish, the mandatory-point bounds for the last 2–3 slots, and bit-parallel popcount kernels;
@@ -812,9 +821,11 @@ Our code is tested against brute force, but not formally verified. These reprodu
 3. **Cost.**
    - Model: Allikvere's per-gate k = 14 CPU time, times our measured k = 15 / k = 14 tree-size ratio. The ratio grows from 4.4 at p = 251 to 10–18 at p = 353–569, fitted ∝ p^1.0. His cost is fitted ∝ p^6.07.
    - Result: **about 1.75·10⁵ CPU-hours for 79 gates 251…743** under the flag target 483.239, which is now proved (Approaches 10–11). Of that, gates above 569 are extrapolated, and the top gates dominate. This is a **heuristic** extrapolation; the number is unchanged from step 2 because the target value is the same, and only its status changed (step 11).
-   - Second model (step 11, `cost_estimate.py`; **heuristic**). With **our** generator (`LRC_PRUNE=1`, `LRC_IRR=2`), level one alone would take about **9.5·10⁵ CPU-hours (about 109 CPU-years)** for the same 79 gates.
-     - Inputs: our plain k = 15 tree N15(p) ∝ p^7.25 (Knuth); the cut fraction measured at k = 14 (0.50 at p = 251, 0.33 at p = 401), assumed to carry over to k = 15; and 1.7·10⁶ nodes/s per core.
-     - The factor of about 5.4 over the first model matches the measured per-gate CPU gap to his engine. Closing that gap is the generator item (Next steps 2).
+   - Second model (`cost_estimate.py`; **heuristic**): **our** generator, level one only, for the same 79 gates.
+     - Step 11 (`LRC_PRUNE=1`, `LRC_IRR=2`): about 9.5·10⁵ CPU-hours.
+     - **Step 13 (`LRC_PRUNE=2 LRC_IRR=2 LRC_ORDER=1`): about 1.96·10⁵ CPU-hours (about 22 CPU-years).** That is comparable to the first model, which also includes the kill.
+     - Inputs: our plain k = 15 tree N15(p) ∝ p^7.25 (Knuth); the k = 14 cut fraction (0.1425 at p = 251 from the exact run, 0.0837 at p = 401 from Knuth), fitted ∝ p^−1.14 and assumed to carry over to k = 15 and up to p = 743; and the measured 1.8·10⁶ nodes/s.
+     - The extrapolation of the cut fraction is the weakest input.
    - This is a **cluster-scale** project (for example 1,000 cores for about a week). It does not fit in a single session.
    - Uncertainties:
      - The ratio is noisy (single estimates per prime).
