@@ -40,13 +40,16 @@ Exact criterion (class mode). For points of classes a, b with body product
 Outputs: OUT_x.i8, OUT_xg.i8 (partner rows), and for 41-43 OUT.lab (uint8,
 or uint16 little-endian when there are more than 256 classes) and OUT.tab;
 OUT_meta.json (counts, classes).
-Usage: python3 -I build_kravatskiy4043.py KRAVDIR DIM OUT ENUM_BIN [--variant NAME]
-  negative controls (must FAIL): 40D negcore (core on the residue -c, the
-  wrong centre); 41-43D shift (the head list shifted by one family, wrong
-  order), purenegate (pure heads negated); 43D tinyscale (tiny heads read
-  over the family denominator D instead of E); 43D p48q (the 43D families
-  enumerated in the 41/42D P48q gram, the wrong parent lattice; rejected by
-  the population count).
+Usage: python3 -I build_kravatskiy4043.py KRAVDIR DIM OUT ENUM_BIN [--variant NAME] [--work DIR]
+  (DIR keeps the shell enumerations, named by the sha256 of their input, for reuse)
+       python3 -I build_kravatskiy4043.py --retable BASE VARIANT OUT
+  negative controls (must FAIL): 40D --variant negcore (core on the residue
+  -c, the wrong centre); 43D --variant p48q (the 43D families enumerated in
+  the 41/42D P48q gram, the wrong parent lattice; rejected by the population
+  count). Head-only controls, a new table OUT.tab for the rows and labels of
+  BASE: shift (the head list shifted by one family, wrong order),
+  purenegate (pure heads negated), 43D tinyscale (tiny heads read over the
+  family denominator D instead of E).
 """
 import hashlib
 import json
@@ -113,12 +116,19 @@ def shell(G, c, n, enum_bin, work, cache):
     key = (tuple(int(v) for v in c), int(n))
     if key in cache:
         return cache[key]
-    inp, out = os.path.join(work, "enum.in"), os.path.join(work, "enum.i8")
-    with open(inp, "w") as f:
-        f.write(f"40 {int(n)}\n" + "\n".join(" ".join(map(str, map(int, r))) for r in G)
-                + "\n" + " ".join(map(str, key[0])) + "\n")
-    cnt = int(subprocess.run([enum_bin, inp, out], check=True, capture_output=True,
-                             text=True).stdout.split()[0])
+    text = (f"40 {int(n)}\n" + "\n".join(" ".join(map(str, map(int, r))) for r in G)
+            + "\n" + " ".join(map(str, key[0])) + "\n")
+    # the enumeration output is kept in WORK, named by the hash of its input
+    # (so negative-control variants reuse it); every row is re-checked below
+    tag = hashlib.sha256(text.encode()).hexdigest()[:24]
+    inp, out = os.path.join(work, tag + ".in"), os.path.join(work, tag + ".i8")
+    if not os.path.exists(out + ".done"):
+        with open(inp, "w") as f:
+            f.write(text)
+        cnt = int(subprocess.run([enum_bin, inp, out], check=True, capture_output=True,
+                                 text=True).stdout.split()[0])
+        open(out + ".done", "w").write(str(cnt))
+    cnt = int(open(out + ".done").read())
     X = np.fromfile(out, dtype=np.int8).reshape(-1, 40)
     assert len(X) == cnt
     X = np.unique(X, axis=0)
@@ -215,12 +225,6 @@ def build4143(kdir, dim, out, enum_bin, variant, work):
     assert np.all((0 <= res) & (res < 3)) and not np.any((res @ G) % 3)
     assert th.shape == (len(tb), w) and pure.shape[1] == w and tb.shape[1:] == (40,)
     assert rank(np.vstack([heads, th, pure])) == dim - 40, "head span has the wrong rank"
-    if variant == "shift":
-        heads = np.roll(heads, 1, axis=0)
-    if variant == "purenegate":
-        pure = -pure
-    if variant == "tinyscale":
-        E = D
     cache, rows, labels, classes = {}, [], [], []
     for i in range(F):
         X = shell(G, res[i], 3 * int(radii[i]), enum_bin, work, cache)
@@ -254,11 +258,7 @@ def build4143(kdir, dim, out, enum_bin, variant, work):
     assert len(X) == CLAIM[dim], f"{len(X)} != claimed {CLAIM[dim]}"
     write_rows(out, X, G)
     (lab.astype(np.uint8) if k <= 256 else lab.astype("<u2")).tofile(out + ".lab")
-    tab = table(classes)
-    with open(out + ".tab", "w") as f:
-        f.write(f"{k}\n")
-        for (a, b), (T, C) in sorted(tab.items()):
-            f.write(f"{a} {b} {T} {C}\n")
+    write_table(classes, out)
     json.dump({"dim": dim, "rows": len(X), "families": F, "tiny": len(tb), "pure": len(pure),
                "classes": k, "D": D, "E": E, "variant": variant,
                "class_list": [[r, d_, z_] for r, d_, z_ in classes]}, open(out + "_meta.json", "w"))
@@ -266,16 +266,47 @@ def build4143(kdir, dim, out, enum_bin, variant, work):
           f"{k} classes; head rank {dim - 40}")
 
 
+def write_table(classes, out):
+    tab = table(classes)
+    with open(out + ".tab", "w") as f:
+        f.write(f"{len(classes)}\n")
+        for (a, b), (T, C) in sorted(tab.items()):
+            f.write(f"{a} {b} {T} {C}\n")
+
+
+def retable(base, variant, out):
+    """Negative controls that change only the heads: a new table for the rows,
+    labels and partner rows of BASE (built without a variant)."""
+    meta = json.load(open(base + "_meta.json"))
+    assert meta["variant"] is None
+    cl = [(r, d_, list(z_)) for r, d_, z_ in meta["class_list"]]
+    F, K = meta["families"], len(cl) - meta["pure"]
+    if variant == "shift":  # head list shifted by one family (wrong order)
+        heads = [cl[(i - 1) % F][2] for i in range(F)]
+        cl[:F] = [(r, d_, h) for (r, d_, _), h in zip(cl[:F], heads)]
+    elif variant == "purenegate":
+        cl[K:] = [(r, d_, [-v for v in z_]) for r, d_, z_ in cl[K:]]
+    elif variant == "tinyscale":  # tiny heads over the family denominator D
+        assert meta["tiny"] > 0
+        cl[F:K] = [(r, meta["D"], z_) for r, _, z_ in cl[F:K]]
+    else:
+        raise SystemExit(f"unknown variant {variant}")
+    write_table(cl, out)
+    print(f"{meta['dim']}D variant {variant}: table -> {out}.tab (rows, labels: {base})")
+
+
 def main():
+    if sys.argv[1] == "--retable":
+        return retable(sys.argv[2], sys.argv[3], sys.argv[4])
     kdir, dim, out, enum_bin = sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4]
     variant = sys.argv[sys.argv.index("--variant") + 1] if "--variant" in sys.argv else None
-    work = out + "_enumwork"
+    work = sys.argv[sys.argv.index("--work") + 1] if "--work" in sys.argv else out + "_enumwork"
     os.makedirs(work, exist_ok=True)
     if dim == 40:
         assert variant in (None, "negcore")
         build40(kdir, out, enum_bin, variant, work)
     else:
-        assert dim in (41, 42, 43) and variant in (None, "shift", "purenegate", "tinyscale", "p48q")
+        assert dim in (41, 42, 43) and variant in (None, "p48q")
         build4143(kdir, dim, out, enum_bin, variant, work)
 
 
