@@ -27,7 +27,7 @@ def main():
         if r["pass"]:
             passed.append(p)
         ct = r["cascade_totals_ours"]
-        died = ", ".join("%s: %d" % (k[5:], v) for k, v in sorted(ct.items(), key=lambda kv: kv[0])
+        died = ", ".join("%s: %d" % (k[5:], v) for k, v in sorted(ct.items(), key=lambda kv: int(kv[0][6:]) if kv[0].startswith("died_l") else 0)
                          if k.startswith("died_l"))
         ext = r["cascade_rows"] - r["ir_rows"]
         tot["ir_rows"] += r["ir_rows"]
