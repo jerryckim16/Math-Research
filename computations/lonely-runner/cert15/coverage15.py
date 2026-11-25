@@ -15,7 +15,7 @@ assert len(GATES) == 59
 
 
 def main():
-    rows, done, passed = [], [], []
+    rows, done, passed, per_gate = [], [], [], []
     tot = {"ir_rows": 0, "ext_rows": 0, "cascade_rows": 0, "survivor_rows": 0, "seconds": 0.0}
     for p in GATES:
         f = os.path.join(RES, "gate_%d.json" % p)
@@ -30,6 +30,11 @@ def main():
         died = ", ".join("%s: %d" % (k[5:], v) for k, v in sorted(ct.items(), key=lambda kv: int(kv[0][6:]) if kv[0].startswith("died_l") else 0)
                          if k.startswith("died_l"))
         ext = r["cascade_rows"] - r["ir_rows"]
+        per_gate.append({"p": p, "pass": r["pass"], "sha256": r["sha256"], "ir_rows": r["ir_rows"],
+                         "km1_rooted": r["km1_rooted"], "km1_dedup": r["km1_dedup"], "ext_rows": ext,
+                         "level2_survivors": ct["survivor_rows"],
+                         "died": {k[5:]: v for k, v in ct.items() if k.startswith("died_l")},
+                         "trace16": r["rows_first_empty_at_16_trace"], "seconds": r["seconds"]})
         tot["ir_rows"] += r["ir_rows"]
         tot["ext_rows"] += ext
         tot["cascade_rows"] += r["cascade_rows"]
@@ -64,7 +69,7 @@ def main():
                len(done), len(passed), tot["ir_rows"], tot["ext_rows"], tot["cascade_rows"], tot["survivor_rows"],
                tot["seconds"], s)]
     open(os.path.join(RES, "COVERAGE.md"), "w").write("\n".join(out) + "\n")
-    json.dump({"gates_run": done, "gates_passed": passed, "totals": tot, "sum_log_p_passed": s},
+    json.dump({"gates_run": done, "gates_passed": passed, "totals": tot, "sum_log_p_passed": s, "per_gate": per_gate},
               open(os.path.join(RES, "summary.json"), "w"), indent=1)
     print(len(done), len(passed), tot)
 
