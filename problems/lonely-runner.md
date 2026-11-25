@@ -3,7 +3,7 @@
 **Area:** Diophantine approximation / combinatorics
 **Status:** in progress. Done so far:
 - The prime-gate framework is reproduced end to end for LRC(3)–LRC(10) (4–11 runners), conditional on one cited bound (B_k). LRC(10) uses an explicit ×11 lift, independent of Sungkawichai–Trakulthongchai's Prop. corlarge (step 7).
-- All 71 of Allikvere's 15-runner (LRC(14)) gate certificates are independently re-checked, with no discrepancy found. Stored rows were checked in full at every gate; the cascade and kill in full at 54 gates and sampled at 17, with the cascade alone also in full at near-gcd gate 223; level-one completeness at 3 gates. See "Independent re-check summary". His 14-runner terminal kills are re-checked at all 111 of his gate primes.
+- All 71 of Allikvere's 15-runner (LRC(14)) gate certificates are independently re-checked, with no discrepancy found. Stored rows were checked in full at every gate; the cascade and kill in full at 54 gates and sampled at 17, with the cascade alone also in full at near-gcd gate 223; level-one completeness at 4 gates (p = 89, 239, 251, 269). See "Independent re-check summary". His 14-runner terminal kills are re-checked at all 111 of his gate primes.
 - The n = 15 shape lemma R_15 < 49/100 is proved (Approach 10; every inequality machine-checked exactly). The general-n parts of Allikvere's Theorem 3.8 are independently verified (Approach 11), so the 16-runner gate target 483.239 is proved here, given LRC(m) for m ≤ 14.
 - The cost of the next open case (16 runners) is estimated from measurements.
 
@@ -292,7 +292,7 @@ Per-gate JSON files are in `results/lrc14_gates/`.
 
 - All 52 "J empty" gates were checked in full.
 - 19 of the 19 near-gcd gates were checked: every stored row tested, with the cascade and kill on seeded samples (3,000, or 500 for the large archives).
-- Level-one completeness was checked at p = 89, 239 and 251.
+- Level-one completeness was checked at 4 gates (p = 89, 239, 251, 269).
 - **No discrepancy was found.**
 - **All 71 gates are now covered.**
 
@@ -369,7 +369,9 @@ Per-gate JSON files are in `results/lrc14_gates/`.
   - Result: **2,404,346 orbits, exactly equal to the orbit set of the certificate's 2,405,962 stored rows.** No orbit appears on only one side.
   - Because this run is pruned, its completeness rests on the Lemma 4.1 / normalisation proof transcribed in Approach 8 (and its tests) as well as the minimal-cover argument. The p = 89 and 239 runs are unpruned and rely on the minimal-cover argument alone.
 - **p = 251 again (step 13)**, with the faster generator (`LRC_PRUNE=2 LRC_IRR=2 LRC_ORDER=1`, Approach 13): the same 3,876,360 covers and 2,404,346 orbits, equal to the certificate. 1.35·10¹⁰ nodes, 7,505 CPU-s, 33 min wall on 4 cores (`results/lrc14_gates/regen_251_order.json`).
-- Not done: completeness at the other 68 gates (a p = 179 run was lost in a step-3 restart).
+- **Step 14: more "J empty" gates with the faster generator** (`LRC_PRUNE=2 LRC_IRR=2 LRC_ORDER=1`, 16 shards on 4 cores, `results/lrc14_gates/completeness_<p>.json`). Gates were chosen cheapest first by Knuth estimates (`results/knuth_completeness_step14.txt`).
+  - p = 269: **197,957 orbits, equal to the certificate** (none only on one side); 318,113 covers; 1.22·10¹⁰ nodes; 8,433 CPU-s; 36 min wall.
+- Not done: completeness at the other 67 gates (a p = 179 run was lost in a step-3 restart).
 
 **LRC(13) archive** (Zenodo 10.5281/zenodo.22066772, `fourteen_lonely_runners_package.zip`).
 
@@ -647,7 +649,7 @@ Machine checks, exact, with the actual B_r of each n:
 
 **Consequence.** For a primitive counterexample with 15 speeds (16 runners), assuming LRC(m) for m ≤ 14: v_1⋯v_15 < e^{496.7268}. The 16-runner gate target 483.239 is therefore **proved here**, modulo:
 
-- **LRC(13) and LRC(14)**, the 14- and 15-runner cases. These are Allikvere's certificate-based results: LRC(14) is re-checked in Approach 7, fully at 54 of 71 gates, with level-one completeness at 3; LRC(13) is re-checked only through its terminal kills. LRC(m) for m ≤ 12 comes from the literature.
+- **LRC(13) and LRC(14)**, the 14- and 15-runner cases. These are Allikvere's certificate-based results: LRC(14) is re-checked in Approach 7, fully at 54 of 71 gates, with level-one completeness at 4 gates (p = 89, 239, 251, 269); LRC(13) is re-checked only through its terminal kills. LRC(m) for m ≤ 12 comes from the literature.
 - **The standard facts listed above.**
 - **The forced divisor** (Rosenfeld Lemma 4), which is elementary (see "The finite reduction").
 
@@ -760,14 +762,14 @@ Scope: J. Allikvere's computer-assisted proofs of LRC(13) and LRC(14), i.e. 14 a
 - **Stored level-one rows: all 71 gates, every row.** Every stored irredundant row is witness-free at level 1, i.e. lies in I(14,p,1). Every stored km1 multiset is a cover. That is 495,538,971 stored irredundant rows in total.
 - **Binary cascade, levels 2–32.** In full at all 52 "J(14,p) = ∅" gates and at the near-gcd gates p = 179, 223 and 233 (step 8). At the other 16 near-gcd gates, on seeded uniform samples of stored rows (compared both ways) and of extension-survivor lines: 3,000 at p = 89, 163, 173; 500 at the 13 large archives. There were 0 mismatches.
 - **Level-15 kill records.** In full at the 52 "J empty" gates (one persistent orbit, (1..14), each) and at p = 179 (all 8,011 orbits) and p = 233 (all 13,457 orbits). At the other near-gcd gates, on seeded samples of the same sizes. Every record checked is reproduced exactly: level-3/5 witness-free lifts, CRT candidates, level-15 grid, gcd clause, and the few-exception shift Lemma 3.12. Improper after Lemma 3.12 is 0 everywhere, and improper after the gcd clause is 0 at the "J empty" gates. At the stream-checked gates, the number of kill files equals the certificate's persistent-orbit count.
-- **Level-one completeness at 3 gates.** At p = 89 (near-gcd), p = 239 and p = 251 ("J empty"), an independent minimal-cover enumeration reproduces exactly the certificate's set of level-one orbits: 687,016, 1,441,284 and 2,404,346 orbits. The runs at 89 and 239 are unpruned; the run at 251 uses our implementation of the private-time pruning (Approach 8).
+- **Level-one completeness at 4 gates (p = 89, 239, 251, 269).** At p = 89 (near-gcd), p = 239, p = 251 and p = 269 ("J empty"; 269 in step 14), an independent minimal-cover enumeration reproduces exactly the certificate's set of level-one orbits: 687,016, 1,441,284, 2,404,346 and 197,957 orbits. The runs at 89 and 239 are unpruned; the run at 251 uses our implementation of the private-time pruning (Approach 8).
 - **Constants.** The flag-bound constants K_14, A_14, the log bound 414.779365 and the target 401.984506 were re-derived exactly. The 71 gates' Σ ln p = 408.8233 exceeds the target, recomputed from the gate list.
 - **LRC(13).** At all 111 gate primes, the terminal level-14 kill of both persistent orbits was recomputed and matches, and the kill files' SHA-256 match the gate manifests.
 - **No discrepancy with any certificate was found.**
 
 **What remains unverified here:**
 
-- **Level-one completeness at the other 68 LRC(14) gates.** That every orbit of I(14,p,1) is represented among the stored rows is checked only at p = 89, 239 and 251. At all other gates it rests on Allikvere's generator and its completeness proposition (his Prop. 4.2 with the private-time Lemma 4.1). We implemented Lemma 4.1 (Approach 8) but have run it to completeness only at p = 251.
+- **Level-one completeness at the other 67 LRC(14) gates.** That every orbit of I(14,p,1) is represented among the stored rows is checked only at 4 gates (p = 89, 239, 251, 269). At all other gates it rests on Allikvere's generator and its completeness proposition (his Prop. 4.2 with the private-time Lemma 4.1). We implemented Lemma 4.1 (Approach 8) and have run it to completeness at p = 251 and p = 269 (step 14).
 - **The sampled parts at the 19 near-gcd gates.** The unsampled cascade rows and kill records there were not re-computed.
 - **The analytic inputs.** The finite-checking bound (Malikiosis–Santos–Schymura, via Rosenfeld's Cor. 3) was not re-proved. Allikvere's flag bound (Thm 3.8) is now independently verified: the shape Lemma 3.7 is re-checked for n = 13 and 14 and extended to n = 15 (Approach 10), and its general-n Lemmas 3.1–3.6 and assembly are checked in Approach 11, resting only on standard facts (KZ bases, Minkowski–Weyl, Schur-concavity). Not re-proved, beyond reading their proofs, are the prime-divisibility Lemma 2.2(ii) and the few-exception shift Lemma 3.12. The lower cases LRC(m), m ≤ 12, are taken from the literature.
 - **LRC(13).** The archive does not contain the k = 13 level-one rows, so the rows, cascade and completeness cannot be re-checked from it.
@@ -789,7 +791,7 @@ Scope: J. Allikvere's computer-assisted proofs of LRC(13) and LRC(14), i.e. 14 a
 | n = 15 flag constants: K_15, ratio min 3751/2349 > 4/3 | exact | `flag_bound.py` |
 | n = 15 shape lemma R_15 < 49/100 (min of H ≈ 944.96 > (1500/49)²), hence ln(v_1⋯v_15) < 496.727 and gate target 483.239 | shape lemma **proved** (written proof, every inequality exact-checked); the general-n Thm 3.8 is **verified** (Approach 11; Lemmas 3.1, 3.2, 3.6 machine-checked exactly, 3.3–3.5 by reading), so the target is **proved given LRC(m), m ≤ 14** and standard facts | Approaches 10–11, `shape_lemma.py`, `flag_theorem_check.py`, tests |
 | 4 of 71 LRC(14) gate certificates (p = 263, 311, 397, 401): rows improper, cascade and kill reproduced | independent re-computation of the certificate's claims **except level-one completeness** | `check_allikvere.py`, `results/allikvere_spotcheck.jsonl` |
-| LRC(14) certificates: independent re-check of 71/71 gates. All 52 "J empty" gates and near-gcd gates 179 and 233 in full; cascade also in full at 223. Near-gcd gates 89, 163, 173, 223 (sample 3,000) and 131, 149, 157, 167, 181, 191, 193, 197, 199, 211, 227, 229, 241 (sample 500): all rows, plus seeded samples of the cascade and kill. Level-one completeness at p = 89, 239 and 251. No discrepancy found. | independent re-computation of the certificates' claims; cascade sampled at 16 and kill at 17 of the 19 near-gcd gates; completeness at 3 gates only | `results/lrc14_gates/COVERAGE.md`, Approach 7 |
+| LRC(14) certificates: independent re-check of 71/71 gates. All 52 "J empty" gates and near-gcd gates 179 and 233 in full; cascade also in full at 223. Near-gcd gates 89, 163, 173, 223 (sample 3,000) and 131, 149, 157, 167, 181, 191, 193, 197, 199, 211, 227, 229, 241 (sample 500): all rows, plus seeded samples of the cascade and kill. Level-one completeness at 4 gates (p = 89, 239, 251, 269). No discrepancy found. | independent re-computation of the certificates' claims; cascade sampled at 16 and kill at 17 of the 19 near-gcd gates; completeness at 4 gates only | `results/lrc14_gates/COVERAGE.md`, Approach 7 |
 | LRC(13) certificates: terminal level-14 kill of both persistent orbits re-computed at all 111 gate primes; kill-file SHA-256s match manifests | independent re-computation (cascade and level one not checkable: rows not archived) | `results/lrc13_kills.jsonl` |
 | (1..15) dies at level 16 at all 79 primes 251–743 | computed exactly (one orbit only) | `results/tight_orbit_k15.jsonl` |
 | Child ordering + cutoff (`LRC_ORDER=1`) and incremental redundancy cut (`LRC_IRR` bit 4): same minimal covers as the plain search; k = 14 nodes 2.75× fewer at p = 113 (58 s → 31.6 s), 3.5× fewer at p = 251 (Knuth). Exact sharded run at p = 251 (step 13): 1.35·10¹⁰ nodes, 7,505 CPU-s (4.1× faster than step 6), same 3,876,360 covers and 2,404,346 orbits as the certificate | validated computation; **worked** (Knuth figures heuristic) | Approach 13, `results/knuth_order_k14.txt`, `results/lrc14_gates/regen_251_order.json` |
