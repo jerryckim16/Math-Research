@@ -11,7 +11,8 @@ Everything is exact integer or `Fraction` arithmetic. There is no floating point
 | `covergen.c` | Step 2: level-one generator by minimal covers. The completeness proof is in its header. Also has a cost-estimation mode: Knuth random probes plus a capped timed DFS. Step 6: `LRC_PRUNE` (private-time pruning). Step 7: `LRC_IRR` (sharper gain bound = 2, redundancy cuts = 1; same output). |
 | `liftfree.c` | Step 2: all witness-free lifts of given tuples from level M to level cM, by branch and bound over the lift digits. Tuples are read from stdin. Step 7: `sieve.lift_c` uses it for every lift with c^k > 65,536 (unless `LRC_LIFT=py`), e.g. the ×11 lift for LRC(10). |
 | `check_allikvere.py` | Step 2: independent spot check of Allikvere's LRC(14) gate certificates. The Zenodo archives are read as data and never executed. |
-| `flag_bound.py` | Step 2: exact re-derivation of Allikvere's flag-bound constants for n = 13 and 14, extended to n = 15. The n = 15 shape factor is heuristic. |
+| `flag_bound.py` | Step 2: exact re-derivation of Allikvere's flag-bound constants for n = 13 and 14, extended to n = 15. Its one-variable shape value for n = 15 is a float estimate; the proof is in `shape_lemma.py`. |
+| `shape_lemma.py` | Step 9: Allikvere's shape Lemma 3.7 run for general n, with every identity and inequality checked in exact rational arithmetic. Re-proves R_13 < 101/200 and R_14 < 1/2 and proves R_15 < 49/100 (written proof: problem file, Approach 10). Tests: `test_shape_lemma.py`. |
 | `tight_orbit_k15.py` | Step 2: binary cascade of (1..15) at the candidate gate primes for 16 runners. |
 | `cost_estimate.py` | Step 2: measured-basis cost estimate for LRC(15). |
 | `gatecheck.c` | Step 3: per-row binary cascade (levels 2–32) and per-orbit level-15 kill for LRC(14) gates. The kill does level-3/5 witness-free lifts, CRT, the level-15 grid, the gcd clause and the near-gcd Lemma 3.12. |
@@ -40,6 +41,7 @@ LRC_USE_C=1 python3 prove_small.py 8 47 2,2,2,p,3,3 4   # 4 processes, see resul
 LRC_LEVEL1=cover python3 prove_small.py 9 137 2,2,2,p,5,2 4   # LRC(9), cover generator
 LRC_LEVEL1=cover python3 prove_small.py 10 127 2,2,2,p,11 4  # LRC(10), x11 lift via liftfree.c
 python3 flag_bound.py
+python3 shape_lemma.py
 python3 tight_orbit_k15.py              # ~1 min
 # Allikvere spot check (download from Zenodo 10.5281/zenodo.22667683 first):
 python3 check_allikvere.py SHA256SUMS.txt evidence_401_s0.tgz evidence_397_s0.tgz ...
@@ -61,6 +63,7 @@ python3 exhaustive.py 4 60
   - The C engine agrees with the Python engine.
   - The B_k arithmetic matches the value `log B_13 < 670.3498` quoted in the abstract of arXiv:2609.02604.
 
+- Step 9 (`test_shape_lemma.py`): `shape_lemma.py` reproduces the paper's Lemma 3.7 objects for n = 13 and 14 (interior polynomials, cubics, intervals) and its bounds. All n = 15 checks pass. Negative controls: targets above the true minimum fail. A float search over the 15-dimensional domain never goes below the target. An optional sympy check covers the identities with the real exponent u^(2/n).
 - Step 6: `covergen.c` with `LRC_PRUNE=1` (Lemma 4.1) and `=2` (max-private normalisation) gives the same orbit sets as unpruned on 5 (k,p) pairs, including (14,89).
 - Step 7: `covergen.c` with `LRC_IRR` = 1, 2, 3 prints exactly the same minimal covers as plain on 6 (k,p) pairs (also sharded), and `LRC_PRUNE=2` + `LRC_IRR=2` keeps the (14,89) orbit set. `sieve.lift_c` (liftfree.c) equals `sieve.lift` at levels 1 and 2.
 - Step 4: `covergen.c` sharding (`LRC_NSHARDS`/`LRC_SHARD`) gives exactly the unsharded output.
