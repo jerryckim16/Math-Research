@@ -113,7 +113,10 @@ Details from the primary texts:
   | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
   | ln B_k | 7.45 | 22.09 | 46.11 | 80.59 | 126.33 | 184.04 | 254.3 | 337.6 | 434.5 | 545.3 | 670.35 | 810.07 | 964.75 |
 
-- **Forced divisor** (Rosenfeld, Lemma 4). For a counterexample, lcm(2, …, k+1) | u_1⋯u_k. Proof: t = 1/d is a witness unless d divides some u_i.
+- **Forced divisor** (Rosenfeld, Lemma 4; restated with proof as Allikvere's Lemma 3.9, `lem:divisor`, arXiv:2609.02604v2 §3.7). For a counterexample u to LRC(k), lcm(2, …, k+1) | u_1⋯u_k.
+  - *Proof (checked here).* For 2 ≤ d ≤ k+1, if d divides no u_i, then at t = 1/d every ‖u_i/d‖ is a nonzero multiple of 1/d, hence at least 1/d ≥ 1/(k+1), and t is a witness. So every such d divides some u_i.
+  - For each prime r ≤ k+1, the largest power q_r ≤ k+1 of r therefore divides ∏u_i. The q_r are pairwise coprime with product lcm(2, …, k+1).
+  - In a gate target the gate primes p > k+1 are coprime to this lcm, so lcm · ∏p divides ∏u_i. This is how ln 720720 enters the 16-runner target 483.239.
 - **Allikvere's flag bound** (arXiv:2609.02604v2, Thm 3.8; due to Allikvere, building on Giri–Kravitz's projected lattice).
   - Setting: assume LRC(m) for all m < n, and let v be a primitive positive counterexample to LRC(n).
   - Constants: B_r = (2r/((n+1)(n+1−r)))², c_i = B_i − B_{i−1}, and K_n = ∏_{i<n} c_i. The hypothesis is c_{i+1}/c_i > 4/3.
@@ -649,6 +652,49 @@ Machine checks, exact, with the actual B_r of each n:
 
 It no longer depends on citing Theorem 3.8.
 
+### 12. Two-branch level-one search (step 11): implemented, validated, no node reduction (failed route, kept)
+
+**Goal.** Allikvere's level-one engine (arXiv:2609.02604v2 §4.1, "A complete two-branch covering search") splits the improper k-multisets into two kinds and searches them separately:
+
+1. irredundant covers on exactly k distinct classes, satisfying the q_k private-time bound;
+2. covers on at most k − 1 classes, normalized to contain class 1 once and satisfying q_{k−1}, followed by all one-class extensions.
+
+The aim was to test whether this split explains his much smaller tree (Approaches 4, 8 and 9).
+
+**Implementation** (`covergen.c`, environment `LRC_TWOBRANCH=1`). The minimal covers C ∋ 1 with |C| ≤ k are searched in two trees.
+
+- **Branch 1, |C| = k.** Depth limit k, and leaves with |L| < k are not printed. A new cut |U| ≥ k − |L| applies: each class of C not yet chosen has a private time, which lies in U and is distinct from the others' private times.
+- **Branch 2, |C| ≤ k − 1.** The depth limit, the gain bound and (with `LRC_PRUNE`) the private-time node cut all use k − 1, so the node cut is q_{k−1} ≥ q_k.
+
+Every cut removes only nodes with no admissible leaf below them, so the union of the two outputs is the single-tree output. The Knuth probe now applies the q-cut when `LRC_PRUNE` is set, and the same cuts in each branch, so the estimates compare like with like.
+
+**Validation.** The sorted minimal-cover output is identical to the single tree in 36 configurations:
+
+- (k, p) = (5,41), (7,61), (8,101), (9,137), (10,127), (14,89);
+- `LRC_PRUNE` = 0/1/2 and `LRC_IRR` = 0/2.
+
+`test_lonely.py`, `test_covergen_twobranch_same_minimal_covers`, keeps 15 of these.
+
+**Measured** (`results/knuth_twobranch_k14.txt`):
+
+| (k, p), cuts | single tree | branch 1 + branch 2 | change |
+| --- | --- | --- | --- |
+| (14, 89), PRUNE=2 IRR=2, exact | 4,629,123 | 4,544,404 + 732,536 | +14% |
+| (14, 113), PRUNE=2 IRR=2, exact | 229,333,830 (64.5 s) | 227,304,940 + 18,585,560 (67.8 s) | +7% |
+| (14, 251), PRUNE=1 IRR=2, Knuth | 4.71·10¹⁰ | 4.71·10¹⁰ + 1.60·10⁹ | +3.4% |
+| (14, 401), PRUNE=1 IRR=2, Knuth | 7.36·10¹¹ | 7.36·10¹¹ + 1.45·10¹⁰ | +2.0% |
+
+**Conclusion.** Branch 1 is the single tree to within 1%: the exactly-k cut almost never fires. Branch 2 is pure overhead. So in our engine the two-branch split gives **no node reduction**, and it is **not** the source of Allikvere's advantage. The mode is kept for reference; it is not recommended.
+
+**What his records do show** (`gates.json` in the Zenodo manuscript source; his node counts may be defined differently from ours):
+
+- **At p = 89**, his irredundant branch used 517,527 nodes and output 110,720 rows. Our branch 1 used 4,544,404 nodes (8.8× more) and output 238,039 covers (2.15× more).
+- **Rows per gate.** At p = 401 his irredundant branch output only 394 rows from 1.6·10¹¹ nodes. A separate exhaustive "precondition" search (1.07·10⁸ nodes) certified that no cover uses at most 12 classes there.
+- **Where the gap probably lies.** His normalization in the irredundant branch is stronger than our max-private one ("taking a lexicographic minimum … removes duplicates"), and it may also prune. His decomposition into 513 jobs may matter too.
+- **CPU time.** He took 2,475 s at p = 251, against about 30,240 s for our `LRC_PRUNE=2` run, or about 18,000 s with `LRC_IRR=2`. That is a gap of about 7×.
+
+These leads are not explored further here (Next steps 2).
+
 ## Independent re-check summary
 
 Scope: J. Allikvere's computer-assisted proofs of LRC(13) and LRC(14), i.e. 14 and 15 runners (arXiv:2609.02604v2). Certificates: Zenodo 10.5281/zenodo.22066772 and 10.5281/zenodo.22667683. All checks use our own code (C and Python, in `computations/lonely-runner/`), written from the definitions in the paper and in arXiv:2604.23906. The archives were read as data only; none of the author's programs were executed.
@@ -691,7 +737,8 @@ Scope: J. Allikvere's computer-assisted proofs of LRC(13) and LRC(14), i.e. 14 a
 | LRC(14) certificates: independent re-check of 71/71 gates. All 52 "J empty" gates and near-gcd gates 179 and 233 in full; cascade also in full at 223. Near-gcd gates 89, 163, 173, 223 (sample 3,000) and 131, 149, 157, 167, 181, 191, 193, 197, 199, 211, 227, 229, 241 (sample 500): all rows, plus seeded samples of the cascade and kill. Level-one completeness at p = 89, 239 and 251. No discrepancy found. | independent re-computation of the certificates' claims; cascade sampled at 16 and kill at 17 of the 19 near-gcd gates; completeness at 3 gates only | `results/lrc14_gates/COVERAGE.md`, Approach 7 |
 | LRC(13) certificates: terminal level-14 kill of both persistent orbits re-computed at all 111 gate primes; kill-file SHA-256s match manifests | independent re-computation (cascade and level one not checkable: rows not archived) | `results/lrc13_kills.jsonl` |
 | (1..15) dies at level 16 at all 79 primes 251–743 | computed exactly (one orbit only) | `results/tight_orbit_k15.jsonl` |
-| Cost of LRC(15) level one + kill with Allikvere-class code: about 1.75·10⁵ CPU-h (about 20 CPU-years) for 79 gates 251–743 under the flag target 483.24 (proved, Approaches 10–11); about 8.7·10⁶ CPU-h under the proved B_15 | **heuristic extrapolation from measurements** | `cost_estimate.py`, `results/knuth_covergen_k14_k15.txt` |
+| Two-branch level-one search (`LRC_TWOBRANCH=1`): same minimal covers as the single tree in 36 configurations; node change at k = 14 is +14% (p = 89), +7% (p = 113), +3.4% (p = 251), +2.0% (p = 401) | validated computation; **failed route** (no speed-up) | Approach 12, `results/knuth_twobranch_k14.txt` |
+| Cost of LRC(15) level one + kill with Allikvere-class code: about 1.75·10⁵ CPU-h (about 20 CPU-years) for 79 gates 251–743 under the flag target 483.24 (proved, Approaches 10–11); about 9.5·10⁵ CPU-h for level one with our generator (step 11); about 8.7·10⁶ CPU-h under the proved B_15 | **heuristic extrapolation from measurements** | `cost_estimate.py`, `results/knuth_covergen_k14_k15.txt` |
 
 "Certificate-checked computation + cited B_k" means the following. The chain LRC(2) ⇒ … ⇒ LRC(9) is a proof *if* three things hold:
 
@@ -706,10 +753,20 @@ Our code is tested against brute force, but not formally verified. These reprodu
 1. **Bound.**
    - Done (steps 9–10): R_15 < 49/100 is proved (Approach 10), and the general-n parts of Theorem 3.8 are independently verified (Approach 11). So the 16-runner gate target 483.239 is proved, given LRC(m) for m ≤ 14.
    - Without Theorem 3.8, the only target from MSS is ln B_15 − ln 720720 = 951.26. That needs about 147 gates up to 1223, which is roughly 50× the cost below.
-2. **Generator.** Add Allikvere's private-time normalisation (his Lemma 4.1 and the two-branch search) to `covergen.c`. Validate it against the current generator for k ≤ 9, and then against his archived k = 14 rows at p = 397 and 401. Those are small gates: about 13 and 16 CPU-h for his code.
+2. **Generator.**
+   - Done: his Lemma 4.1 normalisation (Approach 8), sharper bounds (Approach 9), and the two-branch search (step 11, Approach 12). The two-branch split is validated but gives **no** node reduction (+2–14%).
+   - Our engine is still about 7× slower in CPU time than his at p = 251, and our irredundant branch is 8.8× larger in nodes at p = 89.
+   - Next leads:
+     - his stronger normalization or lexicographic-minimum rule in the irredundant branch (2.15× fewer rows at p = 89);
+     - his precondition search certifying τ(p) ≥ k − 1;
+     - the decomposition into jobs.
+   - Validate any change against the current generator, and then against his archived k = 14 rows at p = 397 and 401. Those are small gates: about 13 and 16 CPU-h for his code.
 3. **Cost.**
    - Model: Allikvere's per-gate k = 14 CPU time, times our measured k = 15 / k = 14 tree-size ratio. The ratio grows from 4.4 at p = 251 to 10–18 at p = 353–569, fitted ∝ p^1.0. His cost is fitted ∝ p^6.07.
-   - Result: **about 1.75·10⁵ CPU-hours for 79 gates 251…743**, assuming the flag target. Of that, gates above 569 are extrapolated, and the top gates dominate.
+   - Result: **about 1.75·10⁵ CPU-hours for 79 gates 251…743** under the flag target 483.239, which is now proved (Approaches 10–11). Of that, gates above 569 are extrapolated, and the top gates dominate. This is a **heuristic** extrapolation; the number is unchanged from step 2 because the target value is the same, and only its status changed (step 11).
+   - Second model (step 11, `cost_estimate.py`; **heuristic**). With **our** generator (`LRC_PRUNE=1`, `LRC_IRR=2`), level one alone would take about **9.5·10⁵ CPU-hours (about 109 CPU-years)** for the same 79 gates.
+     - Inputs: our plain k = 15 tree N15(p) ∝ p^7.25 (Knuth); the cut fraction measured at k = 14 (0.50 at p = 251, 0.33 at p = 401), assumed to carry over to k = 15; and 1.7·10⁶ nodes/s per core.
+     - The factor of about 5.4 over the first model matches the measured per-gate CPU gap to his engine. Closing that gap is the generator item (Next steps 2).
    - This is a **cluster-scale** project (for example 1,000 cores for about a week). It does not fit in a single session.
    - Uncertainties:
      - The ratio is noisy (single estimates per prime).

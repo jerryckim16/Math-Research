@@ -65,7 +65,7 @@ def main():
         return c14(p) * exp(ar) * p ** br
 
     lcm16 = 720720
-    for label, target in (("flag bound with heuristic r_15 = 0.49, minus ln lcm(2..16)", 496.7268 - log(lcm16)),
+    for label, target in (("flag bound with proved r_15 = 49/100 (Approaches 10-11), minus ln lcm(2..16)", 496.7268 - log(lcm16)),
                           ("MSS/Rosenfeld B_15 (proved input), minus ln lcm(2..16)", 964.7525 - log(lcm16))):
         s, tot, gates = 0.0, 0.0, []
         for p in primes(251, 5000):
@@ -76,6 +76,30 @@ def main():
             gates.append(p)
         print(f"{label}: target {target:.2f}: {len(gates)} gates {gates[0]}..{gates[-1]}, "
               f"estimated level-one+kill CPU ~ {tot:,.0f} h ({tot/8766:.1f} CPU-years)")
+
+
+    # Second model (step 11): OUR generator.  Level one only (no kill, no
+    # cascade).  Our k = 15 plain tree N15(p) (Knuth, fitted as a power law),
+    # times the node fraction left by LRC_PRUNE=1 + LRC_IRR=2 as measured at
+    # k = 14 (0.496 at p = 251, 0.334 at p = 401; Knuth, results/
+    # knuth_twobranch_k14.txt), fitted log-linearly in p, at the measured
+    # 1.7e6 nodes/s per core.  Heuristic: assumes the k = 14 cut fraction
+    # carries over to k = 15.
+    b15, a15 = fit(ps, [N[(15, p)] for p in ps])
+    fr = {251: 0.496, 401: 0.334}
+    bf = (log(fr[401]) - log(fr[251])) / (log(401) - log(251))
+    af = log(fr[251]) - bf * log(251)
+    rate = 1.7e6
+    s, tot, gates = 0.0, 0.0, []
+    for p in primes(251, 5000):
+        if s > 496.7268 - log(lcm16):
+            break
+        s += log(p)
+        n15 = N[(15, p)] if (15, p) in N else exp(a15) * p ** b15
+        tot += n15 * min(1.0, exp(af) * p ** bf) / rate / 3600
+        gates.append(p)
+    print(f"our covergen (LRC_PRUNE=1, LRC_IRR=2), level one only, proved target: {len(gates)} gates "
+          f"{gates[0]}..{gates[-1]}: ~ {tot:,.0f} CPU-h ({tot/8766:.1f} CPU-years); N15 ~ p^{b15:.2f}, cut fraction ~ p^{bf:.2f}")
 
 
 if __name__ == "__main__":
