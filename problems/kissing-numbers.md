@@ -1,4 +1,4 @@
-# Kissing numbers: 2026 lower bounds in dimensions 11, 12, 19, 25–39 and 43
+# Kissing numbers: 2026 lower bounds in dimensions 11, 12, 19 and 25–43
 
 **Area:** discrete geometry / spherical codes
 **Status:** in progress. We are checking recent, unrefereed, computer-assisted lower-bound claims independently, by an exact pairwise check of every point pair:
@@ -10,7 +10,7 @@
 
 - Added 2026-11-25 (§Approaches 3d): Kravatskiy's 40–43D records (1,126,365; 1,460,066; 1,991,475; 2,921,073), affine shells of rank-40 P₄₈ complements with rational heads. They are rebuilt with our own shell enumerator, every published family population is reproduced, and they are checked over all pairs in exact class + partner mode.
 
-Results so far: see §Results. No violation was found in any of the 36 configurations checked (Qiushi 25, 27, 32–39 and 43; Lin 32–35 and 37–39; Kravatskiy 25–39; 11D 604; 12D 841; 19D 11,948). The exact kissing numbers in these dimensions remain open; these are lower bounds only.
+Results so far: see §Results. No violation was found in any of the 40 configurations checked (Qiushi 25, 27, 32–39 and 43; Lin 32–35 and 37–39; Kravatskiy 25–43; 11D 604; 12D 841; 19D 11,948). The exact kissing numbers in these dimensions remain open; these are lower bounds only.
 
 **What our checks do and do not show.** Each check shows that a configuration is a valid kissing configuration of the stated size, so the stated lower bound holds. It does not show that the bound is the current record. Many of the 2026 arXiv claims, including Qiushi's 25D, 27D and 43D values and all of Qiushi's and Lin's 32–39D values, are already exceeded according to a third-party copy of Cohn's table (§Survey; reported, not checked).
 
