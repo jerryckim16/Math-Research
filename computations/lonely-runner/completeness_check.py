@@ -35,7 +35,7 @@ def main():
     tmp = tempfile.mkdtemp(prefix="lrc_ev_")
     with tarfile.open(tgz) as tf:
         tf.extractall(tmp, filter="data")
-    (sub,) = [d for d in os.listdir(tmp) if d.startswith("out_")]
+    (sub,) = [d for d in os.listdir(tmp) if d.startswith("out") and os.path.isdir(os.path.join(tmp, d))]   # out_<p> (k = 14) or out15_<p> (k = 15)
     root = os.path.join(tmp, sub)
     summ = json.load(open(os.path.join(root, "SUMMARY.json")))
     k, p = summ["gate"]["k"], summ["gate"]["p"]
