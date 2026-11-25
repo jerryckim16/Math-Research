@@ -1,0 +1,13 @@
+{"k": 15, "p": 31, "claim": "I(15,31,16) is empty, hence J(15,31) is empty",
+ "level1": "Lemma S: single unit orbit (1..15)",
+ "trace": [
+  {"level": 2, "witness_free_lifts": 2747, "gcd_proper": 1, "improper_orbits": 186},
+  {"level": 4, "witness_free_lifts": 86926, "gcd_proper": 0, "improper_orbits": 42541},
+  {"level": 8, "witness_free_lifts": 55778, "gcd_proper": 0, "improper_orbits": 27881},
+  {"level": 16, "witness_free_lifts": 0, "gcd_proper": 0, "improper_orbits": 0}],
+ "implementations": {
+  "A_small_gates_py": "liftfree.c + Python gcd clause/canon: trace above, 53 s",
+  "B_cascade_verify_c": "full-fibre DFS, own witness/gcd/canon: lifts 32768, 6094848, 1393983488, 913604608; witness-free 2747, 86926, 55778, 0; orbit sets at levels 2,4,8 identical to A",
+  "C_cascade_sh": "liftfree.c + orbit_filter.c + sort -u: identical orbit sets at levels 4, 8; 0 at 16"},
+ "uses": "grid witnesses and plain gcd clause only (no NG, no level-15 kill)",
+ "allikvere_record": "gates_29_31_records.zip p31_gate_independent_replay.json: l2=2746 (= 2747-1), l16=0"}

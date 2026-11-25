@@ -1,0 +1,32 @@
+k=3 p=5: lemma 1 covergen 1 burnside 1 naive 1 OK
+k=3 p=7: lemma 1 covergen 1 burnside 1 naive 1 OK
+k=4 p=7: lemma 1 covergen 1 burnside 1 naive 1 OK
+k=5 p=7: lemma 2 covergen 2 burnside 2 naive 2 OK
+k=5 p=11: lemma 1 covergen 1 burnside 1 naive 1 OK
+k=6 p=11: lemma 1 covergen 1 burnside 1 naive 1 OK
+k=6 p=13: lemma 1 covergen 1 burnside 1 naive 1 OK
+k=7 p=11: lemma 3 covergen 3 burnside 3 naive 3 OK
+k=7 p=13: lemma 1 covergen 1 burnside 1 naive 1 OK
+k=8 p=11: lemma 7 covergen 7 burnside 7 naive 7 OK
+k=8 p=13: lemma 4 covergen 4 burnside 4 naive 4 OK
+k=8 p=17: lemma 1 covergen 1 burnside 1 naive 1 OK
+k=9 p=11: lemma 14 covergen 14 burnside 14 naive 14 OK
+k=9 p=13: lemma 10 covergen 10 burnside 10 naive 10 OK
+k=9 p=17: lemma 1 covergen 1 burnside 1 naive 1 OK
+k=9 p=19: lemma 1 covergen 1 burnside 1 naive 1 OK
+k=10 p=13: lemma 22 covergen 22 burnside 22 naive 22 OK
+k=10 p=17: lemma 5 covergen 5 burnside 5 naive 5 OK
+k=10 p=19: lemma 1 covergen 1 burnside 1 naive 1 OK
+k=11 p=13: lemma 42 covergen 42 burnside 42 naive 42 OK
+k=11 p=17: lemma 15 covergen 15 burnside 15 naive 15 OK
+k=11 p=19: lemma 5 covergen 5 burnside 5 naive 5 OK
+k=11 p=23: lemma 1 covergen 1 burnside 1 naive 1 OK
+k=12 p=17: lemma 43 covergen 43 burnside 43 naive 43 OK
+k=12 p=19: lemma 19 covergen 19 burnside 19 naive 19 OK
+k=12 p=23: lemma 1 covergen 1 burnside 1 naive 1 OK
+k=15 p=17: lemma 429 burnside 429
+k=15 p=19: lemma 335 burnside 335
+k=15 p=23: lemma 91 burnside 91
+k=15 p=29: lemma 1 burnside 1
+k=15 p=31: lemma 1 burnside 1
+ALL OK
