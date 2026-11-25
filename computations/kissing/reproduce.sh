@@ -219,7 +219,7 @@ unset KISS_STOP_AT_FIRST
 #     shell enumerator (enum_affine.c) and checked over all pairs by kiss_check.c in
 #     partner mode (40D) or class + partner mode (41-43D, table from the builder).
 #     Only with --with-40-43: about 1.7 h of C on 4 cores (40D 11 min, 41D 22 min,
-#     42D 21 min, 43D 44 min), 48 min of numpy for 40D and 73 min for 41D, builds about 25 min; peak RAM < 2 GB.
+#     42D 21 min, 43D 44 min), 48 min of numpy for 40D and 73 min for 41D, builds about 25 min; peak RAM < 2 GB (C), about 3 GB (numpy, 41D).
 if [ "$with4043" = 1 ]; then
   gcc -O3 -march=native -fopenmp -Wall "$here/enum_affine.c" -o "$work/bin/enum_affine" -lm
   python3 -I "$here/fetch_kravatskiy.py" "$K" --with-40-43
