@@ -216,7 +216,17 @@ This is two bases only, so it is *heuristic*. But it shows that the $d = 8, 16$ 
 ## 6. $k = 17$ (18 runners): what was measured
 
 - **Level structure.** $(1, \dots, 17)$ is tight, so it has no witness unless $18 \mid l$. Every gate chain must therefore contain $2 \cdot 3 \cdot 3$. We use the chain $2, 3, 3, 2$ (levels 2, 6, 18, 36). Lemma S at $d = 9$ or $18$ is available at levels 18 and 36.
-- **Tight orbit** (`smallp/xcascade.py 17 tight`, Lemma S on). At $p = 101$ and $103$ it dies at level 18, with retained sizes $52, 2, 0$ and $56, 2, 0$. At $p = 101$ it dies at level 18 even without Lemma S. The run over 97–300 is in `smallp/results/tight17.jsonl`, to the extent it finished.
+- **Tight orbit** (`smallp/xcascade.py 17 tight`, Lemma S on; computed exactly). The retained sizes at levels 2, 6, 18 are:
+
+  | $p$ | 97 | 101 | 103 | 107 | 109 |
+  | --- | --- | --- | --- | --- | --- |
+  | level 2 | 143 | 52 | 56 | 36 | 109 |
+  | level 6 | 2 | 2 | 2 | 2 | 4 |
+  | level 18 | 0 | 0 | 0 | 0 | 0 |
+
+  - So the tight orbit dies at level 18 at each of these primes. At $p = 101$ it dies there even without Lemma S.
+  - The run was stopped after 109 (several minutes per prime, budget). Results: `smallp/results/tight17.jsonl`.
+  - Only this one orbit is examined, so these are not gate checks.
 - **Level one at small $p$** (`covergen.c` with `LRC_PRUNE=2 LRC_IRR=2 LRC_ORDER=1`, then `canon.c expand`):
   - $p = 37$: 39 minimal covers, giving 853,467 orbits;
   - $p = 71$: 52,786 covers (30, 935, 15,222 and 36,599 of sizes 14–17), giving 381,083 orbits.

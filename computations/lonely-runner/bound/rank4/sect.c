@@ -77,7 +77,38 @@ static ll gcdl(ll a, ll b) { if (a < 0) a = -a; if (b < 0) b = -b; while (b) { l
 static int bit(const uint64_t *m, int k) { return (m[k >> 6] >> (k & 63)) & 1; }
 static void setbit(uint64_t *m, int k) { m[k >> 6] |= 1ULL << (k & 63); }
 
+/* row-sign symmetry: G = {sigma in {+-1}^R, sigma_0 = +1}; it maps each
+   type to a type with the same support pattern.  Types are ordered by
+   pattern blocks, so a completed prefix of blocks is G-stable and the
+   lex-min orbit representative can be tested block by block. */
+#define NG (1 << (R - 1))
+static int img[NG][MAXT];          /* index of canon(sigma * T[k]) */
+static int blk_end[MAXT + 1];      /* blk_end[k] = 1 if a block ends just before index k */
+static int SYM = 1;
+static int pattern(const int *t) { int p = 0; for (int i = 0; i < R; i++) if (t[i]) p |= 1 << i; return p; }
+static void make_types0(void);
 static void make_types(void) {
+    make_types0();
+    /* stable sort by pattern */
+    for (int i = 0; i < NT; i++)
+        for (int j = i + 1; j < NT; j++)
+            if (pattern(T[j]) < pattern(T[i]) || (pattern(T[j]) == pattern(T[i]) && memcmp(T[j], T[i], sizeof T[i]) < 0)) {
+                int tmp[R]; memcpy(tmp, T[i], sizeof tmp); memcpy(T[i], T[j], sizeof tmp); memcpy(T[j], tmp, sizeof tmp);
+            }
+    for (int k = 0; k <= NT; k++) blk_end[k] = (k == 0) || k == NT || pattern(T[k]) != pattern(T[k - 1]);
+    for (int g = 0; g < NG; g++)
+        for (int k = 0; k < NT; k++) {
+            int t[R], f = 0;
+            for (int i = 0; i < R; i++) t[i] = ((i > 0 && ((g >> (i - 1)) & 1)) ? -1 : 1) * T[k][i];
+            for (int i = 0; i < R; i++) if (t[i]) { f = t[i]; break; }
+            if (f < 0) for (int i = 0; i < R; i++) t[i] = -t[i];
+            int found = -1;
+            for (int q = 0; q < NT; q++) if (memcmp(T[q], t, sizeof t) == 0) found = q;
+            if (found < 0 || pattern(T[found]) != pattern(T[k])) { fprintf(stderr, "img error\n"); exit(6); }
+            img[g][k] = found;
+        }
+}
+static void make_types0(void) {
     int t[R];
     int tot = 1;
     for (int i = 0; i < R; i++) tot *= 3;
@@ -216,6 +247,7 @@ static ll shard = 0, nshard = 1, prefix_ord = 0;
 #define SHARD_DEPTH 4
 
 static int GREEDY = 1, PRUNE = 1, have_max = 0;
+static int cur_orbit = 1; static ll orbit_leaves = 0;
 static i128 best_flo, bestA, bestB;
 static int oddceil(int s) { return (s & 1) ? s : s + 1; }
 
@@ -258,7 +290,7 @@ static int present[MAXT], np;
 static void leaf(void) {
     int K = NT;
     int c = ccount[K];
-    leaves++;
+    leaves++; orbit_leaves += cur_orbit;
     i128 A = 0, B = 0;
     {   /* rank of the present types */
         ll bs[R][R]; int nb0 = 0;
@@ -319,7 +351,7 @@ static void leaf(void) {
     ll g = gram / (idx * idx);
     n_adm++;
     /* S_O(delta) * 2^(n-1) = delta*A + B */
-    printf("ADM a=%d g=%lld idx=%lld raw=%lld lines=%d A=%lld B=%lld m=", a, g, idx, gram, c, (ll)A, (ll)B);
+    printf("ADM a=%d g=%lld idx=%lld raw=%lld lines=%d A=%lld B=%lld orb=%d m=", a, g, idx, gram, c, (ll)A, (ll)B, cur_orbit);
     for (int k = 0; k < NT; k++) printf("%d%c", m[k], k + 1 < NT ? ',' : '\n');
 }
 
@@ -346,13 +378,30 @@ static int prune_ub2(int k) {
 
 static int *leafsup;
 
-static void dfs(int k, int rem) {
+
+static void dfs(int k, int rem, unsigned tied) {
+    if (SYM && blk_end[k] && k > 0) {
+        /* the block [b0, k) is complete: compare (g.m) with m on it, for tied g */
+        int b0 = k - 1;
+        while (b0 > 0 && !blk_end[b0]) b0--;
+        unsigned nt = tied;
+        for (int g = 1; g < NG; g++) if ((tied >> g) & 1) {
+            /* (g.m)_{img[g][j]} = m_j, so (g.m)_q = m_{img[g]^{-1}(q)}; G is an involution group: img[g] is its own inverse */
+            for (int q = b0; q < k; q++) {
+                int gm = m[img[g][q]];
+                if (gm < m[q]) return;                       /* g.m < m: not the representative */
+                if (gm > m[q]) { nt &= ~(1u << g); break; }  /* g.m > m: g resolved */
+            }
+        }
+        tied = nt;
+    }
     if (k == SHARD_DEPTH) {
         ll o = prefix_ord++;
         if (o % nshard != shard) return;
     }
     if (k == NT) {
         for (int i = 0; i < R; i++) if (need[i]) return;
+        cur_orbit = SYM ? NG / (1 + __builtin_popcount(tied)) : 1;
         int c = ccount[k], v = cv[k], *bs = csup[k], *zf = cz[k];
         for (int i = 0; i < c; i++) leafsup[i] = bs[i] + v * zf[i];
         csup[k] = leafsup;
@@ -368,7 +417,7 @@ static void dfs(int k, int rem) {
     /* m_k = 0 */
     m[k] = 0;
     cand[k + 1] = cand[k]; csup[k + 1] = csup[k]; cz[k + 1] = cz[k]; cv[k + 1] = cv[k]; ccount[k + 1] = ccount[k];
-    dfs(k + 1, rem);
+    dfs(k + 1, rem, tied);
     /* m_k >= 1 */
     int cap = rem;
     for (int i = 0; i < R; i++) if (T[k][i] && need[i] < cap) cap = need[i];
@@ -384,7 +433,7 @@ static void dfs(int k, int rem) {
         m[k] = v;
         for (int i = 0; i < R; i++) if (T[k][i]) need[i] -= v;
         cand[k + 1] = dst; csup[k + 1] = bs; cz[k + 1] = zf; cv[k + 1] = v; ccount[k + 1] = nc_n;
-        dfs(k + 1, rem - v);
+        dfs(k + 1, rem - v, tied);
         for (int i = 0; i < R; i++) if (T[k][i]) need[i] += v;
     }
     m[k] = 0;
@@ -397,6 +446,7 @@ int main(int argc, char **argv) {
     if (argc >= 8 + R) { shard = atoll(argv[6 + R]); nshard = atoll(argv[7 + R]); }
     if (getenv("NOGREEDY")) GREEDY = 0;
     if (getenv("NOPRUNE")) PRUNE = 0;
+    if (getenv("NOSYM")) SYM = 0;
     pow2[0] = 1; for (int i = 1; i < 64; i++) pow2[i] = pow2[i - 1] * 2;
     make_types();
     make_lambdas();
@@ -413,11 +463,12 @@ int main(int argc, char **argv) {
     printf("TYPES");
     for (int k = 0; k < NT; k++) { printf(" "); for (int i = 0; i < R; i++) printf("%d%s", T[k][i], i + 1 < R ? "," : ""); }
     printf("\n");
-    dfs(0, nn);
+    dfs(0, nn, SYM ? ((1u << NG) - 2) : 0);
     printf("SUMMARY n=%d prof=", nn);
     for (int i = 0; i < R; i++) printf("%d%s", prof[i], i + 1 < R ? "," : "");
     printf(" shard=%lld/%lld leaves=%lld rankdef=%lld short=%lld riesz_fail=%lld greedy_fail=%lld admitted=%lld pruned=%lld\n",
            shard, nshard, leaves, n_rank_def, n_short, n_riesz_fail, n_greedy_fail, n_adm, n_pruned);
+    printf("ORBITSUM leaves_weighted=%lld sym=%d\n", orbit_leaves, SYM);
     if (have_max) printf("MAXS A=%lld B=%lld (S_O*2^(n-1) = delta*A + B, max at delta_lo over short-free full-rank leaves) greedy=%d prune=%d\n", (ll)bestA, (ll)bestB, GREEDY, PRUNE);
     return 0;
 }
