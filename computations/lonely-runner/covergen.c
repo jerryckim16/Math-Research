@@ -125,6 +125,40 @@ static int irr = 0, maxcov = 0;   /* maxcov = max |cov(c)| (gains are <= it) */
  * Every cut removes only nodes with no admissible leaf below, so the union of
  * the two outputs is exactly the single-tree output (tested). */
 static int kmax = 0, exactk = 0;
+/* Child ordering and child-gain cutoff, enabled with LRC_ORDER=1 (step 12;
+ * the rules are those described in the change log of Allikvere's generator,
+ * basegen_v66_lf.cpp v6.3, reimplemented here from that description).
+ *  - The children of the chosen time a (allowed classes covering a) are tried
+ *    in order of DEScending gain |cov(c) & U|, ties by ascending c, instead of
+ *    ascending c.  Exclusion of earlier siblings is unchanged, and the
+ *    completeness/uniqueness argument in the header holds for any fixed child
+ *    order, so the printed set of minimal covers is unchanged (tested).
+ *  - Cutoff: after child c the other (left-1) classes cover at most bsum =
+ *    the sum of the (left-1) largest gains over the allowed classes (gains only
+ *    shrink below the node), so c is dead if g_c + bsum < |U|; the siblings
+ *    after it have g <= g_c and are dead too, so the loop stops. */
+static int order = 0;
+/* LRC_IRR bit 4 (step 12): incremental redundancy cut.  State per depth d:
+ * cv2[d] = times covered at least twice by L, pv[d][j] = private times of the
+ * j-th chosen class.  Adding class c: newly2 = cov(c) & covered & ~cv2;
+ * every earlier private set loses newly2; if one becomes empty that class has
+ * no private time in any completion (private sets only shrink), so no minimal
+ * cover lies below and the child is skipped (its class is still excluded for
+ * later siblings).  Same cut as bit 1 part (i), at O(|L|) instead of O(|L|^2)
+ * mask work per child, and applied before the child node is created. */
+static bs cv2[MAXK + 2], pv[MAXK + 2][MAXK + 1];
+static void irr4_init(void) { memset(&cv2[1], 0, sizeof(bs)); pv[1][0] = cov[1]; }
+/* returns 1 if child c (added at depth d = |L|, uncovered set U) passes */
+static int irr4_add(int d, int c, const bs *U) {
+    bs n2; int ok = 1;
+    for (int w = 0; w < W; w++) { n2.w[w] = cov[c].w[w] & ~U->w[w] & ~cv2[d].w[w]; cv2[d + 1].w[w] = cv2[d].w[w] | n2.w[w]; pv[d + 1][d].w[w] = cov[c].w[w] & U->w[w]; }
+    for (int j = 0; j < d; j++) {
+        uint64_t any = 0;
+        for (int w = 0; w < W; w++) { pv[d + 1][j].w[w] = pv[d][j].w[w] & ~n2.w[w]; any |= pv[d + 1][j].w[w]; }
+        if (!any) ok = 0;
+    }
+    return ok;
+}
 static int irr_cuts(const bs *U, const bs *A, bs *Aout) {
     *Aout = *A;
     if (nL >= 2 && (irr & 1)) {
@@ -196,10 +230,28 @@ static void dfs(const bs *U, const bs *A, int depth) {
     if (nL == kmax) return;
     if (exactk && popc(U) < kmax - nL) return;
     static bs Airr[MAXK + 2];
-    if (irr) { if (!irr_cuts(U, A, &Airr[nL])) return; A = &Airr[nL]; }
+    /* with LRC_ORDER the gains are computed once per node (below) and feed the
+     * sharper gain bound, the cutoff and the child order, so irr_cuts runs
+     * only its bit-1 part here */
+    int irr_here = order ? (irr & ~2) : irr;
+    if (irr_here) { int sv = irr; irr = irr_here; int ok = irr_cuts(U, A, &Airr[nL]); irr = sv; if (!ok) return; A = &Airr[nL]; }
     int need = popc(U), left = kmax - nL, maxg = 0;
-    /* gain bound (implied by the sharper bound in irr_cuts when irr & 2) */
-    if (!(irr & 2)) {
+    static unsigned short G[2048];
+    long bsum = 0;
+    if (order) {
+        int gh[2049]; memset(gh, 0, (maxcov + 1) * sizeof(int));
+        for (int w = 0; w < W; w++) {
+            uint64_t x = A->w[w];
+            while (x) { int c = w * 64 + __builtin_ctzll(x); x &= x - 1; int g = popand(&cov[c], U); G[c] = (unsigned short)g; gh[g]++; }
+        }
+        long got = 0; int lft = left;
+        for (int g = maxcov; g > 0 && lft > 0; g--) { int t = gh[g] < lft ? gh[g] : lft; got += (long)t * g; lft -= t; }
+        if (got < need) return;               /* sharper gain bound (LRC_IRR bit 2) */
+        lft = left - 1;                        /* bsum = sum of the (left-1) largest gains */
+        for (int g = maxcov; g > 0 && lft > 0; g--) { int t = gh[g] < lft ? gh[g] : lft; bsum += (long)t * g; lft -= t; }
+    }
+    /* gain bound (implied by the sharper bound when irr & 2 or order) */
+    if (!(irr & 2) && !order) {
         for (int c = 1; c <= h; c++) if (has(A, c)) { int g = popand(&cov[c], U); if (g > maxg) maxg = g; }
         if ((long)left * maxg < need) return;
     }
@@ -242,7 +294,22 @@ static void dfs(const bs *U, const bs *A, int depth) {
     if (bestm == 0) return;
     bs A2 = *A;
     long branch = 0;
-    for (int c = 1; c <= h; c++) if (has(&cov[besta], c) && has(A, c)) {
+    int ch[2048], nch = 0, chg[2048];
+    for (int w = 0; w < W; w++) {
+        uint64_t x = cov[besta].w[w] & A->w[w];
+        while (x) { ch[nch++] = w * 64 + __builtin_ctzll(x); x &= x - 1; }
+    }
+    if (order) {
+        for (int i = 0; i < nch; i++) chg[i] = G[ch[i]];
+        for (int i = 1; i < nch; i++) {   /* insertion sort: gain desc, class asc */
+            int c = ch[i], g = chg[i], j = i - 1;
+            while (j >= 0 && (chg[j] < g || (chg[j] == g && ch[j] > c))) { ch[j + 1] = ch[j]; chg[j + 1] = chg[j]; j--; }
+            ch[j + 1] = c; chg[j + 1] = g;
+        }
+    }
+    for (int ci = 0; ci < nch; ci++) {
+        int c = ch[ci];
+        if (order && chg[ci] + bsum < need) break;
         if (depth == 0 && maxtop >= 0 && branch >= maxtop) break;
         branch++;
         clr(&A2, c);                  /* excluded for later siblings and below */
@@ -250,6 +317,7 @@ static void dfs(const bs *U, const bs *A, int depth) {
         bs saveO = others;
         for (int w = 0; w < W; w++) others.w[w] |= cov[c].w[w];
         if (prune && priv1(&others) < qk) { others = saveO; continue; }
+        if ((irr & 4) && !irr4_add(nL, c, U)) { others = saveO; continue; }
         bs U2; for (int w = 0; w < W; w++) U2.w[w] = U->w[w] & ~cov[c].w[w];
         L[nL++] = c;
         dfs(&U2, &A2, depth + 1);
@@ -280,12 +348,29 @@ static double probe(bs U, bs A) {
         /* children = candidates not removed by the private-time node cut (a
          * skipped candidate still excludes its class for later siblings) */
         int cand[2048], nc = 0, kept[2048], nk = 0;
-        for (int c = 1; c <= h; c++) if (has(&cov[besta], c) && has(&A, c)) {
+        int oc[2048], og[2048], no = 0; long bsum = 0;
+        for (int c = 1; c <= h; c++) if (has(&cov[besta], c) && has(&A, c)) { oc[no] = c; og[no++] = popand(&cov[c], &U); }
+        if (order) {
+            int gh[2049]; memset(gh, 0, (maxcov + 1) * sizeof(int));
+            for (int c = 1; c <= h; c++) if (has(&A, c)) gh[popand(&cov[c], &U)]++;
+            int lft = left - 1;
+            for (int g = maxcov; g > 0 && lft > 0; g--) { int t = gh[g] < lft ? gh[g] : lft; bsum += (long)t * g; lft -= t; }
+            for (int i = 1; i < no; i++) {
+                int c = oc[i], g = og[i], j = i - 1;
+                while (j >= 0 && (og[j] < g || (og[j] == g && oc[j] > c))) { oc[j + 1] = oc[j]; og[j + 1] = og[j]; j--; }
+                oc[j + 1] = c; og[j + 1] = g;
+            }
+        }
+        for (int oi = 0; oi < no; oi++) {
+            int c = oc[oi];
+            if (order && og[oi] + bsum < need) break;
             if (prune) { bs O2; for (int w = 0; w < W; w++) O2.w[w] = O.w[w] | cov[c].w[w]; if (priv1(&O2) < qk) { cand[nc++] = c; continue; } }
+            if ((irr & 4) && !irr4_add(nL, c, &U)) { cand[nc++] = c; continue; }
             kept[nk++] = nc; cand[nc++] = c;
         }
         if (nk == 0) return est;
         int i = kept[(int)(xs() % (unsigned long long)nk)];
+        if (irr & 4) irr4_add(nL, cand[i], &U);   /* recompute the chosen child's state */
         for (int j = 0; j <= i; j++) clr(&A, cand[j]);
         for (int w = 0; w < W; w++) { U.w[w] &= ~cov[cand[i]].w[w]; O.w[w] |= cov[cand[i]].w[w]; }
         L[nL++] = cand[i];
@@ -300,6 +385,7 @@ int main(int argc, char **argv) {
     if (argc > 3) maxtop = atol(argv[3]);
     if (getenv("LRC_PRUNE")) prune = atoi(getenv("LRC_PRUNE"));
     if (getenv("LRC_IRR")) irr = atoi(getenv("LRC_IRR"));
+    if (getenv("LRC_ORDER")) order = atoi(getenv("LRC_ORDER"));
     int twob = getenv("LRC_TWOBRANCH") ? atoi(getenv("LRC_TWOBRANCH")) : 0;
     if (getenv("LRC_NSHARDS")) { nshards = atol(getenv("LRC_NSHARDS")); shard = getenv("LRC_SHARD") ? atol(getenv("LRC_SHARD")) : 0; }
     long probes = 0;
@@ -321,6 +407,7 @@ int main(int argc, char **argv) {
     for (int w = 0; w < W; w++) U.w[w] &= ~cov[1].w[w];
     clr(&A, 1);
     L[0] = 1; nL = 1;
+    irr4_init();
     if (probes > 0) {
         int nb = twob ? 2 : 1;
         for (int b = 1; b <= nb; b++) {
@@ -349,6 +436,6 @@ int main(int argc, char **argv) {
         dfs(&U, &A, 0);
         fprintf(stderr, "branch 2 (|C| <= %d): nodes %llu minimal_covers %llu q %d\n", k - 1, nodes - n1, printed - c1, qk);
     } else dfs(&U, &A, 0);
-    fprintf(stderr, "nodes %llu leaves %llu minimal_covers %llu prune %d q_k %d m %d irr %d twobranch %d\n", nodes, leaves, printed, prune, qs(k), mcov, irr, twob);
+    fprintf(stderr, "nodes %llu leaves %llu minimal_covers %llu prune %d q_k %d m %d irr %d twobranch %d order %d\n", nodes, leaves, printed, prune, qs(k), mcov, irr, twob, order);
     return 0;
 }
