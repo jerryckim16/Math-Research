@@ -24,8 +24,17 @@
  * contact pairs (4p^2 = AB exactly, i.e. angle exactly 60 degrees), and for
  * each class pair the maximum inner product p observed.
  *
+ * Class mode (optional, used for points that are not small integer rows):
+ *   kiss_check FILE.i8 d LABELS.u8 TABLE.txt
+ * LABELS.u8 holds one class label (uint8) per row; TABLE.txt holds "k" and
+ * then k*k lines "a b T C". Pair (i, j) then passes iff a_i.a_j <= T[l_i][l_j],
+ * and counts as a contact iff a_i.a_j == C[l_i][l_j]. The table is computed
+ * exactly elsewhere (class_table.py) from an exact decomposition of the true
+ * inner product as an increasing function of the row dot product; this
+ * program only evaluates the row dot products (exactly, as above).
+ *
  * Build: gcc -O3 -march=native -fopenmp kiss_check.c -o kiss_check
- * Usage: kiss_check FILE.i8 d
+ * Usage: kiss_check FILE.i8 d [LABELS.u8 TABLE.txt]
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -33,7 +42,7 @@
 #include <string.h>
 #include <omp.h>
 
-#define MAXCLS 64
+#define MAXCLS 256
 #define JB 2048
 
 static int64_t isqrt64(int64_t x) {
@@ -44,7 +53,7 @@ static int64_t isqrt64(int64_t x) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 3) { fprintf(stderr, "usage: %s FILE.i8 d\n", argv[0]); return 2; }
+    if (argc != 3 && argc != 5) { fprintf(stderr, "usage: %s FILE.i8 d [LABELS.u8 TABLE.txt]\n", argv[0]); return 2; }
     const char *fn = argv[1];
     int d = atoi(argv[2]);
     if (d <= 0 || d > 4096) { fprintf(stderr, "bad d\n"); return 2; }
@@ -87,6 +96,28 @@ int main(int argc, char **argv) {
         int64_t t = isqrt64(AB / 4);
         T[a][b] = (int16_t)t;
         C[a][b] = (4 * t * t == AB) ? (int16_t)t : (int16_t)32767; /* 32767 never reached */
+    }
+    int classmode = (argc == 5);
+    if (classmode) {
+        if (maxnorm >= 32767) { fprintf(stderr, "class mode needs max squared norm < 32767\n"); return 2; }
+        FILE *fl = fopen(argv[3], "rb");
+        if (!fl || fread(cls, 1, n, fl) != (size_t)n || fgetc(fl) != EOF) { fprintf(stderr, "bad labels file\n"); return 2; }
+        fclose(fl);
+        FILE *ft = fopen(argv[4], "r");
+        if (!ft || fscanf(ft, "%d", &ncls) != 1 || ncls < 1 || ncls > MAXCLS) { fprintf(stderr, "bad table\n"); return 2; }
+        int seen[MAXCLS][MAXCLS]; memset(seen, 0, sizeof seen);
+        for (int e = 0; e < ncls * ncls; e++) {
+            int a, b; long tv, cv;
+            if (fscanf(ft, "%d %d %ld %ld", &a, &b, &tv, &cv) != 4 || a < 0 || b < 0 || a >= ncls || b >= ncls || seen[a][b]
+                || tv < -32768 || tv > 32767 || cv < -32768 || cv > 32767) { fprintf(stderr, "bad table entry\n"); return 2; }
+            seen[a][b] = 1; T[a][b] = (int16_t)tv; C[a][b] = (int16_t)cv;
+        }
+        fclose(ft);
+        for (int c = 0; c < ncls; c++) { clsnorm[c] = c; clscount[c] = 0; }
+        for (int64_t i = 0; i < n; i++) {
+            if (cls[i] >= ncls) { fprintf(stderr, "label out of range\n"); return 2; }
+            clscount[cls[i]]++;
+        }
     }
 
     /* column-major int16 copy */
@@ -158,8 +189,8 @@ int main(int argc, char **argv) {
         }
     }
 
-    printf("file %s\nrows %lld\ncolumns %d\nnorm_classes %d\n", fn, (long long)n, d, ncls);
-    for (int c = 0; c < ncls; c++) printf("  squared_norm %d count %lld\n", clsnorm[c], (long long)clscount[c]);
+    printf("file %s\nrows %lld\ncolumns %d\n%s %d\n", fn, (long long)n, d, classmode ? "label_classes" : "norm_classes", ncls);
+    for (int c = 0; c < ncls; c++) printf("  %s %d count %lld\n", classmode ? "label" : "squared_norm", clsnorm[c], (long long)clscount[c]);
     printf("pairs %lld\n", (long long)(n * (n - 1) / 2));
     for (int a = 0; a < ncls; a++) for (int b = a; b < ncls; b++) {
         int16_t m = maxp[a][b] > maxp[b][a] ? maxp[a][b] : maxp[b][a];

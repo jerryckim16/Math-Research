@@ -14,7 +14,13 @@ before it is reported.
 
 Work is split over row tiles; each worker process uses a single BLAS thread.
 
+Class mode (--classes LABELS.u8 TABLE.txt): as in kiss_check.c, pair (i, j)
+passes iff a_i.a_j <= T[l_i][l_j] and is a contact iff a_i.a_j == C[l_i][l_j],
+with the table computed exactly by class_table.py; flagged pairs are
+recomputed in int64 and compared with T.
+
 Usage: python3 kiss_check_np.py FILE.i8 d [--workers 4] [--tile 4096]
+         [--classes LABELS.u8 TABLE.txt]
 """
 import argparse
 import math
@@ -30,12 +36,30 @@ import numpy as np  # noqa: E402
 _G = {}
 
 
-def _init(path, d):
+def _init(path, d, labels=None, table=None):
     raw = np.fromfile(path, dtype=np.int8).reshape(-1, d)
     _G["X"] = raw.astype(np.float32)
     _G["I"] = raw.astype(np.int64)
     nrm = (_G["I"] ** 2).sum(axis=1)
     _G["nrm"] = nrm
+    _G["classmode"] = labels is not None
+    if labels is not None:
+        cls = np.fromfile(labels, dtype=np.uint8).astype(np.int64)
+        assert len(cls) == len(raw)
+        tok = open(table).read().split()
+        k = int(tok[0])
+        assert len(tok) == 1 + 4 * k * k and cls.max() < k
+        T = np.full((k, k), 2**40, dtype=np.int64)
+        C = np.full((k, k), 2**25, dtype=np.float32)
+        for e in range(k * k):
+            a, b, t, c = (int(x) for x in tok[1 + 4 * e:5 + 4 * e])
+            assert T[a, b] == 2**40
+            T[a, b] = t
+            if c != 32767:
+                C[a, b] = c
+        assert (T != 2**40).all()
+        _G["cls"], _G["classes"], _G["T"], _G["C"] = cls, np.arange(k), T, C
+        return
     classes, cls = np.unique(nrm, return_inverse=True)
     _G["cls"] = cls
     _G["classes"] = classes
@@ -84,8 +108,11 @@ def _tile(args):
         gi, gj = ii + i0, jj + j0
         p = (I[gi] * I[gj]).sum(axis=1)
         assert np.array_equal(p.astype(np.float32), G[ii, jj]), "float32 product not exact"
-        A, B = _G["nrm"][gi], _G["nrm"][gj]
-        bad = (p > 0) & (4 * p * p > A * B)
+        if _G["classmode"]:
+            bad = p > T[cls[gi], cls[gj]]
+        else:
+            A, B = _G["nrm"][gi], _G["nrm"][gj]
+            bad = (p > 0) & (4 * p * p > A * B)
         assert bad.all()
         viol = int(bad.sum())
         first = (int(gi[0]), int(gj[0]))
@@ -98,8 +125,9 @@ def main():
     ap.add_argument("d", type=int)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--tile", type=int, default=4096)
+    ap.add_argument("--classes", nargs=2, metavar=("LABELS", "TABLE"))
     a = ap.parse_args()
-    _init(a.path, a.d)
+    _init(a.path, a.d, *(a.classes or (None, None)))
     n = _G["X"].shape[0]
     nrm = _G["nrm"]
     if (nrm == 0).any():
@@ -125,10 +153,11 @@ def main():
     firsts = [r[3] for r in res if r[3] is not None]
     for r in res:
         maxp = np.maximum(maxp, r[2])
-    print(f"rows {n}\ncolumns {a.d}\nnorm_classes {k}")
-    cnt = np.bincount(_G["cls"])
+    cm = _G["classmode"]
+    print(f"rows {n}\ncolumns {a.d}\n{'label_classes' if cm else 'norm_classes'} {k}")
+    cnt = np.bincount(_G["cls"], minlength=k)
     for c in range(k):
-        print(f"  squared_norm {int(_G['classes'][c])} count {int(cnt[c])}")
+        print(f"  {'label' if cm else 'squared_norm'} {int(_G['classes'][c])} count {int(cnt[c])}")
     print(f"pairs {n * (n - 1) // 2}")
     for x in range(k):
         for y in range(x, k):
