@@ -1,0 +1,3 @@
+{"k": 17, "p": 31, "level": 1, "orbits": 8}
+{"k": 17, "p": 31, "level": 2, "witness_free_lifts": 161764, "gcd_proper": 39, "ng_settled": 0, "orbits": 75530, "seconds": 2}
+{"k": 17, "p": 31, "level": 4, "witness_free_lifts": 54319056, "gcd_proper": 0, "ng_settled": 32, "orbits": 18145635, "seconds": 1347}

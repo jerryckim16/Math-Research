@@ -4,6 +4,7 @@
 **Status:** in progress. Done so far:
 - The prime-gate framework is reproduced end to end for $\mathrm{LRC}(3)$–$\mathrm{LRC}(10)$ (4–11 runners), conditional on one cited bound ($B_k$). $\mathrm{LRC}(10)$ uses an explicit $\times 11$ lift, independent of Sungkawichai–Trakulthongchai's Prop. corlarge (step 7).
 - All 71 of Allikvere's 15-runner ($\mathrm{LRC}(14)$) gate certificates are independently re-checked, with no discrepancy found. Stored rows were checked in full at every gate; the cascade and kill in full at 54 gates and sampled at 17, with the cascade alone also in full at near-gcd gate 223; level-one completeness at 6 gates ($p = 89, 239, 251, 263, 269, 283$). See "Independent re-check summary". His 14-runner terminal kills are re-checked at all 111 of his gate primes.
+- **Allikvere's 16-runner ($\mathrm{LRC}(15)$) gate certificates: all 59 re-checked (2026-11-25), with no discrepancy.** Every stored row, the binary cascade to level 16, every SUMMARY total and the archive hashes were checked with our own code (`notes/lonely-runner/cert15.md`). **Level-one completeness is not yet checked at any of these gates**, and at the large gates the stored families are tiny, so the claim rests mainly on his search there. The cloud session has started completeness runs at his cheapest gates.
 - The $n = 15$ shape lemma $R_{15} < 49/100$ is proved (Approach 10; every inequality machine-checked exactly). The general-$n$ parts of Allikvere's Theorem 3.8 are independently verified (Approach 11), so the 16-runner gate target 483.239 is proved here, given $\mathrm{LRC}(m)$ for $m \le 14$.
 - The cost of 16 runners with our code is estimated from measurements. **16 and 17 runners turn out to be already claimed** (Zenodo, Oct 2026; see the correction under Statement). The first unclaimed case is 18 runners.
 
@@ -879,6 +880,13 @@ Started 2026-11-25. This is the current focus. The results below were reviewed b
 - **Lemma S (proved).** For a prime $k+2 \le p \le 2k+1$, a tuple is improper at level one iff its $\pm$ classes cover all $(p-1)/2$ classes. This gives tiny level-one sets at the smallest primes; for $k = 17$ the orbit counts are 1430, 728, 40, 8 at $p = 19, 23, 29, 31$. Allikvere has the same lemma for $k = 15$; ours was derived before we read it.
 - **Lemma T1 (proved).** For $p > k+1$, the class of $(1,\ldots,k)$ is improper at level $l$ iff $(k+1) \nmid l$. So $k = 17$ gates need a level divisible by $18$, i.e. lifts by 3 as well as 2.
 - **$J(15,31) = \emptyset$** (certificate-checked, two independent implementations, re-run by the coordinator). This is an independent re-derivation of one of Allikvere's 16-runner preliminary primes, not a new gate.
+
+**The tight orbit at $k = 17$** (`notes/lonely-runner/k17-structure.md`):
+
+- **Theorem K (proved).** For every prime $p \ge 353$, the tight orbit $(1,\ldots,17)$ dies at level 18 along the lift chain $\times 3\times 2\times 3$; along $\times 2\times 3\times 3$ the same holds for $p \ge 421$.
+- The proof uses Lemma R′ and the exact constants $\Lambda(17,3) = 1/352$ and $\Lambda(17,2) = 4/1683$. These were computed by two independent exact algorithms with a Fraction spot check; the coordinator re-ran the exact code and got $\Lambda(17,3) = 1/352$.
+- **The smallest primes do not work.** The four Lemma S gates $p = 19, 23, 29, 31$ for $k = 17$ blow up under the cascade with NG; for example, $p = 31$ goes from 8 orbits at level 1 to $1.8\cdot 10^{7}$ at level 4. This is recorded as a failed route.
+- **Lemma TN (proved)** gives lower bounds on the level at which a cascade with NG could close at small-$\tau$ primes.
 
 **Cost (heuristic; draft page `notes/lonely-runner/gates.md`).**
 

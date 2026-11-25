@@ -1,0 +1,8 @@
+p=31: reps 8 nodes 479196 witness_free 161764 gcd_proper 39 ng_settled 0 improper_out 161725
+p=31 level-2 orbit sets identical (cascade_verify.c vs liftfree.c|orbit_filter.c): 75530 orbits; sha256 3d9dacc2f2b773ca
+p=29: reps 40 nodes 3233016 witness_free 1260662 gcd_proper 265 ng_settled 0 improper_out 1260397
+p=29 level-2 orbit sets identical (cascade_verify.c vs liftfree.c|orbit_filter.c): 421686 orbits; sha256 91ab463b4a6f9e07
+p=23: reps 728 nodes 21538608 witness_free 8538286 gcd_proper 8099 ng_settled 0 improper_out 8530187
+p=23 level-2 orbit sets identical (cascade_verify.c vs liftfree.c|orbit_filter.c): 605189 orbits; sha256 7e245d67e56b5fc4
+p=19: reps 1430 nodes 109097210 witness_free 49878016 gcd_proper 19305 ng_settled 0 improper_out 49858711
+p=19 level-2 orbit sets identical (cascade_verify.c vs liftfree.c|orbit_filter.c): 1697639 orbits; sha256 161c497ae68a1a48
