@@ -23,7 +23,9 @@ Selection: admissible primes sorted by cost / ln p, taken until sum ln p >
 target.  This is the greedy solution of the knapsack "minimise cost subject
 to sum ln p >= target"; it is optimal up to the last prime taken (the
 fractional relaxation is solved exactly by the same order).
-Usage: python3 gate_set.py K TARGET [TARGET2 ...]   (env GATE_DATA = data directory, default: this one)
+Usage: python3 gate_set.py K TARGET [TARGET2 ...]   (env GATE_DATA = data directory, default: this one;
+       GATE_IGNORE_TAU=1: optimistic scenario in which near-gcd primes (tau <= k-2) also close,
+       through Lemma S and a suitable kill -- NOT established for k = 17)
 """
 import math
 import os
@@ -83,7 +85,7 @@ def main():
         pool = []
         for p in primes(k + 2, 6000):
             st = tau.get(p, "unscreened" if p <= pmax else "extrapolated")
-            if st.startswith("near-gcd"):
+            if st.startswith("near-gcd") and not os.environ.get("GATE_IGNORE_TAU"):
                 continue
             pool.append((nodes(p) / RATE / 3600 / math.log(p), p, st))
         pool.sort()

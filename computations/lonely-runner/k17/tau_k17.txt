@@ -1,0 +1,84 @@
+# tau.c screen, k = 17, TAU_FROM=15 smax=15, 60 s per prime: 'tau 15' = a cover on <= 15 classes FOUND (tau_17 <= 15); TIMEOUT = undetermined
+k 17 p 19 h 9 m 1 tau 15 nodes 9 cover 1 9 6 5 4 3 8 7 2 secs 0
+k 17 p 23 h 11 m 1 tau 15 nodes 11 cover 1 11 8 6 9 4 10 3 5 7 2 secs 0
+k 17 p 29 h 14 m 1 tau 15 nodes 14 cover 1 14 10 7 6 5 4 11 13 3 8 12 9 2 secs 0
+k 17 p 31 h 15 m 1 tau 15 nodes 15 cover 1 15 10 8 6 5 9 4 7 3 14 13 12 11 2 secs 0
+k 17 p 37 h 18 m 2 tau 15 nodes 10 cover 1 12 9 7 5 4 11 17 3 8 secs 0
+k 17 p 41 h 20 m 2 tau 15 nodes 13 cover 1 13 10 8 7 6 9 11 3 5 17 2 secs 0
+k 17 p 43 h 21 m 2 tau 15 nodes 12 cover 1 14 11 9 6 5 13 4 7 20 8 12 secs 0
+k 17 p 47 h 23 m 2 tau 15 nodes 14 cover 1 15 12 9 8 7 5 14 13 11 10 3 4 secs 0
+k 17 p 53 h 26 m 2 tau 15 nodes 14 cover 1 17 13 11 9 15 6 16 5 4 7 10 25 12 secs 0
+k 17 p 59 h 29 m 3 tau 15 nodes 12 cover 1 14 12 10 25 22 13 16 9 4 5 19 secs 0
+k 17 p 61 h 30 m 3 tau 15 nodes 13 cover 1 15 12 10 9 7 11 19 13 3 8 5 2 secs 0
+k 17 p 67 h 33 m 3 tau 15 nodes 15 cover 1 16 13 11 10 25 30 7 6 5 9 12 3 21 secs 0
+k 17 p 71 h 35 m 3 tau 15 nodes 15 cover 1 17 14 12 30 9 16 13 11 5 25 3 8 7 2 secs 0
+k 17 p 73 h 36 m 4 tau 15 nodes 12 cover 1 14 12 10 27 32 22 13 11 5 3 2 secs 1
+k 17 p 79 h 39 m 4 tau 15 nodes 12 cover 1 15 13 11 10 18 8 14 5 25 24 3 secs 0
+k 17 p 83 h 41 m 4 tau 15 nodes 14 cover 1 16 14 36 10 37 17 38 6 11 26 25 15 3 secs 0
+k 17 p 89 h 44 m 4 tau 15 nodes 14 cover 1 17 15 13 33 40 27 16 7 6 11 5 3 12 secs 0
+k 17 p 97 h 48 m 5 tau 15 nodes 14 cover 1 16 14 12 22 10 18 13 17 29 27 26 44 2 secs 0
+k 17 p 101 h 50 m 5 tau 15 nodes 14 cover 1 16 14 13 11 10 9 42 31 29 20 6 41 secs 0
+k 17 p 103 h 51 m 5 tau 15 nodes 13 cover 1 17 14 38 12 10 37 32 36 22 42 3 15 secs 0
+k 17 p 107 h 53 m 5 tau 15 nodes 129 cover 1 17 15 40 12 11 29 9 33 6 7 16 41 42 13 secs 0
+k 17 p 109 h 54 m 6 tau 15 nodes 11 cover 1 15 13 12 33 40 9 42 31 7 11 secs 0
+k 17 p 113 h 56 m 6 tau 15 nodes 12 cover 1 16 14 25 11 41 9 30 13 49 4 3 secs 0
+k 17 p 127 h 63 m 7 tau 15 nodes 13 cover 1 15 14 38 11 39 27 8 6 37 48 50 3 secs 0
+k 17 p 131 h 65 m 7 tau 15 nodes 13 cover 1 16 14 13 36 11 50 9 15 17 5 45 64 secs 0
+k 17 p 137 h 68 m 7 tau 15 nodes 14 cover 1 17 15 14 50 11 59 9 16 36 49 4 29 5 secs 0
+k 17 p 139 h 69 m 7 tau 15 nodes 14 cover 1 17 16 14 13 11 10 9 31 29 19 12 45 7 secs 0
+k 17 p 149 h 74 m 8 tau 15 nodes 13 cover 1 16 15 27 13 11 70 19 25 14 36 63 4 secs 0
+k 17 p 151 h 75 m 8 tau 15 nodes 15 cover 1 16 15 14 63 47 11 40 36 8 26 23 5 31 3 secs 0
+k 17 p 157 h 78 m 8 tau 15 nodes 15 cover 1 17 15 13 73 23 49 9 8 43 48 69 29 10 7 secs 0
+k 17 p 163 h 81 m 9 tau 15 nodes 14 cover 1 16 15 13 11 51 29 36 31 7 25 12 40 5 secs 0
+k 17 p 167 h 83 m 9 tau 15 nodes 16 cover 1 16 14 13 12 11 10 19 62 75 23 36 78 35 59 secs 0
+k 17 p 173 h 86 m 9 tau 15 nodes 16 cover 1 17 16 14 13 11 10 9 25 30 72 4 3 19 23 secs 0
+k 17 p 179 h 89 m 9 tau 15 nodes 25 cover 1 17 15 14 38 24 22 74 50 9 23 33 83 5 65 secs 0
+k 17 p 181 h 90 m 10 tau 15 nodes 14 cover 1 16 15 14 13 36 11 81 67 17 70 49 23 61 secs 0
+k 17 p 191 h 95 m 10 tau 15 nodes 32 cover 1 17 16 15 13 71 11 50 19 27 6 57 39 52 28 secs 0
+k 17 p 193 h 96 m 10 tau 15 nodes 15 cover 1 17 16 15 14 13 12 11 31 10 18 5 41 3 2 secs 0
+k 17 p 197 h 98 m 10 tau 15 nodes 1845 cover 1 17 15 42 52 37 46 22 10 95 54 94 8 96 61 secs 0
+k 17 p 199 h 99 m 11 tau 15 nodes 15 cover 1 16 14 25 12 11 10 45 17 23 22 13 29 4 3 secs 0
+k 17 p 211 h 105 m 11 tau 15 nodes 17483 cover 1 17 15 14 66 62 47 16 96 100 45 78 49 95 73 secs 0
+k 17 p 223 h 111 m 12 tau 15 nodes 58 cover 1 17 16 15 14 13 47 33 96 71 19 31 18 58 50 secs 0
+k 17 p 227 h 113 m 12 tau 15 nodes 15 cover 1 17 15 14 13 72 23 86 109 19 16 29 40 77 5 secs 0
+k 17 p 229 h 114 m 12 tau 15 nodes 21 cover 1 17 15 13 97 80 87 73 19 74 14 6 90 25 28 secs 0
+k 17 p 233 h 116 m 12 tau 15 nodes 32441 cover 1 17 15 13 49 23 22 106 48 70 25 57 9 91 73 secs 1
+k 17 p 239 h 119 m 13 tau 15 nodes 19 cover 1 17 16 15 14 50 83 11 29 106 49 110 66 90 65 secs 0
+k 17 p 241 h 120 m 13 tau 15 nodes 15 cover 1 17 16 15 14 13 109 58 31 100 19 54 40 11 4 secs 0
+k 17 p 251 h 125 m 13 tau 15 nodes 179398 cover 1 17 15 14 13 96 77 9 109 54 57 110 52 111 69 secs 0
+k 17 p 257 h 128 m 14 tau 15 nodes 29 cover 1 17 16 15 13 49 93 33 54 105 119 80 36 121 14 secs 0
+k 17 p 263 h 131 m 14 tau 15 nodes 15371 cover 1 17 15 69 26 38 84 11 49 8 71 122 120 27 35 secs 0
+k 17 p 269 h 134 m 14 tau 15 nodes 17005 cover 1 17 15 14 13 74 23 86 48 99 29 100 103 49 114 secs 1
+k 17 p 271 h 135 m 15 tau 15 nodes 269 cover 1 16 15 13 23 97 31 100 28 36 41 44 59 38 6 secs 0
+k 17 p 277 h 138 m 15 tau 15 nodes 27 cover 1 17 16 14 53 101 120 11 10 18 23 117 116 67 107 secs 0
+k 17 p 281 h 140 m 15 tau 15 nodes 2112798 cover 1 17 16 14 13 73 117 100 66 101 15 136 97 107 114 secs 8
+k 17 p 283 h 141 m 15 tau 15 nodes 4073169 cover 1 17 16 15 42 106 108 50 52 19 83 87 37 79 66 secs 19
+k 17 p 293 h 146 m 16 tau 15 nodes 6827882 cover 1 17 15 14 64 9 137 103 105 43 88 102 122 60 131 secs 39
+k 17 p 307 h 153 m 17 tau 15 nodes 4021175 cover 1 17 15 14 140 59 11 82 29 147 99 16 92 69 60 secs 20
+k 17 p 311 h 155 m 17 tau 15 nodes 3025217 cover 1 17 15 14 142 87 72 86 55 57 16 47 97 151 19 secs 17
+k 17 p 313 TIMEOUT 60 secs 60
+k 17 p 317 TIMEOUT 60 secs 60
+k 17 p 331 h 165 m 18 tau 15 nodes 1112520 cover 1 17 15 14 13 147 130 150 57 29 36 88 43 121 145 secs 4
+k 17 p 337 TIMEOUT 60 secs 60
+k 17 p 347 TIMEOUT 60 secs 60
+k 17 p 349 TIMEOUT 60 secs 60
+k 17 p 353 TIMEOUT 60 secs 60
+k 17 p 359 TIMEOUT 60 secs 60
+k 17 p 367 TIMEOUT 60 secs 60
+k 17 p 373 TIMEOUT 60 secs 60
+k 17 p 379 h 189 m 21 tau 15 nodes 8170685 cover 1 17 15 14 183 114 71 44 137 62 58 27 43 169 120 secs 38
+k 17 p 383 TIMEOUT 60 secs 60
+k 17 p 389 TIMEOUT 60 secs 60
+k 17 p 397 TIMEOUT 60 secs 60
+k 17 p 401 TIMEOUT 60 secs 60
+k 17 p 409 TIMEOUT 60 secs 60
+k 17 p 419 TIMEOUT 60 secs 60
+k 17 p 421 TIMEOUT 60 secs 60
+k 17 p 431 TIMEOUT 60 secs 60
+k 17 p 433 TIMEOUT 60 secs 60
+k 17 p 439 TIMEOUT 60 secs 60
+k 17 p 443 TIMEOUT 60 secs 60
+k 17 p 449 TIMEOUT 60 secs 60
+k 17 p 457 TIMEOUT 60 secs 60
+k 17 p 461 TIMEOUT 60 secs 60
+k 17 p 463 TIMEOUT 60 secs 60

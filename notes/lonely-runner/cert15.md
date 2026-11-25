@@ -56,8 +56,8 @@ The format was read from the archives and agrees with his `SUMMARY.json` fields.
 | --- | --- |
 | `out15_<p>/rows_ir/ir_<r>_<s>.txt` | irredundant 15-class covers, 2 hex digits per class, one per line; root job $r$, sub-job $s$ |
 | `out15_<p>/rows_km1/km1_<r>.txt` | rooted 14-class covers (hex) |
-| `out15_<p>/rows_km1/dedup_<i>.txt` | the deduplicated 14-class covers, one per file |
-| `out15_<p>/filt/ir_<r>_<s>.out`, `ext_<i>.out` | one line `SURVIVOR base: v_1 … v_15 l2=… [tight=…] l4=… l8=… l16=…` for every input row with an improper level-2 lift; `ext_<i>` is `dedup_<i>` extended by every class $x = 1..h$ |
+| `out15_<p>/rows_km1/dedup_<i>.txt` | the deduplicated 14-class covers, one or more per file |
+| `out15_<p>/filt/ir_<r>_<s>.out`, `ext_<i>.out` | one line `SURVIVOR base: v_1 … v_15 l2=… [tight=…] l4=… l8=… l16=…` for every input row with an improper level-2 lift; `ext_<i>` holds the covers of `dedup_<i>`, each extended by every class $x = 1..h$ |
 | `filt/*.stats` | rows and survivors per input file |
 | `SUMMARY.json` | counts (base family, cascade totals, persistent orbits = 0), status `GATE_CLOSED` |
 | `MANIFEST_SHA256.json` | SHA-256 of every file, plus three entries `../bgk15`, `../cascade_k15`, `../tight_lift_16` naming executables that are not shipped |
@@ -69,7 +69,7 @@ The format was read from the archives and agrees with his `SUMMARY.json` fields.
 - The layout is the same: `rows_ir`, `rows_km1`, `filt`, `kills`, `SUMMARY.json`, and the same `SURVIVOR` line format.
 - The differences:
   - the directory is `out15_<p>`;
-  - deduplicated covers are stored explicitly as `dedup_<i>.txt`, so each `ext_<i>` cascade file corresponds to one stored cover;
+  - deduplicated covers are stored explicitly as `dedup_<i>.txt`, so each `ext_<i>` cascade file corresponds to one stored file of covers;
   - the cascade stops at level 16, which for $k = 15$ is the kill level $k+1 = 16$ itself.
 - There is no terminal level-15 kill: `kills/` and `level_kills` are empty and the persistent-orbit count is 0.
 - So the LRC(14) check D (level-3/5 CRT kill and few-exception shift lemma) has no counterpart. The level-16 emptiness of the binary cascade replaces it.
@@ -93,6 +93,7 @@ The format was read from the archives and agrees with his `SUMMARY.json` fields.
   - The 14-class covers are tested with the $k = 15$ threshold. So every extension $c + x$ is in $I(15,p,1)$.
   - Every 14-class cover is irredundant, as $\tau(p) \ge 14$ requires.
   - The dedup covers represent exactly the unit orbits of the rooted covers (`canon.c`), one cover per orbit.
+  - A `dedup_<i>.txt` file holds one cover at most gates and two at some, for example $p = 317$. A first version of our script assumed one per file, flagged $p = 317$, and was corrected; the corrected run is the one reported.
   - All counts equal `SUMMARY.json`.
 - **C. Cascade**, by `gatecheck.c cascade` with $k = 15$, on every irredundant row and every extension row (dedup cover $+\,x$, $x = 1..h$).
   - Per input file, the multiset of $(\text{row}, \lvert S_2\rvert, \lvert S_4\rvert, \lvert S_8\rvert, \lvert S_{16}\rvert, \lvert S_{32}\rvert)$ over rows with $S_2 \ne \varnothing$ equals the certificate's `.out` file. Rows and survivors equal the `.stats` file. The set of `filt` files equals the set of stored input files.
