@@ -10,7 +10,7 @@
 # < 1 GB (25D/27D field checks: < 2 GB; 39D build and class mode: < 3 GB).
 # Usage: reproduce.sh [WORKDIR] [--with-43] [--with-40-43]   (downloads and logs go to WORKDIR)
 # --with-43 adds the Qiushi 43D export (2,553,792 points; about 75 min more).
-# --with-40-43 adds Kravatskiy's 40-43D records (section 7d; about 3.5 h more).
+# --with-40-43 adds Kravatskiy's 40-43D records (section 7d; about 2.7 h more).
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 work=${1:-$(mktemp -d)}
@@ -218,8 +218,8 @@ unset KISS_STOP_AT_FIRST
 # 7d. Kravatskiy 40-43D (affine lattice shells with rational heads), rebuilt with our own
 #     shell enumerator (enum_affine.c) and checked over all pairs by kiss_check.c in
 #     partner mode (40D) or class + partner mode (41-43D, table from the builder).
-#     Only with --with-40-43: about 3 h of C on 4 cores (40D 11 min, 41D 21 min,
-#     42D about 40 min, 43D about 85 min), builds about 25 min; peak RAM < 2 GB.
+#     Only with --with-40-43: about 1.7 h of C on 4 cores (40D 11 min, 41D 22 min,
+#     42D 21 min, 43D 44 min), 48 min of numpy for 40D, builds about 25 min; peak RAM < 2 GB.
 if [ "$with4043" = 1 ]; then
   gcc -O3 -march=native -fopenmp -Wall "$here/enum_affine.c" -o "$work/bin/enum_affine" -lm
   python3 -I "$here/fetch_kravatskiy.py" "$K" --with-40-43
@@ -228,6 +228,9 @@ if [ "$with4043" = 1 ]; then
     python3 -I "$B4043" "$K" $d "$K/krav$d" "$work/bin/enum_affine" --work "$K/enum$d"   # asserts every population
   done
   "$CHK" "$K/krav40_x.i8" 40 --partner "$K/krav40_xg.i8" | tee "$K/check40.txt" | grep -E "^pairs|class_pair|contacts|RESULT"
+  for k in 0 1; do  # second implementation for 40D (about 24 min per half)
+    python3 "$here/kiss_check_np.py" "$K/krav40_x.i8" 40 --partner "$K/krav40_xg.i8" --part $k 2 | grep -E "^part|contacts|RESULT"
+  done
   for d in 41 42 43; do
     for k in 0 1 2 3; do  # four parts (each under 25 min); together they cover every pair once
       "$CHK" "$K/krav${d}_x.i8" 40 "$K/krav$d.lab" "$K/krav$d.tab" --partner "$K/krav${d}_xg.i8" --part $k 4 \
