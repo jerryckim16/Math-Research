@@ -4,6 +4,7 @@
 **Status:** in progress. Done so far:
 - The prime-gate framework is reproduced end to end for LRC(3)–LRC(10) (4–11 runners), conditional on one cited bound (B_k). LRC(10) uses an explicit ×11 lift, independent of Sungkawichai–Trakulthongchai's Prop. corlarge (step 7).
 - All 71 of Allikvere's 15-runner (LRC(14)) gate certificates are independently re-checked, with no discrepancy found. Stored rows were checked in full at every gate; the cascade and kill in full at 54 gates and sampled at 17, with the cascade alone also in full at near-gcd gate 223; level-one completeness at 3 gates. See "Independent re-check summary". His 14-runner terminal kills are re-checked at all 111 of his gate primes.
+- The n = 15 shape lemma R_15 < 49/100 is proved (Approach 10; every inequality machine-checked exactly). So the 16-runner gate target 483.239 holds conditional on Allikvere's general-n Theorem 3.8.
 - The cost of the next open case (16 runners) is estimated from measurements.
 
 **Started:** 2026-11-23 (literature upgraded to primary texts the same day, step 2)
@@ -123,7 +124,7 @@ Details from the primary texts:
     - The ratio minimum is 3751/2349 > 4/3, exactly.
     - The paper's one-variable shape family gives min R_15 ≈ 0.48796 numerically.
     - If a shape lemma r_15 = 49/100 were proved, then ln(v_1⋯v_15) < 496.727, and the gate target after ln lcm(2..16) = ln 720720 would be 483.239. This agrees with the figure in the (unreviewed) munim lonely-runner-16 repository.
-    - **The shape lemma for n = 15 is unproved here.** This target is heuristic until it is.
+    - **The shape lemma R_15 < 49/100 is now proved here** (Approach 10, step 9; machine-checked by `shape_lemma.py`). So the target 483.239 is proved conditional on the cited Theorem 3.8 (general n).
 - **Prime gates (Sungkawichai–Trakulthongchai, Def. 2.1).** Fix k ≥ 2, a prime p and l ≥ 1. Put N = lp and Z_{p,l} = {x ∈ Z_N : p ∤ x}. Then w ∈ Z_{p,l}^k is *(k,p,l)-proper* if either
   - (a) gcd(l, w_1, …, ŵ_i, …, w_k) > 1 for some i, or
   - (b) some t ∈ (1/N)Z has ‖t w_i‖ ≥ 1/(k+1) for all i.
@@ -249,7 +250,7 @@ For each of the four gates we checked:
 - The other 67 gates.
 - The 19 near-gcd gates (τ ≤ 12, p ≤ 241), which use Lemma 3.12.
 - The LRC(13) archive (174 MB).
-- The flag-bound shape Lemma 3.7. We did re-check K_n and the log constants.
+- The flag-bound shape Lemma 3.7. We did re-check K_n and the log constants. (Later re-checked, step 9: Approach 10.)
 
 ### 6. Tight orbit for 16 runners (step 2)
 
@@ -445,6 +446,99 @@ Goal: a faster level-one generator, as the precondition for completeness at more
   - So completeness at p = 257 would still take about 12 core-hours (at least about 4 h of wall time on 3 cores). It was not run.
 - **Still short of Allikvere's tree** (about 14× smaller than our plain search, Approach 4). The remaining gap is not explained by the bounds tried here.
 
+### 10. Shape lemma R_15 < 49/100 (step 9)
+
+**Claim.** On the positive simplex in R^15, R_15 < 49/100. Here R_n is the shape factor of Allikvere's flag bound (arXiv:2609.02604v2, eq. (F)):
+
+- F_n(x)² = ∏ q_i · Σ x_i²/q_i and R_n(x) = n (∏ x_i)^{1/n} / F_n(x);
+- q_i = 1 + 2u_i − u_i², with u_i = x_i / max_j x_j.
+
+**Status: proved here.** The argument is the paper's proof of Lemma 3.7 carried over to n = 15, written out below. Every identity and numeric inequality in it is checked in exact rational arithmetic by `computations/lonely-runner/shape_lemma.py` (tests: `test_shape_lemma.py`). The same script, run with n = 13 and n = 14, reproduces the paper's polynomials, cubics, intervals and the bounds R_13 < 101/200 and R_14 < 1/2 (regression tests). So Lemma 3.7 itself is now re-checked as well.
+
+The (unreviewed) munim lonely-runner-16 repository states the same bound. We did not use its text; our derivation agrees with it.
+
+**Notation.** For u ∈ (0,1] put:
+
+- q(u) = 1 + 2u − u²;
+- a(u) = q(u)/u^{2/15};
+- w(u) = u²/q(u);
+- H(u) = (Σ_i w(u_i)) · ∏_i a(u_i);
+- D(u) = 14u² − 13u + 1.
+
+The common scale cancels, so R_15(x)² = 225/H(u). Hence R_15 < 49/100 ⟺ H(u) > T := (1500/49)² = 937.1095… on the domain Ω = {u ∈ (0,1]^15 : max_i u_i = 1}.
+
+The smaller root of D is α = (13 − √113)/28. Since D(0.0846) > 0 > D(0.0847) and D decreases on [0, 13/28], α ∈ (0.0846, 0.0847).
+
+**Step 0: H attains its minimum on Ω.**
+
+- Σ w ≥ w(1) = 1/2, and a > 8/5 (Step 2). So H ≥ ½ (8/5)^14 a(u_i) for every i.
+- Also a(u) ≥ u^{−2/15} because q ≥ 1.
+- So on {H ≤ M} every u_i ≥ δ(M) > 0. This sublevel set is a closed subset of [δ,1]^15, hence compact, and the continuous H attains its minimum on it.
+
+**Step 1: all coordinates below 1 share one value.**
+
+Fix a minimizer and a coordinate u = u_i < 1. Some other coordinate equals 1, so u can vary in (0,1) inside Ω. Put C = Σ_{j≠i} w(u_j).
+
+- Bounds on C: w > 0 on (0,1], so C > 0. Also ½ − w = (1 + 3u)(1 − u)/(2q) ≥ 0, so w ≤ ½ and C ≤ 7.
+- Up to a positive factor, H is φ(u) = a(u)(C + w(u)) = u^{−2/15}(Cq + u²).
+- The derivative satisfies (15/2) u^{1+2/15} φ'(u) = −β(u), with β(u) = C·D(u) − 14u². This holds because (15/2)u(Cq' + 2u) − (Cq + u²) = −C·D + 14u², a polynomial identity in u for each C.
+
+Shape of β: β(0) = C > 0 and β(α) = −14α² < 0.
+
+- If C ≤ 1: β is concave (leading coefficient 14(C − 1) ≤ 0; linear if C = 1) with β(0) > 0. So it has exactly one positive root, and β < 0 beyond it.
+- If C > 1: β is convex and β(1) = 2C − 14 ≤ 0, so its second root is ≥ 1.
+
+In both cases β has exactly one root u₀ in (0,1), with u₀ < α. Then φ decreases on (0,u₀) and increases on (u₀,1), so the minimizer has u = u₀ ∈ (0, α).
+
+Putting all these coordinates on one scale:
+
+- On (0, α), D > 0, so β(u) = 0 ⟺ C = 14u²/D.
+- Since 14q + D = 15(1 + u), this gives A := C + w(u) = Σ_k w(u_k) = 15u²(1 + u)/(D q).
+- So every coordinate below 1 satisfies L(u) := q D/(15 u²(1 + u)) = 1/A, with the same A for all of them.
+- L'(u) = −2P(u)/(15u³(1 + u)²), where P(u) = 7u⁵ + 14u⁴ − 27u³ − 11u² − 4u + 1.
+- On (0, α) ⊂ (0, 0.0847): P(u) > 1 − 4(0.0847) − 11(0.0847)² − 27(0.0847)³ = 0.5658… > 0.
+
+So L is strictly decreasing on (0, α), and all coordinates below 1 are equal, to some t ∈ (0, α).
+
+**Step 2: a(u) > 8/5 on (0,1].**
+
+- a'/a = (15u q' − 2q)/(15u q), and 15u q' − 2q = −2D(u).
+- So a decreases on (0, α), increases between the roots of D, and decreases on the rest of (0,1]. D(1) = 2 > 0, so both roots lie below 1.
+- Hence min a = min(a(α), a(1) = 2).
+- a(α) > q(0.0846)/0.0847^{2/15}, because q increases and u^{−2/15} decreases. This is > 8/5 ⟺ q(0.0846)^15 > (8/5)^15 · 0.0847², an exact rational inequality that holds (a(α) ≈ 1.6152).
+
+**Step 3: two or more coordinates equal to 1.** If k ≥ 2 coordinates equal 1:
+
+- Σ w ≥ k/2 and ∏ a ≥ 2^k (8/5)^{15−k}.
+- The bound (k/2) 2^k (8/5)^{15−k} increases with k (ratio (k+1)/k · 5/4 > 1).
+- So H ≥ 4 (8/5)^13 = 1801.4… > T.
+
+**Step 4: exactly one coordinate equal to 1.** By Step 1 the other fourteen equal some t ∈ (0, α), and
+
+H₁(t) = (½ + 14t²/q) · 2 · (q/t^{2/15})^14 = (1 + 2t + 27t²) q(t)^13 / t^{28/15},
+
+using q + 28t² = 1 + 2t + 27t².
+
+- Its log-derivative times 15t(1 + 2t + 27t²)q(t) equals 28(1 − t)·K(t), with K(t) = 378t³ + 25t² + 10t − 1 (polynomial identity).
+- On (0,1) the factor 15t(1 + 2t + 27t²)q(t) is positive, so the sign of the log-derivative is the sign of K.
+- K is increasing on t > 0, with K(0.07247) < 0 < K(0.07248). So H₁ decreases up to the root t₀ ∈ (0.07247, 0.07248) and increases after it, and H₁ ≥ H₁(t₀) on (0,1).
+- Bound at t₀: 1 + 2t + 27t² and q increase, and t^{−28/15} decreases. So H₁(t₀) ≥ (1 + 2·0.07247 + 27·0.07247²) q(0.07247)^13 / 0.07248^{28/15} = 944.71…
+- This exceeds T ⟺ (1 + 2·0.07247 + 27·0.07247²)^15 q(0.07247)^195 > T^15 · 0.07248^28, an exact rational inequality that holds. (H₁(t₀) itself is ≈ 944.96.)
+
+Ω has at least one coordinate equal to 1, so Steps 3 and 4 cover every case. Therefore H > T on Ω, and R_15 < 49/100. ∎
+
+**Margins and negative controls (tests):**
+
+- The proof has about 0.8% of room in Step 4 (944.7 against 937.1).
+- A target above the true minimum (T = 946, or r_15 = 0.487) correctly fails the Step 4 check.
+- A float coordinate-descent search over Ω never goes below T, and finds the minimum ≈ 944.96 on the one-variable family. This search is a sanity check only, not part of the proof.
+
+**Consequence (conditional).** Allikvere's Theorem 3.8 is stated and proved for general n. For n = 15 its ratio hypothesis holds: min c_{i+1}/c_i = 3751/2349 > 4/3, exact (`flag_bound.py`). Its other hypothesis is LRC(m) for all m < 15, i.e. up to 15 runners, which is Allikvere's certificate-based result re-checked in Approach 7.
+
+With r_15 = 49/100 the theorem gives, for a primitive counterexample with 15 speeds, ln(v_1⋯v_15) < 15 ln(A_15 · (49/100)/15) = 496.727. With the forced divisor lcm(2..16) = 720720, the prime-gate target is 483.239.
+
+We did not re-prove the general-n parts of Theorem 3.8: the inclusion and covolume lemmas, the prefix inequalities, KZ bases and the product minimization. We read their proofs (§3.1–3.4 of the paper) and they make no use of n = 13 or 14. So the target 483.239 is **proved conditional on the cited Theorem 3.8**. It is no longer heuristic, but it is not independently verified end to end.
+
 ## Independent re-check summary
 
 Scope: J. Allikvere's computer-assisted proofs of LRC(13) and LRC(14), i.e. 14 and 15 runners (arXiv:2609.02604v2). Certificates: Zenodo 10.5281/zenodo.22066772 and 10.5281/zenodo.22667683. All checks use our own code (C and Python, in `computations/lonely-runner/`), written from the definitions in the paper and in arXiv:2604.23906. The archives were read as data only; none of the author's programs were executed.
@@ -464,7 +558,7 @@ Scope: J. Allikvere's computer-assisted proofs of LRC(13) and LRC(14), i.e. 14 a
 
 - **Level-one completeness at the other 68 LRC(14) gates.** That every orbit of I(14,p,1) is represented among the stored rows is checked only at p = 89, 239 and 251. At all other gates it rests on Allikvere's generator and its completeness proposition (his Prop. 4.2 with the private-time Lemma 4.1). We implemented Lemma 4.1 (Approach 8) but have run it to completeness only at p = 251.
 - **The sampled parts at the 19 near-gcd gates.** The unsampled cascade rows and kill records there were not re-computed.
-- **The analytic inputs.** The finite-checking bound (Malikiosis–Santos–Schymura, via Rosenfeld's Cor. 3) and Allikvere's flag bound (Thm 3.8) were not re-proved; in particular the shape Lemma 3.7 was not re-checked. Nor were the lattice lemmas behind it, the prime-divisibility Lemma 2.2(ii), or the few-exception shift Lemma 3.12, beyond reading their proofs. The lower cases LRC(m), m ≤ 12, are taken from the literature.
+- **The analytic inputs.** The finite-checking bound (Malikiosis–Santos–Schymura, via Rosenfeld's Cor. 3) and Allikvere's flag bound (Thm 3.8) were not re-proved. The shape Lemma 3.7 is now re-checked for n = 13 and 14 and extended to n = 15 (Approach 10), but the general-n lattice lemmas behind Thm 3.8 were not re-proved. Nor were the prime-divisibility Lemma 2.2(ii), or the few-exception shift Lemma 3.12, beyond reading their proofs. The lower cases LRC(m), m ≤ 12, are taken from the literature.
 - **LRC(13).** The archive does not contain the k = 13 level-one rows, so the rows, cascade and completeness cannot be re-checked from it.
 - **Our own code is not formally verified.** It is tested against brute force on small cases (18 tests) and against the certificates' own numbers.
 
@@ -482,12 +576,12 @@ Scope: J. Allikvere's computer-assisted proofs of LRC(13) and LRC(14), i.e. 14 a
 | LRC(10) (11 runners): all 61 primes 127…467 pass (identical to Sungkawichai–Trakulthongchai's P_10), Σ ln p = 342.72 > ln B_10 = 337.63 (exact test `prod_ge_B_k_exact`); cover generator, chain ×2×2×2, proj, ×11 (`liftfree.c`); in every gate only (1..10) survives the ×2 lifts and the ×11 lift kills it; 13,924 s wall (about 13.8 core-hours, almost all level one) on 4 processes. Depends on cited B_10, LRC(9) and tested-not-verified code; does **not** use Prop. corlarge (Next steps 6) | certificate-checked computation **+ cited B_k** | `results/lrc_k10.jsonl` |
 | Allikvere constants: K_13, K_14, ratio minima, ln bounds 341.031991 and 414.779365, target 401.984506 | exact rational re-derivation | `flag_bound.py` |
 | n = 15 flag constants: K_15, ratio min 3751/2349 > 4/3 | exact | `flag_bound.py` |
-| n = 15 shape factor ≈ 0.48796, hence target 483.24 | **heuristic** (no shape lemma) | `flag_bound.py` |
+| n = 15 shape lemma R_15 < 49/100 (min of H ≈ 944.96 > (1500/49)²), hence ln(v_1⋯v_15) < 496.727 and gate target 483.239 | shape lemma **proved** (written proof, every inequality exact-checked); the target is proved **conditional on cited Thm 3.8** (general n) | Approach 10, `shape_lemma.py`, `test_shape_lemma.py` |
 | 4 of 71 LRC(14) gate certificates (p = 263, 311, 397, 401): rows improper, cascade and kill reproduced | independent re-computation of the certificate's claims **except level-one completeness** | `check_allikvere.py`, `results/allikvere_spotcheck.jsonl` |
 | LRC(14) certificates: independent re-check of 71/71 gates. All 52 "J empty" gates and near-gcd gates 179 and 233 in full; cascade also in full at 223. Near-gcd gates 89, 163, 173, 223 (sample 3,000) and 131, 149, 157, 167, 181, 191, 193, 197, 199, 211, 227, 229, 241 (sample 500): all rows, plus seeded samples of the cascade and kill. Level-one completeness at p = 89, 239 and 251. No discrepancy found. | independent re-computation of the certificates' claims; cascade sampled at 16 and kill at 17 of the 19 near-gcd gates; completeness at 3 gates only | `results/lrc14_gates/COVERAGE.md`, Approach 7 |
 | LRC(13) certificates: terminal level-14 kill of both persistent orbits re-computed at all 111 gate primes; kill-file SHA-256s match manifests | independent re-computation (cascade and level one not checkable: rows not archived) | `results/lrc13_kills.jsonl` |
 | (1..15) dies at level 16 at all 79 primes 251–743 | computed exactly (one orbit only) | `results/tight_orbit_k15.jsonl` |
-| Cost of LRC(15) level one + kill with Allikvere-class code: about 1.75·10⁵ CPU-h (about 20 CPU-years) for 79 gates 251–743 under the heuristic flag target; about 8.7·10⁶ CPU-h under the proved B_15 | **heuristic extrapolation from measurements** | `cost_estimate.py`, `results/knuth_covergen_k14_k15.txt` |
+| Cost of LRC(15) level one + kill with Allikvere-class code: about 1.75·10⁵ CPU-h (about 20 CPU-years) for 79 gates 251–743 under the flag target 483.24 (conditional on Thm 3.8, Approach 10); about 8.7·10⁶ CPU-h under the proved B_15 | **heuristic extrapolation from measurements** | `cost_estimate.py`, `results/knuth_covergen_k14_k15.txt` |
 
 "Certificate-checked computation + cited B_k" means the following. The chain LRC(2) ⇒ … ⇒ LRC(9) is a proof *if* three things hold:
 
@@ -500,8 +594,8 @@ Our code is tested against brute force, but not formally verified. These reprodu
 ## Next steps: plan for LRC(15) (16 runners)
 
 1. **Bound.**
-   - Prove a shape lemma R_15 < 49/100, following Allikvere's Lemma 3.7. The one-variable reduction and the "two or more coordinates equal to one" case must be redone for n = 15.
-   - Until then, the only proved target is ln B_15 − ln 720720 = 951.26. That needs about 147 gates up to 1223, which is roughly 50× the cost below.
+   - Done (step 9): R_15 < 49/100 is proved in Approach 10, so the flag target 483.239 holds conditional on the cited Theorem 3.8. What remains is an independent check of the general-n parts of Theorem 3.8 (the inclusion, covolume, prefix and product-minimization lemmas).
+   - Without Theorem 3.8, the only target from MSS is ln B_15 − ln 720720 = 951.26. That needs about 147 gates up to 1223, which is roughly 50× the cost below.
 2. **Generator.** Add Allikvere's private-time normalisation (his Lemma 4.1 and the two-branch search) to `covergen.c`. Validate it against the current generator for k ≤ 9, and then against his archived k = 14 rows at p = 397 and 401. Those are small gates: about 13 and 16 CPU-h for his code.
 3. **Cost.**
    - Model: Allikvere's per-gate k = 14 CPU time, times our measured k = 15 / k = 14 tree-size ratio. The ratio grows from 4.4 at p = 251 to 10–18 at p = 353–569, fitted ∝ p^1.0. His cost is fitted ∝ p^6.07.
