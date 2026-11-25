@@ -65,7 +65,6 @@ def edit(old, w, variant=None):
     """Apply the witness to the parent certificate (a dict); return the new dict."""
     c = copy.deepcopy(old)
     sup = c["full_even_supports"]
-    assert len(w["octads"]) == 4 and len(w["stars"]) == 7
     done = set()
     for i, before, after in w["octads"]:
         assert i not in done and sup[i] == mask(before), "switch does not match parent"
@@ -84,7 +83,7 @@ def edit(old, w, variant=None):
                 for j, x in zip(leaves, s):
                     v[j] = x
                 stars.append(v)
-    assert len({tuple(v) for v in stars}) == len(stars) == 112
+    assert len({tuple(v) for v in stars}) == len(stars) == 16 * len(w["stars"])
     c["stars"] = stars
     heads = c["heavy_numerators_over_85"]
     removed = set()
@@ -142,7 +141,7 @@ def points(c):
 def main(kdir, out, variant=None):
     old = read(os.path.join(kdir, "k34_parent_rotated34.json"), PARENT_SHA)
     w = read(os.path.join(kdir, "k34_witness.json"), WITNESS_SHA)
-    assert old["points"] == 390992
+    assert old["points"] == 390992 and len(w["octads"]) == 4 and len(w["stars"]) == 7
     c = edit(old, w, variant)
     h = hashlib.sha256((json.dumps(c, sort_keys=True) + "\n").encode()).hexdigest()
     X, H = points(c)

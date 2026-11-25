@@ -181,7 +181,8 @@ def build(kdir, variant=None):
                 field.append([c0, c1, [0] * D, [0] * D])
     nrm = (X * X).sum(1)
     assert set(nrm.tolist()) == {1, 32, 145, 160}
-    assert len({r.tobytes() for r in X}) == len(X), "repeated rows"
+    # (negative variants may repeat rows; the checker must then reject them)
+    assert variant is not None or len({r.tobytes() for r in X}) == len(X), "repeated rows"
     n = len(X) + len(field)
     print(f"variant {variant}: dense {len(dense)} + middle {len(mid)} ({len(sup)} supports) + roots {len(roots)}"
           f" + poles 2 + flat {len(fl)} + radical {len(field)} = {n}")

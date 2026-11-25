@@ -74,6 +74,15 @@ EXTRA_34_39 = [
      "3e8a212b8a8ee4c6d81a45134dae67b99fbfbc4a4f990fc174c42af987e01e16"),
     ("k35_replacement.npz", "dim35-joint-star-root/replacement.npz",
      "ffb73e3082a0ed5a1f94ce8e5c32febb0683e151bcd1aee3838eb52a6e76320c"),
+    # 36D: Coxeter-Todd base certificate and the three edit steps
+    ("k36_nonlocal.json", "dim36-ct-nonlocal/certificate.json",
+     "c4598a0dfc49365ae2b082745454c38b53b76703e5eef5dafbd71e2d06c59180"),
+    ("k36_triangle.json", "dim36-ct-triangle-refill/certificate.json",
+     "8ef795fd0b034e913e28c05b36f43c80cf274f78dd2af2bb8a07b1488bc8c306"),
+    ("k36_double.json", "dim36-ct-double-trine/witness.json",
+     "ad81a8abdfb10889b7f7826b5f4823fa355f415e7cca4083d092167faed13b08"),
+    ("k36_final.json", "dim36-ct-neutral-reheat/witness.json",
+     "5327877dfd99b826787391c9ecdb76db9f58747ae693f8540ef03f0b3b678c93"),
     # 37D: Yang et al.'s length-38 code, 168 radical six-supports, flat refill
     ("k37_dense_parent38.json", "dim37-qr-flat-repack/dense_parent38.json",
      "addcc62d2757f68c31fda2af630e1f41a46948c58d42a24d981e2b8291336108"),

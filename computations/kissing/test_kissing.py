@@ -21,8 +21,27 @@ kiss_check binary; scratch files are written there too).
    contacts; moving one row by 1e-15 towards a contact partner fails.
    build_einstein11.py: the 604-point 11D configuration passes with
    17088 + 2616 = 19704 contacts; both negative variants fail.
+7. Class mode of kiss_check.c and kiss_check_np.py (thresholds from
+   class_table.py): (a) on random mixed-norm sets with one class per norm
+   (L = 1, no head part) it agrees exactly with norm mode and with the
+   brute-force reference; (b) on random split sets x = (L u, w_c) with
+   large integer head vectors w_c (L = 10^6) both implementations agree
+   with a pure-Python big-integer check of the assembled vectors, passing
+   and failing; (c) E8 split as (body 7 coords, head = last coordinate)
+   passes with 6720 contacts; lowering one table entry by 1, or adding a
+   duplicate row, makes it fail.
+9. Partner (Gram) mode: D5 and E8, and E8 with a duplicated or perturbed
+   row, written in a random unimodular basis (coordinates C = X U^-1, Gram
+   G = U U^T, partner rows C G): C and numpy agree with norm mode on X.
+8. Chain rebuild (small, synthetic, in the format of build_kravatskiy34.py):
+   a toy parent certificate plus a witness is edited by the same `edit`
+   function; the stars, root deletions and counts come out as computed by
+   hand, and applying the octad switch to a support that does not match
+   the parent is rejected.
 """
 
+import itertools
+import json
 import os
 import random
 import re
@@ -146,6 +165,9 @@ def main():
     field_tests(E8)
     decimal_tests(E8)
     einstein11_tests()
+    class_tests(E8)
+    chain_tests()
+    partner_tests(D5, E8)
     print("ALL TESTS PASSED")
 
 
@@ -267,6 +289,149 @@ def einstein11_tests():
         else:
             assert bv + fv > 0, (variant, c_out, f_out)
             print(f"ok  11D variant {variant:8s}                      violations={bv + fv} FAIL (expected)")
+
+
+def run_class(body, labels, classes, L, d, tag, table_edit=None):
+    """Write body/labels/classes, build the table, run C and numpy class mode."""
+    import class_table
+    pre = os.path.join(BUILD, f"t_cls_{tag}")
+    np.array(body, dtype=np.int8).reshape(-1, d).tofile(pre + ".i8")
+    np.array(labels, dtype=np.uint8).tofile(pre + ".u8")
+    json.dump({"L": L, "classes": classes}, open(pre + ".json", "w"))
+    class_table.main(pre + ".json", pre + ".tab")
+    if table_edit:
+        lines = open(pre + ".tab").read().split("\n")
+        lines = [table_edit(ln) for ln in lines]
+        open(pre + ".tab", "w").write("\n".join(lines))
+    c = parse(subprocess.run([CBIN, pre + ".i8", str(d), pre + ".u8", pre + ".tab"],
+                             capture_output=True, text=True).stdout)
+    p = parse(subprocess.run([sys.executable, os.path.join(HERE, "kiss_check_np.py"), pre + ".i8", str(d),
+                              "--workers", "1", "--tile", "7", "--classes", pre + ".u8", pre + ".tab"],
+                             capture_output=True, text=True).stdout)
+    return c, p
+
+
+def class_tests(E8):
+    rng = random.Random(20261125)
+    # (a) one class per norm, L = 1, no head: must equal norm mode
+    for t in range(15):
+        d = rng.randint(3, 6)
+        rows = [v for v in (tuple(rng.randint(-3, 3) for _ in range(d)) for _ in range(rng.randint(10, 50))) if any(v)]
+        norms = sorted({sum(x * x for x in r) for r in rows})
+        lab = [norms.index(sum(x * x for x in r)) for r in rows]
+        cl = [{"w": [], "body_norm": n} for n in norms]
+        c, p = run_class(rows, lab, cl, 1, d, f"a{t}")
+        b = brute(rows)
+        nm = run_c(rows, d, f"cls_a{t}")
+        assert c[:2] == p[:2] == b == nm[:2], (t, c, p, b, nm)
+    print("ok  class mode = norm mode on 15 random sets (C, numpy, brute force)")
+    # (b) split vectors (L u, w_c) with big heads, against big-integer brute force
+    L = 10**6
+    pool = {}
+    for v in itertools.product(range(-2, 3), repeat=5):
+        if any(v):
+            pool.setdefault(sum(x * x for x in v), []).append(v)
+    seen = [0, 0]
+    for t in range(12):
+        k = rng.randint(2, 5)
+        cl, heads = [], []
+        for _ in range(k):
+            n = rng.choice([4, 8, 12, 16])
+            w = [rng.choice([0, L]) * rng.randint(-2, 2) + rng.randint(-3 * L, 3 * L) * rng.randint(0, 1)
+                 for _ in range(2)]
+            cl.append({"w": w, "body_norm": n})
+            heads.append(w)
+        body, lab, full = [], [], []
+        greedy = t % 2 == 0  # even t: keep only rows compatible with all earlier rows
+        for _ in range(rng.randint(15, 40) * (20 if greedy else 1)):
+            c_ = rng.randrange(k)
+            u = rng.choice(pool[cl[c_]["body_norm"]])
+            x = tuple(L * v for v in u) + tuple(heads[c_])
+            if greedy and brute(full + [x])[0]:
+                continue
+            body.append(u)
+            lab.append(c_)
+            full.append(x)
+        b = brute(full)
+        c, p = run_class(body, lab, cl, L, 5, f"b{t}")
+        assert c[:2] == p[:2] == b, (t, c, p, b)
+        seen[b[0] == 0] += 1
+    assert min(seen) > 0, seen
+    print(f"ok  class mode on 12 random split sets, L = 10^6 ({seen[1]} pass, {seen[0]} fail): C = numpy = big-integer brute force")
+    # (c) E8 split as body (first 7 coordinates) + head (last coordinate), L = 3
+    body = [r[:7] for r in E8]
+    keys = sorted({(r[7], sum(x * x for x in r[:7])) for r in E8})
+    lab = [keys.index((r[7], sum(x * x for x in r[:7]))) for r in E8]
+    cl = [{"w": [3 * h], "body_norm": n} for h, n in keys]
+    c, p = run_class(body, lab, cl, 3, 7, "e8")
+    assert c == p == (0, 6720, "PASS"), (c, p)
+
+    def lower(ln):  # lower the threshold of the first class pair that has contacts
+        f = ln.split()
+        if len(f) == 4 and f[3] != "32767" and not lower.done:
+            lower.done = True
+            return f"{f[0]} {f[1]} {int(f[2]) - 1} {f[3]}"
+        return ln
+    lower.done = False
+    c2, p2 = run_class(body, lab, cl, 3, 7, "e8low", lower)
+    c3, p3 = run_class(body + [body[5]], lab + [lab[5]], cl, 3, 7, "e8dup")
+    assert c2[2] == p2[2] == "FAIL" and c2[0] == p2[0] > 0 and c3[:2] == p3[:2] and c3[0] > 0, (c2, p2, c3, p3)
+    print(f"ok  class mode E8 split: PASS 6720 contacts; lowered table entry FAIL ({c2[0]}); duplicate row FAIL ({c3[0]})")
+
+
+def chain_tests():
+    import build_kravatskiy34 as b34
+    D = b34.D
+    parent = {"full_even_supports": [0xFF, 0xFF00], "stars": [], "removed_root_lines": [],
+              "heavy_numerators_over_85": [], "counts": {"dense": 0, "middle": 256, "stars": 0, "roots": 2 * D * (D - 1)},
+              "points": 0}
+    wit = {"octads": [[1, list(range(8, 16)), list(range(16, 24))]], "stars": [[[30, 31, 32, 33, 29], 0]]}
+    c = b34.edit(parent, wit)
+    assert c["full_even_supports"] == [0xFF, 0xFF0000]
+    assert len(c["stars"]) == 16 and all(v[30] in (4, -4) for v in c["stars"])
+    # star centre 30, leaves 31, 32, 33, 29: the 4 lines (30, leaf, +-1) are
+    # blocked in both signs, i.e. 8 lines, 16 roots
+    assert len(c["removed_root_lines"]) == 8 and c["counts"]["roots"] == 2 * D * (D - 1) - 16
+    assert c["points"] == 256 + 16 + 2 * D * (D - 1) - 16
+    bad = {"octads": [[1, list(range(16, 24)), list(range(8, 16))]], "stars": wit["stars"]}
+    try:
+        b34.edit(parent, bad)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("mismatched switch accepted")
+    print("ok  chain rebuild (toy 34D-format parent + witness): stars, root deletions, counts; bad switch rejected")
+
+
+def partner_tests(D5, E8):
+    rng = random.Random(20261126)
+    e = list(E8)
+    e[3] = tuple(list(e[3][:4]) + [e[3][4] + 1] + list(e[3][5:]))
+    for name, rows, d in (("D5", D5, 5), ("E8", E8, 8), ("E8 dup", E8 + [E8[9]], 8), ("E8 perturbed", e, 8)):
+        X = np.array(rows, dtype=np.int64)
+        U = np.eye(d, dtype=np.int64)
+        for _ in range(3 * d):  # random elementary operations, |entries| kept small
+            i, j = rng.sample(range(d), 2)
+            V = U.copy()
+            V[i] += rng.choice((-1, 1)) * V[j]
+            if np.abs(V).max() <= 2:
+                U = V
+        Ui = np.round(np.linalg.inv(U)).astype(np.int64)
+        assert (U @ Ui == np.eye(d, dtype=np.int64)).all()
+        C = X @ Ui
+        G = U @ U.T
+        assert (C @ G @ C.T == X @ X.T).all() and np.abs(C).max() <= 127 and np.abs(C @ G).max() <= 127
+        pre = os.path.join(BUILD, "t_partner")
+        C.astype(np.int8).tofile(pre + "_x.i8")
+        (C @ G).astype(np.int8).tofile(pre + "_xg.i8")
+        c = parse(subprocess.run([CBIN, pre + "_x.i8", str(d), "--partner", pre + "_xg.i8"],
+                                 capture_output=True, text=True).stdout)
+        p = parse(subprocess.run([sys.executable, os.path.join(HERE, "kiss_check_np.py"), pre + "_x.i8", str(d),
+                                  "--workers", "1", "--tile", "7", "--partner", pre + "_xg.i8"],
+                                 capture_output=True, text=True).stdout)
+        ref = run_c(rows, d, "partner_ref")
+        assert c == p == ref and (ref[2] == "PASS") == (name in ("D5", "E8")), (name, c, p, ref)
+        print(f"ok  partner mode {name:12s} (basis change, |U| <= 2): {c}")
 
 
 if __name__ == "__main__":
