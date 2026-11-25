@@ -118,7 +118,7 @@ def render_md(text, depth):
     # keep the "**Field:** value" header lines on separate lines
     text = re.sub(r"^(\*\*(?:Area|Status|Started|ProofAtlas):\*\*.*)$", r"\1  ", text, flags=re.M)
     text, stash = protect_math(fix_links(text, depth))
-    out = markdown.markdown(text, extensions=["tables", "fenced_code", "sane_lists", "toc"])
+    out = markdown.markdown(text, extensions=["tables", "fenced_code", "sane_lists", "toc"], tab_length=2)
     return restore_math(out, stash)
 
 
@@ -179,7 +179,7 @@ def page(title, body, depth=0, desc="Live progress on open math problems"):
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
- onload="renderMathInElement(document.body,{{delimiters:[{{left:'$$',right:'$$',display:true}},{{left:'\\[',right:'\\]',display:true}},{{left:'\\(',right:'\\)',display:false}},{{left:'$',right:'$',display:false}}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false}})"></script>
+ onload="renderMathInElement(document.body,{{delimiters:[{{left:'$$',right:'$$',display:true}},{{left:'\\\\[',right:'\\\\]',display:true}},{{left:'\\\\(',right:'\\\\)',display:false}},{{left:'$',right:'$',display:false}}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false}})"></script>
 </head>
 <body><header><div class="wrap"><a class="brand" href="{up}index.html">Math Research</a>
 <nav><a href="{up}index.html#problems">Problems</a><a href="{up}index.html#activity">Activity</a><a href="{up}notes/ai-feasible-open-problems.html">Shortlist</a><a href="{REPO_URL}">GitHub</a></nav></div></header>
