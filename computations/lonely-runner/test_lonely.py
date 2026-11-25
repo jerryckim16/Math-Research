@@ -264,6 +264,31 @@ class TestCoverGenAndLiftFree(unittest.TestCase):
                     parts += run(k, p, LRC_IRR="6", LRC_ORDER="1", LRC_NSHARDS="3", LRC_SHARD=str(r))
                 self.assertEqual(sorted(parts), run(k, p))
 
+    def test_covergen_finish_wfix_sharddepth(self):
+        """Step 15: LRC_FINISH=1 (exact two-slot finish), a -DWFIX build
+        (compile-time bitset width) and LRC_SHARD_DEPTH=2 (depth-1 job split)
+        print the same set of minimal covers as the plain search."""
+        import os, subprocess, tempfile
+        b = sieve._covergen_bin()
+        src = os.path.join(os.path.dirname(os.path.abspath(__file__)), "covergen.c")
+        bw = os.path.join(tempfile.mkdtemp(prefix="lrc_w1_"), "covergen_w1")
+        subprocess.run(["cc", "-O3", "-DWFIX=1", "-o", bw, src, "-lm"], check=True)
+        norm = lambda txt: sorted(" ".join(map(str, sorted(map(int, l.split()))))
+                                  for l in txt.splitlines() if l.strip())
+        run = lambda exe, k, p, **e: norm(subprocess.run([exe, str(k), str(p)], capture_output=True, text=True,
+                                                         env=dict(os.environ, **e)).stdout)
+        fast = dict(LRC_PRUNE="2", LRC_IRR="2", LRC_ORDER="1", LRC_FINISH="1")
+        for k, p in ((5, 41), (7, 61), (8, 101), (10, 127), (14, 89)):   # all have (p-1)/2 + 1 <= 64
+            for pr in ("0", "2"):
+                ref = run(b, k, p, LRC_PRUNE=pr)
+                self.assertTrue(ref)
+                self.assertEqual(ref, run(b, k, p, LRC_PRUNE=pr, LRC_FINISH="1"), (k, p, pr))
+                self.assertEqual(ref, run(bw, k, p, **dict(fast, LRC_PRUNE=pr)), (k, p, pr, "wfix"))
+            parts = []
+            for r in range(5):
+                parts += run(bw, k, p, **dict(fast, LRC_SHARD_DEPTH="2", LRC_NSHARDS="5", LRC_SHARD=str(r)))
+            self.assertEqual(sorted(parts), run(b, k, p, LRC_PRUNE="2"), (k, p, "sharddepth"))
+
     def test_covergen_sharding(self):
         import os, subprocess
         b = sieve._covergen_bin()
