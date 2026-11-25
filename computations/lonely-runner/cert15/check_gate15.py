@@ -158,8 +158,20 @@ def check(tgz, sums, work):
         mis.append({"what": "status is not GATE_CLOSED", "status": summ["status"]})
     # A'. internal manifest
     man = json.load(open(os.path.join(root, "MANIFEST_SHA256.json")))
-    bad_man = [f for f, hsh in man.items()
-               if not os.path.isfile(os.path.join(root, f)) or sha256_file(os.path.join(root, f)) != hsh]
+    # entries "../<exe>" name the author's executables, which are not shipped;
+    # their hashes are compared with the archive's BUILD_SHA256.txt instead.
+    exe = {f: hsh for f, hsh in man.items() if f.startswith("../")}
+    bad_man = [f for f, hsh in man.items() if f not in exe and
+               (not os.path.isfile(os.path.join(root, f)) or sha256_file(os.path.join(root, f)) != hsh)]
+    build = {}
+    bp = os.path.join(work, "BUILD_SHA256.txt")
+    if os.path.isfile(bp):
+        for line in open(bp):
+            a = line.split()
+            if len(a) == 2 and re.fullmatch(r"[0-9a-f]{64}", a[0]):
+                build[a[1]] = a[0]
+    rep["manifest_executables"] = {f: hsh[:16] for f, hsh in exe.items()}
+    rep["manifest_executables_equal_BUILD_SHA256"] = all(build.get(f[3:]) == hsh for f, hsh in exe.items())
     rep["manifest_entries"] = len(man)
     rep["manifest_mismatch"] = len(bad_man)
     if bad_man:
@@ -237,7 +249,8 @@ def check(tgz, sums, work):
     rep["cascade_rows"] = len(inputs)
     rep["cascade_seconds"] = round(time.time() - tc, 1)
     ours_by_file = collections.defaultdict(collections.Counter)
-    rows_by_file = collections.Counter()
+    rows_by_file = collections.Counter({"ir_" + f[3:-4]: 0 for f in irfiles})
+    rows_by_file.update({"ext_" + f[6:-4]: 0 for f, _ in dedup_files})
     for (fn, r), c in zip(inputs, cas):
         rows_by_file[fn] += 1
         if c[0] > 0:
@@ -260,7 +273,7 @@ def check(tgz, sums, work):
             if tight == "YES":
                 tight_seen.append(base)
         r_, s_ = parse_stats(os.path.join(fdir, fn + ".stats"))
-        if cert != ours_by_file.get(fn, collections.Counter()) or r_ != rows_by_file.get(fn) \
+        if cert != ours_by_file.get(fn, collections.Counter()) or r_ != rows_by_file.get(fn, -1) \
                 or s_ != sum(ours_by_file.get(fn, {}).values()):
             file_mis.append({"file": fn, "cert_rows": r_, "ours_rows": rows_by_file.get(fn),
                              "cert_surv": s_, "ours_surv": sum(ours_by_file.get(fn, {}).values()),
