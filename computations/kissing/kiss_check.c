@@ -26,7 +26,9 @@
  *
  * Class mode (optional, used for points that are not small integer rows):
  *   kiss_check FILE.i8 d LABELS.u8 TABLE.txt
- * LABELS.u8 holds one class label (uint8) per row; TABLE.txt holds "k" and
+ * LABELS.u8 holds one class label per row, uint8 (file size n) or uint16
+ * little-endian (file size 2n, for more than 256 classes, at most MAXCLS);
+ * TABLE.txt holds "k" and
  * then k*k lines "a b T C". Pair (i, j) then passes iff a_i.a_j <= T[l_i][l_j],
  * and counts as a contact iff a_i.a_j == C[l_i][l_j]. The table is computed
  * exactly elsewhere (class_table.py) from an exact decomposition of the true
@@ -42,12 +44,20 @@
  * |a_i| |b_j| (Euclidean norms of the stored rows), which the program checks
  * is <= 32767, so int16 accumulation stays exact.
  *
+ * Class and partner modes combine: kiss_check FILE d LABELS TABLE --partner P
+ * (used when class bodies are given in a lattice basis).
+ *
+ * Part mode (optional, to split long runs): --part K M checks only the
+ * column blocks blk with blk % M == K. Block blk covers exactly the pairs
+ * (i, j) with i < j and j in [blk*JB, (blk+1)*JB), so the M parts together
+ * cover every pair exactly once; each part prints its own pair count.
+ *
  * Environment KISS_STOP_AT_FIRST=1 (for negative controls only): stop soon
  * after the first violation; the counts printed are then partial and the
  * result is FAIL with a genuine violating pair.
  *
  * Build: gcc -O3 -march=native -fopenmp kiss_check.c -o kiss_check
- * Usage: kiss_check FILE.i8 d [LABELS.u8 TABLE.txt | --partner PARTNER.i8]
+ * Usage: kiss_check FILE.i8 d [LABELS TABLE] [--partner PARTNER.i8] [--part K M]
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -55,7 +65,7 @@
 #include <string.h>
 #include <omp.h>
 
-#define MAXCLS 256
+#define MAXCLS 1024
 #define JB 2048
 
 static int64_t isqrt64(int64_t x) {
@@ -66,9 +76,23 @@ static int64_t isqrt64(int64_t x) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 3 && argc != 5) { fprintf(stderr, "usage: %s FILE.i8 d [LABELS.u8 TABLE.txt | --partner PARTNER.i8]\n", argv[0]); return 2; }
-    int partnermode = (argc == 5 && strcmp(argv[3], "--partner") == 0);
-    int classmode = (argc == 5 && !partnermode);  /* body rows may be zero there */
+    const char *labfn = NULL, *tabfn = NULL, *partfn = NULL;
+    int64_t partk = 0, partm = 1;
+    int ai = 3;
+    if (argc < 3) goto usage;
+    if (ai + 1 < argc && strncmp(argv[ai], "--", 2) != 0) { labfn = argv[ai]; tabfn = argv[ai + 1]; ai += 2; }
+    while (ai < argc) {
+        if (strcmp(argv[ai], "--partner") == 0 && ai + 1 < argc) { partfn = argv[ai + 1]; ai += 2; }
+        else if (strcmp(argv[ai], "--part") == 0 && ai + 2 < argc) { partk = atoll(argv[ai + 1]); partm = atoll(argv[ai + 2]); ai += 3; }
+        else goto usage;
+    }
+    if (partm < 1 || partk < 0 || partk >= partm) goto usage;
+    if (0) {
+      usage:
+        fprintf(stderr, "usage: %s FILE.i8 d [LABELS TABLE] [--partner PARTNER.i8] [--part K M]\n", argv[0]); return 2;
+    }
+    int partnermode = partfn != NULL;
+    int classmode = labfn != NULL;  /* body rows may be zero there */
     const char *fn = argv[1];
     int d = atoi(argv[2]);
     if (d <= 0 || d > 4096) { fprintf(stderr, "bad d\n"); return 2; }
@@ -84,8 +108,8 @@ int main(int argc, char **argv) {
     fclose(f);
     int8_t *praw = raw;
     if (partnermode) {
-        FILE *fp = fopen(argv[4], "rb");
-        if (!fp) { perror(argv[4]); return 2; }
+        FILE *fp = fopen(partfn, "rb");
+        if (!fp) { perror(partfn); return 2; }
         praw = malloc(sz);
         if (fread(praw, 1, sz, fp) != (size_t)sz || fgetc(fp) != EOF) { fprintf(stderr, "partner file size differs\n"); return 2; }
         fclose(fp);
@@ -102,7 +126,7 @@ int main(int argc, char **argv) {
     /* norms and classes */
     int32_t *nrm = malloc(n * sizeof(int32_t));
     int ncls = 0; int32_t clsnorm[MAXCLS]; int64_t clscount[MAXCLS];
-    uint8_t *cls = malloc(n);
+    uint16_t *cls = malloc(n * sizeof(uint16_t));
     int32_t maxnorm = 0;
     for (int64_t i = 0; i < n; i++) {
         int32_t s = 0;
@@ -116,12 +140,12 @@ int main(int argc, char **argv) {
             if (ncls == MAXCLS) { fprintf(stderr, "too many norm classes\n"); return 2; }
             clsnorm[ncls] = s; clscount[ncls] = 0; ncls++;
         }
-        cls[i] = (uint8_t)c; clscount[c]++;
+        cls[i] = (uint16_t)c; clscount[c]++;
     }
     if (!partnermode && maxnorm > 32767) { fprintf(stderr, "max squared norm %d > 32767: int16 path not exact\n", maxnorm); return 2; }
 
     /* thresholds T[c1][c2] and contact values */
-    int16_t T[MAXCLS][MAXCLS], C[MAXCLS][MAXCLS];
+    static int16_t T[MAXCLS][MAXCLS], C[MAXCLS][MAXCLS];
     for (int a = 0; a < ncls; a++) for (int b = 0; b < ncls; b++) {
         int64_t AB = (int64_t)clsnorm[a] * clsnorm[b];
         int64_t t = isqrt64(AB / 4);
@@ -130,12 +154,24 @@ int main(int argc, char **argv) {
     }
     if (classmode) {
         if (maxnorm >= 32767) { fprintf(stderr, "class mode needs max squared norm < 32767\n"); return 2; }
-        FILE *fl = fopen(argv[3], "rb");
-        if (!fl || fread(cls, 1, n, fl) != (size_t)n || fgetc(fl) != EOF) { fprintf(stderr, "bad labels file\n"); return 2; }
+        FILE *fl = fopen(labfn, "rb");
+        if (!fl) { fprintf(stderr, "bad labels file\n"); return 2; }
+        fseek(fl, 0, SEEK_END); long lsz = ftell(fl); fseek(fl, 0, SEEK_SET);
+        if (lsz == n) {
+            uint8_t *l8 = malloc(n);
+            if (fread(l8, 1, n, fl) != (size_t)n) { fprintf(stderr, "bad labels file\n"); return 2; }
+            for (int64_t i = 0; i < n; i++) cls[i] = l8[i];
+            free(l8);
+        } else if (lsz == 2 * n) {
+            uint8_t *l8 = malloc(2 * n);
+            if (fread(l8, 1, 2 * n, fl) != (size_t)(2 * n)) { fprintf(stderr, "bad labels file\n"); return 2; }
+            for (int64_t i = 0; i < n; i++) cls[i] = (uint16_t)(l8[2 * i] | (l8[2 * i + 1] << 8));
+            free(l8);
+        } else { fprintf(stderr, "labels file size is neither n nor 2n\n"); return 2; }
         fclose(fl);
-        FILE *ft = fopen(argv[4], "r");
+        FILE *ft = fopen(tabfn, "r");
         if (!ft || fscanf(ft, "%d", &ncls) != 1 || ncls < 1 || ncls > MAXCLS) { fprintf(stderr, "bad table\n"); return 2; }
-        int seen[MAXCLS][MAXCLS]; memset(seen, 0, sizeof seen);
+        static int seen[MAXCLS][MAXCLS]; memset(seen, 0, sizeof seen);
         for (int e = 0; e < ncls * ncls; e++) {
             int a, b; long tv, cv;
             if (fscanf(ft, "%d %d %ld %ld", &a, &b, &tv, &cv) != 4 || a < 0 || b < 0 || a >= ncls || b >= ncls || seen[a][b]
@@ -153,18 +189,19 @@ int main(int argc, char **argv) {
     /* column-major int16 copy */
     int16_t *bt = aligned_alloc(64, ((size_t)d * n * 2 + 63) / 64 * 64);
     for (int64_t i = 0; i < n; i++) for (int k = 0; k < d; k++) bt[(size_t)k * n + i] = praw[i * d + k];
-    /* per-class threshold rows: TT[c][j] = T[c][cls[j]], CC[c][j] = C[c][cls[j]] */
-    int16_t *TT = malloc((size_t)ncls * n * 2), *CC = malloc((size_t)ncls * n * 2);
-    for (int c = 0; c < ncls; c++) for (int64_t j = 0; j < n; j++) {
-        TT[(size_t)c * n + j] = T[c][cls[j]];
-        CC[(size_t)c * n + j] = C[c][cls[j]];
-    }
+    /* per-class threshold rows are built per column block (below):
+       TT[c][t] = T[c][cls[j0 + t]], CC[c][t] = C[c][cls[j0 + t]] */
 
     int64_t nblk = (n + JB - 1) / JB;
     int64_t viol = 0, contacts = 0;
     int32_t maxexcess = -32768;
-    int16_t maxp[MAXCLS][MAXCLS];
+    static int16_t maxp[MAXCLS][MAXCLS];
     for (int a = 0; a < MAXCLS; a++) for (int b = 0; b < MAXCLS; b++) maxp[a][b] = -32768;
+    int64_t partpairs = 0;
+    for (int64_t blk = partk; blk < nblk; blk += partm) {
+        int64_t j0 = blk * JB, j1 = j0 + JB; if (j1 > n) j1 = n;
+        partpairs += (j0 + j1 - 1) * (j1 - j0) / 2;  /* sum of j over the block */
+    }
     int64_t first_i = -1, first_j = -1;
     const char *sf = getenv("KISS_STOP_AT_FIRST");
     int stopfirst = sf && strcmp(sf, "1") == 0;
@@ -174,13 +211,19 @@ int main(int argc, char **argv) {
     {
         int16_t acc[JB] __attribute__((aligned(64)));
         int64_t lviol = 0, lcont = 0; int32_t lmax = -32768;
-        int16_t lmaxp[MAXCLS][MAXCLS];
+        int16_t (*lmaxp)[MAXCLS] = malloc(sizeof(int16_t) * MAXCLS * MAXCLS);
+        int16_t *TT = malloc(sizeof(int16_t) * (size_t)ncls * JB), *CC = malloc(sizeof(int16_t) * (size_t)ncls * JB);
         for (int a = 0; a < MAXCLS; a++) for (int b = 0; b < MAXCLS; b++) lmaxp[a][b] = -32768;
         int64_t lfi = -1, lfj = -1;
         #pragma omp for schedule(dynamic, 1)
         for (int64_t blk = nblk - 1; blk >= 0; blk--) {
             if (stopfirst && found) continue;
+            if (blk % partm != partk) continue;
             int64_t j0 = blk * JB, j1 = j0 + JB; if (j1 > n) j1 = n;
+            for (int c = 0; c < ncls; c++) for (int64_t j = j0; j < j1; j++) {
+                TT[(size_t)c * JB + (j - j0)] = T[c][cls[j]];
+                CC[(size_t)c * JB + (j - j0)] = C[c][cls[j]];
+            }
             for (int64_t i = 0; i < j1 - 1; i++) {
                 int64_t js = (i + 1 > j0) ? i + 1 : j0;
                 int len = (int)(j1 - js);
@@ -194,7 +237,7 @@ int main(int argc, char **argv) {
                     for (int t = 0; t < len; t++) acc[t] += x * b[t];
                 }
                 int ci = cls[i];
-                const int16_t *tt = TT + (size_t)ci * n + js, *cc = CC + (size_t)ci * n + js;
+                const int16_t *tt = TT + (size_t)ci * JB + (js - j0), *cc = CC + (size_t)ci * JB + (js - j0);
                 int32_t bmax = -32768; int64_t bv = 0, bc = 0;
                 for (int t = 0; t < len; t++) {
                     int32_t e = (int32_t)acc[t] - tt[t];
@@ -222,11 +265,13 @@ int main(int argc, char **argv) {
             for (int a = 0; a < ncls; a++) for (int b = 0; b < ncls; b++) if (lmaxp[a][b] > maxp[a][b]) maxp[a][b] = lmaxp[a][b];
             if (lfi >= 0 && (first_i < 0 || lfi < first_i)) { first_i = lfi; first_j = lfj; }
         }
+        free(lmaxp); free(TT); free(CC);
     }
 
     printf("file %s\nrows %lld\ncolumns %d\n%s %d\n", fn, (long long)n, d, classmode ? "label_classes" : "norm_classes", ncls);
     for (int c = 0; c < ncls; c++) printf("  %s %d count %lld\n", classmode ? "label" : "squared_norm", clsnorm[c], (long long)clscount[c]);
     printf("pairs %lld\n", (long long)(n * (n - 1) / 2));
+    if (partm > 1) printf("part %lld of %lld: pairs_in_part %lld\n", (long long)partk, (long long)partm, (long long)partpairs);
     for (int a = 0; a < ncls; a++) for (int b = a; b < ncls; b++) {
         int16_t m = maxp[a][b] > maxp[b][a] ? maxp[a][b] : maxp[b][a];
         if (m == -32768) continue;
