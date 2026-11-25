@@ -4,7 +4,8 @@ and pin them by sha256: complete coordinate files for 26, 27, 28, 30, 31;
 the exact witness for 25, the parent file plus trade for 29, and the
 compact witnesses for 32 and 33; with --with-34-39, the parent files and
 edit recipes from which build_kravatskiy34.py ... build_kravatskiy39.py
-rebuild the 34-39D records.
+rebuild the 34-39D records; with --with-40-43, the affine-shell data from
+which build_kravatskiy4043.py rebuilds the 40-43D records.
 
 Source: https://github.com/alexlegeartis/KissingNumbers at commit
 907f9b1f4c5f8bb4196ea03775f60cc260189789 (2026-11-23), fetched 2026-11-24
@@ -13,7 +14,7 @@ The files are treated as untrusted data: each is checked against the sha256
 pinned below before load_kravatskiy.py parses it (numpy, allow_pickle=False).
 None of the repository's code is run.
 
-Usage: python3 -I fetch_kravatskiy.py OUTDIR [--with-34-39]
+Usage: python3 -I fetch_kravatskiy.py OUTDIR [--with-34-39] [--with-40-43]
 """
 import hashlib
 import os
@@ -114,6 +115,24 @@ EXTRA_34_39 = [
 ]
 
 
+# 40-43D: the affine-shell data read by build_kravatskiy4043.py (local name,
+# repository path, sha256). The author publishes no hashes for these files.
+EXTRA_40_43 = [
+    ("k40_certificate.json", "dim40-p48q-affine-refill/certificate.json",
+     "d0a2cf0f78426227d6f425f00417171be6f26f9b7cbb9c5cba89ef5938e5dce4"),
+    ("k40_gram.json", "dim40-p48q-affine-refill/gram.json",
+     "39fed03448ab268281fe3adca9b034ddab65517043e0c9c719dc3774fa611878"),
+    ("k40_points.npz", "dim40-p48q-affine-refill/points.npz",
+     "dfe4e78c885cbffde6f6c0c030d86f9c79d9b1f8e4353d97c183d4649b9f1a26"),
+    ("k41_configuration.npz", "dim41-43-affine-sections/configuration_41.npz",
+     "1a63c971f8357d81236e07dbc6c4d70e4b0ec03ada0e3b8aa9811bc08a6daaf8"),
+    ("k42_configuration.npz", "dim41-43-affine-sections/configuration_42.npz",
+     "3aefb185461e52af9de83eace3b44b7f2f11171ada39da821a2fcb55b4a85713"),
+    ("k43_configuration.npz", "dim41-43-affine-sections/configuration_43.npz",
+     "bea1c397aa6b69c47f786564e402423bc892f5966e4e9899808b6598f2669870"),
+]
+
+
 def sha256(path):
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -122,7 +141,7 @@ def sha256(path):
     return h.hexdigest()
 
 
-def main(out, with3439=False):
+def main(out, with3439=False, with4043=False):
     os.makedirs(out, exist_ok=True)
     for n, d, rel, digest in FILES:
         path = os.path.join(out, f"krav{d}_{n}.npz")
@@ -132,7 +151,8 @@ def main(out, with3439=False):
         if got != digest:
             raise SystemExit(f"{rel}: sha256 {got} != pinned {digest}")
         print(f"{d} {n} sha256 OK -> {path}")
-    for name, rel, digest in EXTRA + (EXTRA_34_39 if with3439 else []):
+    for name, rel, digest in (EXTRA + (EXTRA_34_39 if with3439 else [])
+                              + (EXTRA_40_43 if with4043 else [])):
         path = os.path.join(out, name)
         if not os.path.exists(path) or sha256(path) != digest:
             urllib.request.urlretrieve(RAW + rel, path)
@@ -142,4 +162,4 @@ def main(out, with3439=False):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], "--with-34-39" in sys.argv)
+    main(sys.argv[1], "--with-34-39" in sys.argv, "--with-40-43" in sys.argv)

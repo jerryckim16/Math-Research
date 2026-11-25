@@ -33,6 +33,14 @@ kiss_check binary; scratch files are written there too).
 9. Partner (Gram) mode: D5 and E8, and E8 with a duplicated or perturbed
    row, written in a random unimodular basis (coordinates C = X U^-1, Gram
    G = U U^T, partner rows C G): C and numpy agree with norm mode on X.
+10. Affine class mode (40-43D, build_kravatskiy4043.py): class and partner
+   modes combined, with uint16 labels (more than 256 classes). Points
+   (x, z_c/D_c) with body metric G/3, G = 3 U U^T in a random basis, and
+   300 classes of random rational heads: the C checker (whole, and as
+   --part K 3 pieces whose pair counts add up to C(n,2)) and numpy agree
+   exactly with a pure-Python Fraction check of the inner products, passing
+   and failing; E8 spread over 300 zero-head classes passes with 6720
+   contacts; enum_affine.c reproduces a brute-force affine shell count.
 8. Chain rebuild (small, synthetic, in the format of build_kravatskiy34.py):
    a toy parent certificate plus a witness is edited by the same `edit`
    function; the stars, root deletions and counts come out as computed by
@@ -168,6 +176,7 @@ def main():
     class_tests(E8)
     chain_tests()
     partner_tests(D5, E8)
+    affine_tests(E8)
     print("ALL TESTS PASSED")
 
 
@@ -432,6 +441,141 @@ def partner_tests(D5, E8):
         ref = run_c(rows, d, "partner_ref")
         assert c == p == ref and (ref[2] == "PASS") == (name in ("D5", "E8")), (name, c, p, ref)
         print(f"ok  partner mode {name:12s} (basis change, |U| <= 2): {c}")
+
+
+
+def affine_tests(E8):
+    """Section 10: class + partner modes with > 256 classes (40-43D format)."""
+    from fractions import Fraction
+    import build_kravatskiy4043 as b43
+    rng = random.Random(20261125)
+    ebin = os.path.join(BUILD, "enum_affine")
+    subprocess.run(["gcc", "-O3", "-fopenmp", os.path.join(HERE, "enum_affine.c"), "-o", ebin, "-lm"], check=True)
+
+    def basis(d):
+        U = np.eye(d, dtype=np.int64)
+        for _ in range(3 * d):
+            i, j = rng.sample(range(d), 2)
+            V = U.copy()
+            V[i] += rng.choice((-1, 1)) * V[j]
+            if np.abs(V).max() <= 2:
+                U = V
+        return U
+
+    # enum_affine against brute force: x == c (mod 3), x G x^T == n
+    d = 4
+    U = basis(d)
+    G = U @ U.T
+    c = [1, 0, 2, 1]
+    for n in (6, 9, 14):
+        inp, out = os.path.join(BUILD, "t_enum.in"), os.path.join(BUILD, "t_enum.i8")
+        with open(inp, "w") as f:
+            f.write(f"{d} {n}\n" + "\n".join(" ".join(map(str, r)) for r in G) + "\n" + " ".join(map(str, c)) + "\n")
+        cnt = int(subprocess.run([ebin, inp, out], capture_output=True, text=True, check=True).stdout.split()[0])
+        R = range(-12, 13)
+        ref = sum(1 for x in itertools.product(R, repeat=d)
+                  if all((x[k] - c[k]) % 3 == 0 for k in range(d)) and int(np.array(x) @ G @ np.array(x)) == n)
+        assert cnt == ref, (n, cnt, ref)
+    print(f"ok  enum_affine affine shell counts equal brute force (norms 6, 9, 14)")
+
+    def run(X, G, classes, lab, tag):
+        """X int rows, G Gram (body metric G/3), classes (r, D, z), lab labels."""
+        pre = os.path.join(BUILD, f"t_aff_{tag}")
+        X = np.array(X, dtype=np.int64)
+        assert all(int(x @ G @ x) == 3 * classes[l][0] for x, l in zip(X, lab))
+        assert np.abs(X).max() <= 127 and np.abs(X @ G).max() <= 127
+        X.astype(np.int8).tofile(pre + "_x.i8")
+        (X @ G).astype(np.int8).tofile(pre + "_xg.i8")
+        np.array(lab).astype("<u2").tofile(pre + ".lab")
+        tab = b43.table(classes)
+        with open(pre + ".tab", "w") as f:
+            f.write(f"{len(classes)}\n")
+            for (a, b), (T, C) in sorted(tab.items()):
+                f.write(f"{a} {b} {T} {C}\n")
+        dd = str(X.shape[1])
+        args = [pre + "_x.i8", dd, pre + ".lab", pre + ".tab", "--partner", pre + "_xg.i8"]
+        c = parse(subprocess.run([CBIN] + args, capture_output=True, text=True).stdout)
+        parts, ppairs = [0, 0], 0
+        for k in range(3):
+            o = subprocess.run([CBIN] + args + ["--part", str(k), "3"], capture_output=True, text=True).stdout
+            q = parse(o)
+            parts[0] += q[0]
+            parts[1] += q[1]
+            ppairs += int(re.search(r"pairs_in_part (\d+)", o).group(1))
+        n = len(X)
+        assert ppairs == n * (n - 1) // 2 and tuple(parts) == c[:2], (ppairs, parts, c)
+        p = parse(subprocess.run([sys.executable, os.path.join(HERE, "kiss_check_np.py"), pre + "_x.i8", dd,
+                                  "--workers", "1", "--tile", "13", "--classes", pre + ".lab", pre + ".tab",
+                                  "--partner", pre + "_xg.i8"], capture_output=True, text=True).stdout)
+        # Fraction reference: v = (x, z/D), <v, v'> = x G y / 3 + z.w / (D E)
+        V, C2 = 0, 0
+        for i in range(n):
+            for j in range(i + 1, n):
+                (ra, Da, za), (rb, Db, zb) = classes[lab[i]], classes[lab[j]]
+                ip = Fraction(int(X[i] @ G @ X[j]), 3) + Fraction(sum(u * v for u, v in zip(za, zb)), Da * Db)
+                A = ra + Fraction(sum(u * u for u in za), Da * Da)
+                B = rb + Fraction(sum(u * u for u in zb), Db * Db)
+                V += ip > 0 and 4 * ip * ip > A * B
+                C2 += ip > 0 and 4 * ip * ip == A * B
+        assert c[:2] == p[:2] == (V, C2), (tag, c, p, V, C2)
+        return c
+
+    seen = {True: 0, False: 0}
+    for t in range(6):
+        d = 5
+        U = basis(d)
+        G = 3 * (U @ U.T)
+        k = 300
+        D = rng.choice((1, 7, 10**6 + 3))
+        classes, X, lab = [], [], []
+        for _ in range(k):
+            x = [rng.randint(-2, 2) for _ in range(d)]
+            while np.abs(np.array(x) @ G).max() > 127 or int(np.array(x) @ G @ np.array(x)) > 54:
+                x = [rng.randint(-1, 1) for _ in range(d)]
+            if not any(x) and rng.random() < 0.5:
+                r = 0
+            else:
+                x = x if any(x) else [1] + [0] * (d - 1)
+                r = int(np.array(x) @ G @ np.array(x)) // 3
+            z = [rng.randint(-3 * D, 3 * D) for _ in range(2)]
+            if r == 0 and not any(z):
+                z = [D, 0]
+            classes.append((r, D, z))
+            X.append(x)
+            lab.append(len(classes) - 1)
+            if r and rng.random() < 0.3:  # a second body of the same class (same norm: -x)
+                X.append([-v for v in x])
+                lab.append(len(classes) - 1)
+        if t % 2:  # keep a greedy valid subset (by the Fraction test), so the set passes
+            keep = []
+            for i in range(len(X)):
+                ok = True
+                for j in keep:
+                    (ra, Da, za), (rb, Db, zb) = classes[lab[i]], classes[lab[j]]
+                    ip = Fraction(int(np.array(X[i]) @ G @ np.array(X[j])), 3) + Fraction(
+                        sum(u * v for u, v in zip(za, zb)), Da * Db)
+                    A = ra + Fraction(sum(u * u for u in za), Da * Da)
+                    B = rb + Fraction(sum(u * u for u in zb), Db * Db)
+                    if ip > 0 and 4 * ip * ip > A * B:
+                        ok = False
+                        break
+                if ok:
+                    keep.append(i)
+            X, lab = [X[i] for i in keep], [lab[i] for i in keep]
+        c = run(X, G, classes, lab, f"r{t}")
+        seen[c[2] == "PASS"] += 1
+        assert (c[2] == "PASS") == (t % 2 == 1), (t, c)
+    # E8 over 300 zero-head classes, with D varying: passes with 6720 contacts
+    G = 3 * np.eye(8, dtype=np.int64)
+    rows = [list(r) for r in E8]
+    classes = [(8, rng.choice((1, 5, 10**9)), [0, 0]) for _ in range(300)]
+    lab = [rng.randrange(300) for _ in rows]
+    c = run(rows, G, classes, lab, "e8")
+    assert c == (0, 6720, "PASS"), c
+    c2 = run(rows + [rows[4]], G, classes, lab + [lab[4]], "e8dup")
+    assert c2[2] == "FAIL"
+    print(f"ok  affine class+partner mode, 300 classes (uint16 labels): {seen[False]} random sets fail, "
+          f"{seen[True]} pass, C (whole and 3 parts) = numpy = Fraction reference; E8 PASS 6720, duplicate FAIL")
 
 
 if __name__ == "__main__":

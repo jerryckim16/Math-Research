@@ -14,7 +14,8 @@ before it is reported.
 
 Work is split over row tiles; each worker process uses a single BLAS thread.
 
-Class mode (--classes LABELS.u8 TABLE.txt): as in kiss_check.c, pair (i, j)
+Class mode (--classes LABELS TABLE.txt; labels uint8, or uint16 little-endian
+when the file has 2 bytes per row): as in kiss_check.c, pair (i, j)
 passes iff a_i.a_j <= T[l_i][l_j] and is a contact iff a_i.a_j == C[l_i][l_j],
 with the table computed exactly by class_table.py; flagged pairs are
 recomputed in int64 and compared with T.
@@ -56,8 +57,9 @@ def _init(path, d, labels=None, table=None, partner=None):
     _G["nrm"] = nrm
     _G["classmode"] = labels is not None
     if labels is not None:
-        cls = np.fromfile(labels, dtype=np.uint8).astype(np.int64)
-        assert len(cls) == len(raw)
+        nb = os.path.getsize(labels)  # uint8 labels, or uint16 LE for > 256 classes
+        assert nb in (len(raw), 2 * len(raw)), "labels file size is neither n nor 2n"
+        cls = np.fromfile(labels, dtype=np.uint8 if nb == len(raw) else "<u2").astype(np.int64)
         tok = open(table).read().split()
         k = int(tok[0])
         assert len(tok) == 1 + 4 * k * k and cls.max() < k

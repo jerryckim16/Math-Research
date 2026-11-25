@@ -8,12 +8,17 @@
 # release assets, raw.githubusercontent.com and zenodo.org. About 1.5 h wall
 # on 4 cores, plus about 1.5-2 h for section 7c (Kravatskiy 34-39D); peak RAM
 # < 1 GB (25D/27D field checks: < 2 GB; 39D build and class mode: < 3 GB).
-# Usage: reproduce.sh [WORKDIR] [--with-43]   (downloads and logs go to WORKDIR)
+# Usage: reproduce.sh [WORKDIR] [--with-43] [--with-40-43]   (downloads and logs go to WORKDIR)
 # --with-43 adds the Qiushi 43D export (2,553,792 points; about 75 min more).
+# --with-40-43 adds Kravatskiy's 40-43D records (section 7d; about 2.7 h more).
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 work=${1:-$(mktemp -d)}
-with43=${2:-}
+with43=""
+with4043=0
+for a in "${@:2}"; do
+  case "$a" in --with-43) with43=--with-43 ;; --with-40-43) with4043=1 ;; *) echo "unknown option $a"; exit 2 ;; esac
+done
 mkdir -p "$work"/bin "$work"/known "$work"/qiushi "$work"/lin "$work"/linbuild "$work"/neg "$work"/q2527 \
   "$work"/krav "$work"/small
 gcc -O3 -march=native -fopenmp -Wall "$here/kiss_check.c" -o "$work/bin/kiss_check"
@@ -209,6 +214,46 @@ for v in noremove stale phase; do
   fi
 done
 unset KISS_STOP_AT_FIRST
+
+# 7d. Kravatskiy 40-43D (affine lattice shells with rational heads), rebuilt with our own
+#     shell enumerator (enum_affine.c) and checked over all pairs by kiss_check.c in
+#     partner mode (40D) or class + partner mode (41-43D, table from the builder).
+#     Only with --with-40-43: about 1.7 h of C on 4 cores (40D 11 min, 41D 22 min,
+#     42D 21 min, 43D 44 min), 48 min of numpy for 40D, builds about 25 min; peak RAM < 2 GB.
+if [ "$with4043" = 1 ]; then
+  gcc -O3 -march=native -fopenmp -Wall "$here/enum_affine.c" -o "$work/bin/enum_affine" -lm
+  python3 -I "$here/fetch_kravatskiy.py" "$K" --with-40-43
+  B4043="$here/build_kravatskiy4043.py"
+  for d in 40 41 42 43; do
+    python3 -I "$B4043" "$K" $d "$K/krav$d" "$work/bin/enum_affine" --work "$K/enum$d"   # asserts every population
+  done
+  "$CHK" "$K/krav40_x.i8" 40 --partner "$K/krav40_xg.i8" | tee "$K/check40.txt" | grep -E "^pairs|class_pair|contacts|RESULT"
+  for k in 0 1; do  # second implementation for 40D (about 24 min per half)
+    python3 "$here/kiss_check_np.py" "$K/krav40_x.i8" 40 --partner "$K/krav40_xg.i8" --part $k 2 | grep -E "^part|contacts|RESULT"
+  done
+  for d in 41 42 43; do
+    for k in 0 1 2 3; do  # four parts (each under 25 min); together they cover every pair once
+      "$CHK" "$K/krav${d}_x.i8" 40 "$K/krav$d.lab" "$K/krav$d.tab" --partner "$K/krav${d}_xg.i8" --part $k 4 \
+        | tee "$K/check${d}_p$k.txt" | grep -E "pairs_in_part|contacts|max_excess|RESULT"
+    done
+  done
+  # negative controls: each must FAIL (wrong centre, wrong parent lattice, heads in the wrong order or sign or scale)
+  export KISS_STOP_AT_FIRST=1
+  python3 -I "$B4043" "$K" 40 "$work/neg/k40_negcore" "$work/bin/enum_affine" --variant negcore
+  if "$CHK" "$work/neg/k40_negcore_x.i8" 40 --partner "$work/neg/k40_negcore_xg.i8" > "$work/neg/k40_negcore.txt"; then
+    echo "NEGATIVE CONTROL k40_negcore WAS ACCEPTED"; exit 1
+  fi
+  if python3 -I "$B4043" "$K" 43 "$work/neg/k43_p48q" "$work/bin/enum_affine" --variant p48q > "$work/neg/k43_p48q.txt" 2>&1; then
+    echo "NEGATIVE CONTROL k43_p48q WAS ACCEPTED"; exit 1
+  fi
+  for s in 41:shift 42:shift 43:shift 43:purenegate 43:tinyscale; do
+    d=${s%%:*}; v=${s##*:}
+    python3 -I "$B4043" --retable "$K/krav$d" $v "$work/neg/k${d}_$v"
+    if "$CHK" "$K/krav${d}_x.i8" 40 "$K/krav$d.lab" "$work/neg/k${d}_$v.tab" --partner "$K/krav${d}_xg.i8" \
+        > "$work/neg/k${d}_$v.txt"; then echo "NEGATIVE CONTROL k${d}_$v WAS ACCEPTED"; exit 1; fi
+  done
+  unset KISS_STOP_AT_FIRST
+fi
 
 # 8. 11D: 604 points from the EinsteinArena appendix (arXiv:2606.10402v2), our build
 python3 -I "$here/build_einstein11.py" "$work/small/e11"
