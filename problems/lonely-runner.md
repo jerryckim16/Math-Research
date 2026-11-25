@@ -5,7 +5,7 @@
 - The prime-gate framework is reproduced end to end for LRC(3)–LRC(10) (4–11 runners), conditional on one cited bound (B_k). LRC(10) uses an explicit ×11 lift, independent of Sungkawichai–Trakulthongchai's Prop. corlarge (step 7).
 - All 71 of Allikvere's 15-runner (LRC(14)) gate certificates are independently re-checked, with no discrepancy found. Stored rows were checked in full at every gate; the cascade and kill in full at 54 gates and sampled at 17, with the cascade alone also in full at near-gcd gate 223; level-one completeness at 5 gates (p = 89, 239, 251, 263, 269). See "Independent re-check summary". His 14-runner terminal kills are re-checked at all 111 of his gate primes.
 - The n = 15 shape lemma R_15 < 49/100 is proved (Approach 10; every inequality machine-checked exactly). The general-n parts of Allikvere's Theorem 3.8 are independently verified (Approach 11), so the 16-runner gate target 483.239 is proved here, given LRC(m) for m ≤ 14.
-- The cost of the next open case (16 runners) is estimated from measurements.
+- The cost of 16 runners with our code is estimated from measurements. **16 and 17 runners turn out to be already claimed** (Zenodo, Oct 2026; see the correction under Statement). The first unclaimed case is 18 runners.
 
 **Started:** 2026-11-23 (literature upgraded to primary texts the same day, step 2)
 **ProofAtlas:** rank 477
@@ -29,11 +29,13 @@ k = n speeds. LRC(k) is "the conjecture for k+1 runners".
 The bound 1/(n+1) cannot be improved. Speeds (1, 2, …, n) attain it exactly
 (re-checked below for n ≤ 10).
 
-**Next open case: LRC(15), i.e. 16 runners.** Every 15-tuple of positive
-integers has a t with all ‖v_i t‖ ≥ 1/16.
+**Correction (2026-11-25, literature survey): 16 and 17 runners are already claimed.** See `notes/lonely-runner/literature.md`.
 
-- This assumes Allikvere's computer-assisted preprint for 14 and 15 runners is correct. It has not been independently re-implemented in full; see the spot check below.
-- Without that preprint, the first case without a located claim is still 16 runners.
+- LRC(15) (16 runners) is claimed by J. Allikvere, *Sixteen lonely runners*, Zenodo doi:10.5281/zenodo.23304361 (2026-10-11). It is a computer-assisted proof, not on arXiv and not refereed. It uses a new relation-rank bound log ∏v < 459.084, the forced divisor 720720, 16 preliminary primes and 59 gate primes 269–659, with a margin of 0.916.
+- LRC(16) (17 runners) is claimed by W. Toner, Zenodo doi:10.5281/zenodo.23552885 (2026-10-22), conditional on LRC(15). It is not refereed.
+- **First case without a located claim: LRC(17), i.e. 18 runners.** Every 17-tuple of positive integers has a t with all ‖v_i t‖ ≥ 1/18.
+- Our own LRC(15) work below (Approaches 10–13, the shape lemma and the flag-bound check) was done before these claims were found. It is an independent re-derivation of parts of Allikvere's approach, not a new result.
+- Earlier text in this file calls LRC(15) the "next open case". Read that as "next case without an independently checked proof".
 - The first case without a peer-reviewed proof is 11 runners.
 
 ## Known results
@@ -58,7 +60,9 @@ Literature checked on 2026-11-23. In step 2, arxiv.org and zenodo.org became rea
 | 11, 12, 13 | 10–12 | claimed (computer-assisted preprint) | T. Sungkawichai, T. Trakulthongchai, "Eleven, twelve, and thirteen lonely runners", arXiv:2604.23906 (Apr 2026, v2); code github.com/vzsky/lonely-runners | **[read]** (LaTeX source in the code repository) |
 | 14 | 13 | claimed (computer-assisted preprint), two proofs | J. Allikvere, "Fourteen and fifteen lonely runners", arXiv:2609.02604 (v1 2 Sep 2026, "Fourteen lonely runners"; v2 24 Sep 2026). Certificates: Zenodo 10.5281/zenodo.22066772 | **[read]** v2 |
 | 15 | 14 | claimed (computer-assisted preprint) | Allikvere, same v2. Certificates: Zenodo 10.5281/zenodo.22667683. 2,137 CPU-hours | **[read]**; 4 of 71 gate certificates spot-checked (below) |
-| 16 | 15 | **open** | — | |
+| 16 | 15 | claimed (computer-assisted, Zenodo preprint) | J. Allikvere, *Sixteen lonely runners*, Zenodo 10.5281/zenodo.23304361 (2026-10-11) | metadata and manuscript source read (`notes/lonely-runner/literature.md`); certificates not yet re-checked |
+| 17 | 16 | claimed, conditional on 16 runners (Zenodo preprint) | W. Toner, *Seventeen lonely runners, assuming sixteen*, Zenodo 10.5281/zenodo.23552885 (2026-10-22) | metadata and PDF read; not re-checked |
+| 18 | 17 | **open** (no located claim, 2026-11-25) | — | |
 
 Details from the primary texts:
 
