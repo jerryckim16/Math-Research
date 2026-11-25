@@ -1,0 +1,18 @@
+# Step 12: covergen.c LRC_ORDER=1 (children by descending gain + child-gain cutoff) and LRC_IRR bit 4
+# (incremental redundancy cut).  Rules as described in the change log of Allikvere's basegen_v66_lf.cpp
+# (v6.3-v6.6), reimplemented from that description; his program was read, not run.
+# Output: identical sets of minimal covers (classes sorted per line) vs the plain search on
+#   (5,41),(7,61),(8,101),(9,137),(10,127),(14,89) x PRUNE 0/1/2 x IRR 0/2/4/6 x ORDER 0/1 (and with TWOBRANCH=1).
+# Exact, (14,89), single core: PRUNE=2 IRR=2: 4,629,123 nodes; +ORDER=1: 2,661,496; +IRR bit 4 (IRR=6): 2,084,920.
+#   Allikvere irredundant branch at p=89 (gates.json): 517,527 nodes (counter may be defined differently).
+# Exact, (14,113), single core (same 6,638,391 minimal covers):
+#   (14,113) PRUNE=2 IRR=2 ORDER=0 TB=0: nodes 229333830  secs 57.991597035
+#   (14,113) PRUNE=2 IRR=2 ORDER=1 TB=0: nodes 108523276  secs 34.180229152
+#   (14,113) PRUNE=2 IRR=6 ORDER=1 TB=0: nodes 83308104  secs 31.649606030
+#   (14,113) PRUNE=2 IRR=6 ORDER=1 TB=1: branch 1 (|C| = 14): nodes 81441582 minimal_covers 6185486   nodes 89338228 leaves 44238090 minimal_covers 6638391 branch 1 order 1  secs 33.897051134
+# Knuth (heuristic; 20000 probes, seed 1; probe applies ORDER, the q-cut and IRR cuts; capped DFS 2e7 nodes for the rate):
+#   p=251 PRUNE=1 IRR=2 ORDER=0: knuth_estimate_nodes 4.707168e+10 stderr 1.094e+09 probes 20000 branch 0 prune 1 irr 2 capped_dfs nodes 20000097 secs 5.084 nodes_per_sec 3.934e+06 
+#   p=251 PRUNE=1 IRR=2 ORDER=1: knuth_estimate_nodes 1.338617e+10 stderr 4.469e+08 probes 20000 branch 0 prune 1 irr 2 capped_dfs nodes 20000100 secs 6.669 nodes_per_sec 2.999e+06 
+#   p=251 PRUNE=1 IRR=6 ORDER=1: knuth_estimate_nodes 1.343975e+10 stderr 4.647e+08 probes 20000 branch 0 prune 1 irr 6 capped_dfs nodes 20000080 secs 7.726 nodes_per_sec 2.589e+06 
+# p=251: ORDER=1 gives 3.52x fewer nodes at 0.76x the node rate: net ~2.7x.  IRR bit 4 gives no node saving at 251.
+# Projected (14,251) level one with PRUNE=1 IRR=2 ORDER=1: 1.34e10 / 3.0e6 ~ 4,500 CPU-s (Allikvere: 2,475 CPU-s, other machine).

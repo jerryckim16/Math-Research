@@ -242,6 +242,28 @@ class TestCoverGenAndLiftFree(unittest.TestCase):
                 self.assertEqual(single, two, (k, p, pr, ir))
                 self.assertTrue(single)
 
+    def test_covergen_order_same_minimal_covers(self):
+        """LRC_ORDER=1 (descending-gain child order + child-gain cutoff) and
+        LRC_IRR bit 4 (incremental redundancy cut), step 12, print the same set
+        of minimal covers as the plain search (classes sorted per line)."""
+        import os, subprocess
+        b = sieve._covergen_bin()
+        norm = lambda txt: sorted(" ".join(map(str, sorted(map(int, l.split()))))
+                                  for l in txt.splitlines() if l.strip())
+        run = lambda k, p, **e: norm(subprocess.run([b, str(k), str(p)], capture_output=True, text=True,
+                                                    env=dict(os.environ, **e)).stdout)
+        for k, p in ((5, 41), (7, 61), (8, 101), (9, 137), (14, 89)):
+            for pr in ("0", "2"):
+                ref = run(k, p, LRC_PRUNE=pr)
+                self.assertTrue(ref)
+                for ir, od in (("0", "1"), ("2", "1"), ("4", "0"), ("6", "1")):
+                    self.assertEqual(ref, run(k, p, LRC_PRUNE=pr, LRC_IRR=ir, LRC_ORDER=od), (k, p, pr, ir, od))
+            if k == 9:   # composes with sharding
+                parts = []
+                for r in range(3):
+                    parts += run(k, p, LRC_IRR="6", LRC_ORDER="1", LRC_NSHARDS="3", LRC_SHARD=str(r))
+                self.assertEqual(sorted(parts), run(k, p))
+
     def test_covergen_sharding(self):
         import os, subprocess
         b = sieve._covergen_bin()

@@ -695,6 +695,52 @@ Every cut removes only nodes with no admissible leaf below them, so the union of
 
 These leads are not explored further here (Next steps 2).
 
+### 13. Closing the generator gap: child ordering and incremental redundancy cut (step 12)
+
+**Source of the ideas.** Allikvere's generator source (`basegen_v66_lf.cpp`) and `CODE_GUIDE.md` are in the LRC(13) Zenodo record (10.5281/zenodo.22066772). They were **read as text; the program was not compiled or run.**
+
+The v2 paper's §4.1 ("lexicographic minimum among the normalizations") turned out to be an **output** filter: one row per unit orbit, which is why he has 2.15× fewer rows. It cannot shrink the tree. The τ precondition only affects the small second branch. The node savings come instead from search rules listed in his change log (v6.3–v6.6). Two were reimplemented here from that description, in our own code:
+
+1. **`LRC_ORDER=1`: child order and child-gain cutoff.**
+   - The children of the chosen time (allowed classes covering it) are tried in order of descending gain |cov(c) ∩ U|, ties by ascending class, instead of ascending class. Exclusion of earlier siblings is unchanged, and the header's completeness and uniqueness argument works for any fixed child order, so the printed set is unchanged.
+   - Excluding high-gain classes early makes the gain bound bite much sooner in later siblings.
+   - Cutoff: a child c is dead if g_c + bsum < |U|, where bsum is the sum of the (left − 1) largest gains over the allowed classes (gains only shrink below the node). Later siblings have g ≤ g_c, so the loop stops.
+   - The gains are computed once per node and feed the sharper gain bound, the cutoff and the order.
+2. **`LRC_IRR` bit 4: incremental redundancy cut.** Per depth we keep the set of times covered at least twice and each chosen class's private set.
+   - Adding a class removes the newly doubly-covered times from every earlier private set. If one becomes empty, no minimal cover lies below, so the child is skipped. Its class is still excluded for later siblings.
+   - This is the same cut as bit 1 part (i), at O(|L|) instead of O(|L|²) mask work, and applied before the child node is created.
+
+**Validation.** The set of minimal covers, with classes sorted per line, is identical to the plain search on:
+
+- (5,41), (7,61), (8,101), (9,137), (10,127), (14,89);
+- `LRC_PRUNE` 0/1/2, `LRC_IRR` 0/2/4/6, `LRC_ORDER` 0/1, also with `LRC_TWOBRANCH=1`.
+
+The test is `test_lonely.py`, `test_covergen_order_same_minimal_covers`, which also covers 3-way sharding. Since the output sets are equal, the orbit sets are equal.
+
+**Measured** (`results/knuth_order_k14.txt`; Knuth estimates are heuristic):
+
+| k = 14 | before (PRUNE=2, IRR=2) | ORDER=1 | ORDER=1 + IRR bit 4 |
+| --- | --- | --- | --- |
+| p = 89, exact nodes | 4,629,123 | 2,661,496 | 2,084,920 |
+| p = 113, exact nodes / time | 229.3M / 58.0 s | 108.5M / 34.2 s | **83.3M / 31.6 s** |
+| p = 251, Knuth nodes (PRUNE=1) / nodes per s | 4.71·10¹⁰ / 3.9·10⁶ | **1.34·10¹⁰ / 3.0·10⁶** | 1.34·10¹⁰ / 2.6·10⁶ |
+
+**Results:**
+
+- **Child ordering: worked.** It gives 1.7–3.5× fewer nodes and a 1.8× (p = 113) to about 2.7× (p = 251) net speed-up. At k = 8–10 the node saving is 2.4–3.5×.
+- **Bit 4: worked at small p only.** It saves 22% of nodes at p = 89 and 23% at p = 113, but nothing at p = 251, where it only slows each node. Use `LRC_IRR=6` for small gates and `LRC_IRR=2` for large ones.
+- **The two-branch split** (Approach 12) still adds about 7% on top.
+
+**Remaining gap.** The projected k = 14 level one at p = 251 is now about 1.34·10¹⁰ / 3.0·10⁶ ≈ 4,500 CPU-s, against Allikvere's 2,475 CPU-s on another machine. So the gap is now about 1.8×, down from about 7×.
+
+- At p = 89 our tree still has 4× more nodes than his irredundant branch: 2.08M for both branches against 517k. His node counter may be defined differently.
+- Not yet tried from his change log:
+  - the exact finish of the last two slots (intersect the coverer sets over the uncovered times);
+  - the mandatory-point gain bounds for the last 2–3 slots;
+  - the shrinking top-k gain multiset for the cutoff;
+  - bit-parallel or AVX-512 popcount kernels.
+- These are constant-factor or late-depth improvements.
+
 ## Independent re-check summary
 
 Scope: J. Allikvere's computer-assisted proofs of LRC(13) and LRC(14), i.e. 14 and 15 runners (arXiv:2609.02604v2). Certificates: Zenodo 10.5281/zenodo.22066772 and 10.5281/zenodo.22667683. All checks use our own code (C and Python, in `computations/lonely-runner/`), written from the definitions in the paper and in arXiv:2604.23906. The archives were read as data only; none of the author's programs were executed.
@@ -737,6 +783,7 @@ Scope: J. Allikvere's computer-assisted proofs of LRC(13) and LRC(14), i.e. 14 a
 | LRC(14) certificates: independent re-check of 71/71 gates. All 52 "J empty" gates and near-gcd gates 179 and 233 in full; cascade also in full at 223. Near-gcd gates 89, 163, 173, 223 (sample 3,000) and 131, 149, 157, 167, 181, 191, 193, 197, 199, 211, 227, 229, 241 (sample 500): all rows, plus seeded samples of the cascade and kill. Level-one completeness at p = 89, 239 and 251. No discrepancy found. | independent re-computation of the certificates' claims; cascade sampled at 16 and kill at 17 of the 19 near-gcd gates; completeness at 3 gates only | `results/lrc14_gates/COVERAGE.md`, Approach 7 |
 | LRC(13) certificates: terminal level-14 kill of both persistent orbits re-computed at all 111 gate primes; kill-file SHA-256s match manifests | independent re-computation (cascade and level one not checkable: rows not archived) | `results/lrc13_kills.jsonl` |
 | (1..15) dies at level 16 at all 79 primes 251–743 | computed exactly (one orbit only) | `results/tight_orbit_k15.jsonl` |
+| Child ordering + cutoff (`LRC_ORDER=1`) and incremental redundancy cut (`LRC_IRR` bit 4): same minimal covers as the plain search; k = 14 nodes 2.75× fewer at p = 113 (58 s → 31.6 s), 3.5× fewer at p = 251 (Knuth) for about 2.7× net speed-up | validated computation; **worked** (Knuth figures heuristic) | Approach 13, `results/knuth_order_k14.txt` |
 | Two-branch level-one search (`LRC_TWOBRANCH=1`): same minimal covers as the single tree in 36 configurations; node change at k = 14 is +14% (p = 89), +7% (p = 113), +3.4% (p = 251), +2.0% (p = 401) | validated computation; **failed route** (no speed-up) | Approach 12, `results/knuth_twobranch_k14.txt` |
 | Cost of LRC(15) level one + kill with Allikvere-class code: about 1.75·10⁵ CPU-h (about 20 CPU-years) for 79 gates 251–743 under the flag target 483.24 (proved, Approaches 10–11); about 9.5·10⁵ CPU-h for level one with our generator (step 11); about 8.7·10⁶ CPU-h under the proved B_15 | **heuristic extrapolation from measurements** | `cost_estimate.py`, `results/knuth_covergen_k14_k15.txt` |
 
@@ -755,10 +802,11 @@ Our code is tested against brute force, but not formally verified. These reprodu
    - Without Theorem 3.8, the only target from MSS is ln B_15 − ln 720720 = 951.26. That needs about 147 gates up to 1223, which is roughly 50× the cost below.
 2. **Generator.**
    - Done: his Lemma 4.1 normalisation (Approach 8), sharper bounds (Approach 9), and the two-branch search (step 11, Approach 12). The two-branch split is validated but gives **no** node reduction (+2–14%).
-   - Our engine is still about 7× slower in CPU time than his at p = 251, and our irredundant branch is 8.8× larger in nodes at p = 89.
+   - Step 12 (Approach 13): descending-gain child order with the child-gain cutoff (`LRC_ORDER=1`) and an incremental redundancy cut (`LRC_IRR` bit 4), taken from his generator's change log. Same output; about 2.7× faster at k = 14, p = 251, 1.8× at p = 113. The CPU gap at p = 251 is now about 1.8× (was about 7×).
    - Next leads:
-     - his stronger normalization or lexicographic-minimum rule in the irredundant branch (2.15× fewer rows at p = 89);
-     - his precondition search certifying τ(p) ≥ k − 1;
+     - the lexicographic-minimum rule is an output filter (one row per orbit), not a node saving;
+     - from his change log, not yet tried: the exact two-slot finish, the mandatory-point bounds for the last 2–3 slots, and bit-parallel popcount kernels;
+     - his precondition search certifying τ(p) ≥ k − 1 (affects only the small second branch);
      - the decomposition into jobs.
    - Validate any change against the current generator, and then against his archived k = 14 rows at p = 397 and 401. Those are small gates: about 13 and 16 CPU-h for his code.
 3. **Cost.**
