@@ -154,8 +154,8 @@ unit of $\mathbb Z_l$, and $v^*\in\mathbb Z_{lp}$ the unit with $v^*\equiv1$
 
 - **Witnesses.** $n\mapsto v^*n$ permutes the grid, and
   $\lVert v^*w_i\,n/(lp)\rVert=\lVert w_i\,(v^*n)/(lp)\rVert$.
-- **gcd clause and Lemma S.** $\gcd(l,vw_j)=\gcd(l,w_j)$, and
-  $\gcd(vw_i,d)=\gcd(w_i,d)$ for $d\mid l$.
+- **gcd clause and Lemma S.** $\gcd(l,v^*w_j)=\gcd(l,w_j)$, and
+  $\gcd(v^*w_i,d)=\gcd(w_i,d)$ for $d\mid l$, because $v^*$ is a unit mod $l$.
 - **Lifts.** A unit of $\mathbb Z_l$ lifts to a unit of $\mathbb Z_{cl}$, so
   by CRT there is a unit $V$ of $\mathbb Z_{clp}$ with $V\equiv1$ (mod $p$)
   and $V\equiv v^*$ (mod $lp$). Multiplication by $V$ maps the fibre of $w$
@@ -167,7 +167,7 @@ lexicographic minimum over $v\in\mathbb Z_l^*$ of $ve$, sorted inside each
 block of equal $b_i$. Inside the DFS, equal coordinates are lifted with
 non-decreasing digits.
 
-**Tests** (`midp17/test_midp17.py`, 9 tests, all pass):
+**Tests** (`midp17/test_midp17.py`, 14 tests, all pass):
 
 - At $(k,p,\text{chain})=(7,29,2\cdot2\cdot2)$, $(7,31,2\cdot3)$,
   $(8,37,3\cdot3)$ and $(5,17,2\cdot3\cdot2)$, each on 4 random bases, the
@@ -309,8 +309,18 @@ $3,3,2,2$; same files and columns as §3.2):
   - Of the 5 open bases, 4 hit the retained-set cap ($2\cdot10^{5}$ orbits)
     at level 18 or 36.
   - The fifth still had 4 retained orbits at level 36, the end of the chain.
-  - So the boundary of the mid-range route is $\tau_{17}\ge12$, i.e.
-    $f\le5$, and not a bound on $p$.
+  - So the boundary of the mid-range route along $3,3,2,2$ is
+    $\tau_{17}\ge12$, i.e. $f\le5$, and not a bound on $p$.
+  - **Level 54** (chain $3,3,2,3$; `results/l54_p113.jsonl`). The 13 bases
+    of the 300 at 113 that did not close by level 18 were rerun to level 54.
+    - Nine close at 54. They include the one still open at 36.
+    - The other four have retained sets of more than $1.2\cdot10^{5}$
+      orbits at level 18 (presumably Lemma T families with $f=6$; not
+      classified), and hit the caps: $3\cdot10^{5}$
+      orbits, or $3\cdot10^{9}$ DFS nodes, 575 s for one base.
+
+    So $\tau_{17}=11$ primes may close at level 54, as Lemma TN allows, but
+    at a cost far above the others.
 - **$p=73$ fails although $\tau_{17}=12$.** 29 of 100 bases are still
   open at level 36, most of them at the node cap; this is the coarse-grid
   blow-up of `small-primes.md` §6 ($p\approx4k$, $m=4$). Primes below 83
@@ -713,6 +723,9 @@ residues mod $l$:
 | 18 | 7 | 245,157 | 98,420 | 65,568 |
 | 24 | 5 | 80,730 | 544 | **0** |
 | 24 | 6 | 376,740 | 79,092 | 18,988 |
+| 27 | $\le6$ | 905,665 in all | 0 | 0 |
+| 36 | $\le5$ | 658,002 in all | 0 | 0 |
+| 36 | 6 | 3,838,380 | 136,176 | **240** |
 
 - **Cross-check of Lemma TN.** At every level of the $f_{\min}$ table, the
   first $f$ with a nonzero (R)+(N) count equals $f_{\min}(l)$ from Lemma TN.
@@ -723,6 +736,17 @@ residues mod $l$:
   (R)+(N) patterns with $f=5$. So a retained tuple at level 24 with exactly
   5 non-multiples of 24 is a Lemma T family, for every base and every prime
   (proved, given the enumeration).
+- **Level 36.** Here $f_{\min}(36)=6$, but only 240 of the 136,176 (R)+(N)
+  multisets with $f=6$ are blockable. So a retained tuple at level 36 with
+  6 non-multiples of 36 is either a Lemma T family or carries one of those
+  240 patterns.
+  - At a prime with $\tau_{17}\ge12$ it cannot be a Lemma T family, since
+    11 zero coordinates do not cover.
+  - The defect families of §4.1 (127 and 131, $f=6$ at level 18) all died at
+    level 36, consistent with this.
+  - Level 27 has no (R)+(N) pattern with $f\le6$, so $f_{\min}(27)\ge7$.
+    The $f=7$ counts at levels 24, 27 and 36 were not obtained: the
+    level-24 run was stopped at its 30-min limit.
 - **Consequence.** At the levels of the chain $3,3,2,2$, Lemma TD does not
   raise $f_{\min}$, and the defect families of §4.1 ($f=6$ at level 18) are
   consistent with it. A
