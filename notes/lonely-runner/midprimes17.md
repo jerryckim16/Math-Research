@@ -1,6 +1,6 @@
 # Mid-range primes as divisibility gates for LRC(17): sampled cascades, Lemma T families, cost
 
-> **Draft, work in progress.** This page is written by a research agent and has not yet been reviewed by the coordinator. Treat its claims as unreviewed until this notice is removed.
+> **Partly reviewed (2026-11-26).** The coordinator checked the proofs of Lemma TF, Corollary TN′, Lemma TD and Remark L step by step, and re-ran `test_midp17.py` (14 tests pass). Corollary TN′ and the pattern tables rest on exact enumerations (two independent programs agree). Everything in §3 and §5 is **heuristic** (sampling): no gate is closed.
 
 Track notes of the mid-range-primes agent (2026-11-26). They continue
 `small-primes.md` (§2 Lemma S, §3 $\tau_{17}$, §6–7), `k17-structure.md`

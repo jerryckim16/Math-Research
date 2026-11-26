@@ -923,7 +923,7 @@ Started 2026-11-25. This is the current focus. The results below were reviewed b
 - **The smallest primes do not work.** The four Lemma S gates $p = 19, 23, 29, 31$ for $k = 17$ blow up under the cascade with NG; for example, $p = 31$ goes from 8 orbits at level 1 to $1.8\cdot 10^{7}$ at level 4. This is recorded as a failed route.
 - **Lemma TN (proved)** gives lower bounds on the level at which a cascade with NG could close at small-$\tau$ primes.
 
-**Mid-range primes as divisibility gates** (draft page `notes/lonely-runner/midprimes17.md`, not yet reviewed):
+**Mid-range primes as divisibility gates** (`notes/lonely-runner/midprimes17.md`; the proved parts were reviewed by the coordinator on 2026-11-26, the sampling results are heuristic):
 
 - **Proved.**
   - *Lemma TF.* A "Lemma T family" (coordinates $\equiv 0$ mod the level whose classes cover, plus $f$ free coordinates) is extended-improper iff its free residues form a Lemma TN pattern. So such families die at level 18 when $f \le 5$.
