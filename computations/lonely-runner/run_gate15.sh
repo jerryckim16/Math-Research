@@ -1,6 +1,6 @@
 #!/bin/bash
 # Level-one completeness at one k = 15 gate of Allikvere's "Sixteen lonely runners"
-# (Zenodo 10.5281/zenodo.23304361), step 17.  Usage:  run_gate15.sh p
+# (Zenodo 10.5281/zenodo.23304361), step 17.  Usage:  [LO=a HI=b] run_gate15.sh p   (with LO/HI: generate shards a..b only)
 #   WORK    scratch directory (default ./work15): archives in $WORK/z16, results in $WORK/c15/p<p>
 #   BINDIR  directory with covergen builds covergenW<n> made with -DWFIX=<n> (default $WORK)
 # The archive's SHA-256 must equal the record's SHA256SUMS.txt entry (CRLF stripped).
@@ -29,7 +29,11 @@ touch times.txt
 NSH=${NSH:-128}   # shards; finer shards lose less work when the machine restarts
 if [ -f nshards.txt ] && [ "$(cat nshards.txt)" != "$NSH" ]; then echo NSHARDS_CHANGED > done; exit 1; fi
 echo $NSH > nshards.txt
-seq 0 $((NSH-1)) | xargs -P4 -I{} sh -c "grep -q \"^{} \" times.txt && exit 0; s=\$(date +%s); LRC_PRUNE=0 LRC_ORDERLY=1 LRC_IRR=2 LRC_ORDER=1 LRC_FINISH=1 LRC_SHARD_DEPTH=2 LRC_NSHARDS=$NSH LRC_SHARD={} $B 15 $p > out{}.txt 2> err{}.txt && echo {} \$((\$(date +%s)-s)) >> times.txt"
+seq ${LO:-0} ${HI:-$((NSH-1))} | xargs -P4 -I{} sh -c "grep -q \"^{} \" times.txt && exit 0; s=\$(date +%s); LRC_PRUNE=0 LRC_ORDERLY=1 LRC_IRR=2 LRC_ORDER=1 LRC_FINISH=1 LRC_SHARD_DEPTH=2 LRC_NSHARDS=$NSH LRC_SHARD={} $B 15 $p > out{}.txt 2> err{}.txt && echo {} \$((\$(date +%s)-s)) >> times.txt"
+# A shard range (LO..HI) only generates, so each run fits the 2 h limit of a tracked task.
+# The check + comparison is its own task: run without LO/HI once every shard is finished.
+if [ -n "${LO:-}" ] || [ -n "${HI:-}" ]; then echo "RANGE ${LO:-0}-${HI:-end} done"; exit 0; fi
+for i in $(seq 0 $((NSH-1))); do grep -q "^$i " times.txt || { echo "PARTIAL: shard $i not finished yet"; exit 0; }; done
 date -u +%s > gen_done
 # Every shard must be finished and complete before the comparison: listed in times.txt
 # (written only if covergen exits 0, via &&), and its cover count equal to minimal_covers
