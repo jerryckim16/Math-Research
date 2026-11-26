@@ -460,7 +460,7 @@ Goal: a faster level-one generator, as the precondition for completeness at more
   - So completeness at $p = 257$ would still take about 12 core-hours (at least about 4 h of wall time on 3 cores). It was not run.
 - **Still short of Allikvere's tree** (about $14\times$ smaller than our plain search, Approach 4). The remaining gap is not explained by the bounds tried here.
 
-### 10. Shape lemma R_15 < 49/100 (step 9)
+### 10. Shape lemma $R_{15} < 49/100$ (step 9)
 
 **Claim.** On the positive simplex in $\mathbb{R}^{15}$, $R_{15} < 49/100$. Here $R_n$ is the shape factor of Allikvere's flag bound (arXiv:2609.02604v2, eq. (F)):
 

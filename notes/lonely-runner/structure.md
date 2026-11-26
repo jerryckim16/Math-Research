@@ -169,7 +169,7 @@ and 31).
 ## 3. $p=29$ (and 23, 19, 17) for LRC(15): partial
 
 - **Level 2 matches Allikvere exactly.** We get 5,257 witness-free lifts, 3
-  gcd-proper (so 5,254 left) and 3,636 unit orbits. His p = 29 note has
+  gcd-proper (so 5,254 left) and 3,636 unit orbits. His $p = 29$ note has
   5,254 children and 3,636 swap orbits.
 - **Level 4:** 3,538,878 witness-free lifts and 1,446,910 orbits
   (`results/gate_k15_p29_partial.jsonl`).
@@ -226,8 +226,8 @@ then some $t$ has $\lVert tu_i\rVert\ge\frac1{k+1}$ for all $i$.
 - The plain binary cascade does not close. Improper orbit counts at levels
   $2,\dots,256$ are 35, 252, 142, 34, 42, 82, 162, 322.
 - The level-64 survivors are dyadic near-gcd families, e.g.
-  $(1,x,64,128,192,256,320)\bmod 704$, with five coordinates $\equiv0
-  \pmod{64}$.
+  $(1,x,64,128,192,256,320)\bmod 704$, with five coordinates
+  $\equiv 0 \pmod{64}$.
 - With NG the cascade closes at level 32: 35, 246, 130, 12, 0 orbits. NG
   settles 12 lifts at level 4 ($d=4$, $\lvert E\rvert=2$, cost $2<4$).
 

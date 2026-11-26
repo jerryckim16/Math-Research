@@ -1,0 +1,8 @@
+{
+  "name": "math-research-site",
+  "private": true,
+  "description": "Build-time dependency of site/build.py: KaTeX renders the LaTeX math to HTML when the site is built.",
+  "dependencies": {
+    "katex": "0.16.9"
+  }
+}
