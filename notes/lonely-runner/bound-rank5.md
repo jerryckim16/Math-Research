@@ -72,8 +72,20 @@ Since the support $a$ equals $\sum m$, the number of nonzero columns, classifyin
 | pruning off, slice of the $n=17$ census: (3,7,7,9,9), (3,3,5,5,9), (5,5,7,9,9) and (3,3,5,5,7), chosen for heavy pruning and admitted records | ADM records byte-identical; orbit-weighted leaves equal the DP counts ($43{,}415{,}328$; $38{,}388{,}080$; $175{,}750{,}176$; $322{,}848{,}332$) |
 | independent Python re-check of every admitted record (`rank4/crosscheck.py`, generic in $r$: Cramer-solved sections, Fraction minors) | all $20{,}669$ records pass (rank, no short line, Riesz, greedy sequence, $a$, $g$, index, $A$, $B$) |
 | independent Python full enumeration (`pyenum5.py`; no pruning, no symmetry) against `sectj` with `NOSYM`, (3,3,3,3,3) at $a\le6$ | PENDING_PY |
-| $n=15$ against Allikvere's rank-5 bounds (`proof_rank5.tex`, Lemma `rank5-classification`) | PENDING_N15 |
+| $n=15$ against Allikvere's rank-5 bounds (`proof_rank5.tex`, Lemma `rank5-classification`; source read as data) | consistent: our census at $n=15$, $a\le8$ (21 profiles, 1,979 CPU-s, 196,892 admitted records) gives exact maxima within every bound he states on $g$ itself; see the table below |
 | negative control: the $n=15$ $\delta$ enclosure used at $n=17$ changes the admitted set | passes (`test_rank5.py`) |
+
+**$n=15$ comparison** ($a\le8$; his bounds are upper bounds, ours exact maxima):
+
+| his statement | his bound | ours |
+| --- | --- | --- |
+| 33333, 33335, 33337 ($a\le7$; Hadamard) | $g\le243,405,567$ | $168,360,384$ |
+| 33355 ($a\le7$) | $g\le648$ | $630$ |
+| 33357 ($a\le7$, in the proof text) | $g\le873$ | $783$ |
+| 55557 ($a\le7$) | excluded | none admitted |
+| support $a=8$ | $g\le1800$ | $1530$ |
+
+His rows for 33555, 35555 and 55555 bound $g/\gamma$, not $g$, and his own case analysis there treats $g>760$ (19,296 admissible cases for 33555). So our larger $g$ in those profiles ($1035$, $1106$ and $819$ at $a=7$) are not in conflict. Profile 35557 has no admitted section at $a\le8$ in our census.
 
 ## 4. Result at $n=17$
 
