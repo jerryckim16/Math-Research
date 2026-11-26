@@ -69,7 +69,7 @@ Since the support $a$ equals $\sum m$, the number of nonzero columns, classifyin
 | $R=4$, $n=17$: `sectn` and `sectj` against `rank4/sect.c` with pruning off | byte-identical output (all records and counters) on the profiles tested; with pruning on, identical ADM records (`test_rank5.py`) |
 | $R=5$: `sectj` against `sectn` | identical ADM records on (3,3,3,3,3), (3,3,3,3,5) and (3,3,3,5,5) at $a\le9$ |
 | $R=5$ domain | orbit-weighted leaf counts equal the DP counts exactly: (3,3,3,3,3) at $a\le6$ and $a\le9$; (3,3,3,3,5) and (3,3,3,5,5) at $a\le9$; with `NOSYM` the raw leaf count equals the DP count |
-| pruning off, slice of the $n=17$ census | PENDING_NP |
+| pruning off, slice of the $n=17$ census: (3,7,7,9,9), (3,3,5,5,9), (5,5,7,9,9) and (3,3,5,5,7), chosen for heavy pruning and admitted records | ADM records byte-identical; orbit-weighted leaves equal the DP counts ($43{,}415{,}328$; $38{,}388{,}080$; $175{,}750{,}176$; $322{,}848{,}332$) |
 | independent Python re-check of every admitted record (`rank4/crosscheck.py`, generic in $r$: Cramer-solved sections, Fraction minors) | PENDING_CC |
 | independent Python full enumeration (`pyenum5.py`; no pruning, no symmetry) against `sectj` with `NOSYM`, (3,3,3,3,3) at $a\le6$ | PENDING_PY |
 | $n=15$ against Allikvere's rank-5 bounds (`proof_rank5.tex`, Lemma `rank5-classification`) | PENDING_N15 |
