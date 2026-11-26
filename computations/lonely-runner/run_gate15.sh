@@ -1,6 +1,6 @@
 #!/bin/bash
 # Level-one completeness at one k = 15 gate of Allikvere's "Sixteen lonely runners"
-# (Zenodo 10.5281/zenodo.23304361), step 17.  Usage:  run_gate15.sh p
+# (Zenodo 10.5281/zenodo.23304361), step 17.  Usage:  [LO=a HI=b] run_gate15.sh p   (with LO/HI: generate shards a..b only)
 #   WORK    scratch directory (default ./work15): archives in $WORK/z16, results in $WORK/c15/p<p>
 #   BINDIR  directory with covergen builds covergenW<n> made with -DWFIX=<n> (default $WORK)
 # The archive's SHA-256 must equal the record's SHA256SUMS.txt entry (CRLF stripped).
