@@ -11,10 +11,10 @@ rl.on("line", (line) => {
   const { tex, display } = JSON.parse(line);
   let out;
   try {
-    out = { html: katex.renderToString(tex, { displayMode: display, throwOnError: true, output: "htmlAndMathml" }), error: null };
+    out = { html: katex.renderToString(tex, { displayMode: display, throwOnError: true, output: "html" }), error: null };
   } catch (e) {
     // fall back to KaTeX's own error rendering so the page still builds; build.py reports it
-    out = { html: katex.renderToString(tex, { displayMode: display, throwOnError: false }), error: String(e.message || e) };
+    out = { html: katex.renderToString(tex, { displayMode: display, throwOnError: false, output: "html" }), error: String(e.message || e) };
   }
   process.stdout.write(JSON.stringify(out) + "\n");
 });
