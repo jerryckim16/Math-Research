@@ -23,7 +23,7 @@ level-one orbits.
 | 5 | Corollary TN′: every retained tuple at level $l$ has at least $f_{\min}(l)$ coordinates not divisible by $l$; $f_{\min}(18)=6$. Lemma TD: if the zero set does not cover, the free coordinates must block all shifts at each uncovered time. `defect.c` cross-checks the Lemma TN table and counts the blockable patterns | **proved** (given the exact Lemma TN search); the counts are computed |
 | 6 | The last survivors in the samples are Lemma T families (89–99% at the $\tau=12$ primes, level 9) and *defect* families whose zero set misses 1–3 times (all of them at 127 and 131, level 18) | computed on samples |
 | 7 | The tight orbit $(1..17)$ closes at level 18 along $3,3,2$ at all 39 primes $97\le p\le311$ | computed (exact) |
-| 8 | Cost: cascade $10^{2}$–$2.5\cdot10^{5}$ CPU-h per mid-range gate, plus level one. Gate set at target 647.53 with 41 mid-range primes: about $9.9\cdot10^{6}$ CPU-h, against $6.8\cdot10^{7}$ for J-empty gates alone (same model) | heuristic |
+| 8 | Cost: the cascade takes 2 to $2.5\cdot10^{5}$ CPU-h per mid-range gate ($10^{6}$ at 127), on top of level one. It is under $10^{3}$ CPU-h at most primes from 197 on, and dominated by the $\tau_{17}=12$ primes and by large orbit counts. Gate set at target 647.53 with 41 mid-range primes: about $9.9\cdot10^{6}$ CPU-h, against $6.8\cdot10^{7}$ for J-empty gates alone (same model) | heuristic |
 | 9 | Lemma B (per-base symmetry), Lemma $\mathrm{R}_b$ (Lemma R′ for any base tuple; open lead 2), Remark L (closing levels may differ from base to base) | **proved** |
 | 10 | No stronger shift lemma (open lead 4): the averaging, coset and grid variants fail, for the reasons given in §6. Neither rejection nor importance sampling scales | failed routes |
 
@@ -407,8 +407,9 @@ anything is retained, along $3,3,2,2$ from level one (`run_big.sh`,
 - At 257 ($\tau_{17}=14$) the level-9 closures are expected (§4).
 - At 251, 263, 269 and 277–379 every sample closes by level 3, consistent
   with $\tau_{17}=15$ there.
-- At 271, 2 of 5,000 bases need level 9. That suggests $\tau_{17}(271)\le14$,
-  or a defect family (not checked).
+- At 271, 2 of 5,000 bases need level 9. Their level-3 survivors (2 each)
+  are defect families: 14 zero classes that miss 1 or 4 times. So they do
+  not indicate $\tau_{17}(271)\le14$.
 - At 157 ($\tau_{17}=13$), one base needed level 18. Lemma T families with
   $f=4$ are gone at level 9, so this was a defect family.
 
@@ -528,7 +529,7 @@ need one level more than the table:
 
 - at 127 and 131, 10 of 600 bases need level 36;
 - at 157, 1 of 5,000 needs level 18;
-- at 271, 2 of 5,000 need level 9.
+- at 271, 2 of 5,000 need level 9 (checked: defect families with 14 zeros).
 
 **Classification of the retained tuples** (`classify.py`, results in
 `results/classify_*.txt`).
@@ -895,8 +896,10 @@ The greedy selection by cost / $\ln p$ gives:
    residues $e_j$ and phases $ab_j/p$. A finite search over $(U, e)$ with
    phases tied this way might show that defect families with $f\le7$ die at
    level 36 for every base.
-4. **Prove $\tau_{17}=15$ at 251, 263, 269 and 277–311** (the prediction of
-   §4), and decide $\tau_{17}$ at the undetermined primes, including 271.
+4. **Prove $\tau_{17}=15$ at 251 and 263–311** (the prediction of §4; the
+   level-9 bases at 271 are defect families, so 271 is included). An
+   exhaustive `mincover` run for 251 and 271 was started with a 40-min
+   limit (`results/tau17_p*.log`).
 5. **Primes 59–79 and 331–379.** Only 73 (fails) and 331, 379 (close,
    300 samples) were tried. 79 has $\tau_{17}=11$ and is excluded by Lemma
    TN.
