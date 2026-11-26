@@ -253,7 +253,7 @@ def lnH_box_lb(c, lam0, lam1, s0, s1, t0, t1, m0, m1):
 
 
 # ------------------------------------------------------------------ branch and bound
-def branch_and_bound(n, kind, target, r=None, use=("C1", "L1", "C2", "C3"), max_depth=60, max_boxes=5 * 10 ** 6):
+def branch_and_bound(n, kind, target, r=None, use=("C1", "L1", "C2", "C3"), max_depth=60, max_boxes=10 ** 8):
     """kind = 'phi': prove ln Phi_r < ln(target) on F, i.e. C_r^F <= target.
     kind = 'R':   prove R_n < target on F, i.e. H > (n/target)^2.
     Returns a dict; 'proved' is True only if every box was closed."""

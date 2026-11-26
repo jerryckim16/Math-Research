@@ -18,9 +18,9 @@ Code: `computations/lonely-runner/bound/constrained/`.
 | item | old | new | label |
 | --- | --- | --- | --- |
 | flag shape radius $r_{17}$ | $951/2000$ (all shapes) | $\mathbf{433/1000}$ on counterexample shapes | **proved** (§3–4), given LRC(16) |
-| Schur constant $C_5$ (binding rank) | $3.0098$ | $\mathbf{2.86}$ proved; $2.855$ run in progress | **proved** for $2.86$ (§3–4), given LRC(16) |
-| Schur constants $C_4$, $C_6$ | $2.3710$, $3.8377$ | $2.243$, $3.652$ | runs in progress (not needed for the target) |
-| **relation-rank target** (binding) | $647.534682$ | $\mathbf{647.100688}$ ($-0.4340$) with $C_5\le2.86$; $647.085815$ ($-0.4489$) once $C_5\le2.855$ completes | **proved** for $647.100688$, same inputs as `bound-rank4.md` plus §2 |
+| Schur constant $C_5$ (binding rank) | $3.0098$ | $\mathbf{2.855}$ | **proved** (§3–4), given LRC(16) |
+| Schur constants $C_4$, $C_6$ | $2.3710$, $3.8377$ | $2.243$, $3.652$ | **proved** (§3–4), given LRC(16); not needed for the target |
+| **relation-rank target** (binding) | $647.534682$ | $\mathbf{647.085815}$ ($-0.4489$) | **proved**, same inputs as `bound-rank4.md` plus §2 |
 | plain flag target / Lemma H + M target | $670.28173$ / $667.92857$ | $668.69003$ / $666.33687$ ($-1.5917$) | proved; not binding |
 | gate set and level-one cost (`k17/gate_set.py`, heuristic cost) | 101 gates, 313–1021, about $6.8\cdot10^7$ CPU-h | **unchanged** | heuristic cost model |
 
@@ -112,9 +112,11 @@ Dropping the order constraints only enlarges the domain. What remains is a 4-dim
 | claim | float sup (heuristic) | boxes | label |
 | --- | --- | --- | --- |
 | $R^F_{17}<433/1000$ | $0.43280$ | 2,153,673 (169 s) | **proved** |
-| $C^F_5\le2855/1000$ | $2.85392$ | run in progress ($C^F_5\le286/100$: 1,542,375 boxes, 109 s, proved) | in progress |
-| $C^F_4\le2243/1000$ | $2.24177$ | run in progress | in progress |
-| $C^F_6\le3652/1000$ | $3.65013$ | run in progress | in progress |
+| $C^F_5\le2855/1000$ | $2.85392$ | 13,538,511 (946 s); $C^F_5\le286/100$ takes 1,542,375 | **proved** |
+| $C^F_4\le2243/1000$ | $2.24177$ | 7,551,687 (517 s) | **proved** |
+| $C^F_6\le3652/1000$ | $3.65013$ | 11,286,767 (817 s) | **proved** |
+
+Every box was closed; the smallest closing margin in $\ln$ is about $10^{-11}$–$10^{-10}$, above the $2^{-80}$ rounding. Times are on one core of this container.
 
 **Targets** (`assemble.py`, exact; logarithms to 50 digits).
 - *Relation-rank assembly.* The regression with no overrides reproduces $647.534682$. With $C_5\to2855/1000$, $J_5$ rises from $14.52865$ to $15.31650$. That is still below $J_4=16.38535$, so rank 5 still binds, and the target becomes

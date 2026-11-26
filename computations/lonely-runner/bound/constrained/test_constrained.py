@@ -1,7 +1,8 @@
 """Tests for the constrained shape bounds (run: python3 -m pytest test_constrained.py).
 
-The slow tests re-run the claimed proofs (C_5^F <= 2855/1000 and the
-others); set CONSTRAINED_FAST=1 to skip them."""
+The slow tests re-run the four claimed proofs (C_5^F <= 2855/1000: 13.5 M
+boxes, about 16 min on one core; C_4, C_6, R_17: about 9, 14 and 3 min);
+set CONSTRAINED_FAST=1 to skip them (the other 9 tests take about 90 s)."""
 import os
 import random
 import sys
