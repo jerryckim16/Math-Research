@@ -927,7 +927,7 @@ Started 2026-11-25. This is the current focus. The results below were reviewed b
   - *Corollary TN′.* Every extended-improper tuple at level 18 has at least 6 coordinates not divisible by 18, for every base and every prime.
   - Also proved: Lemma $\mathrm{R}_b$ (Lemma R′ for any base tuple), and per-base closing levels are allowed.
 - **Heuristic (sampling; no gate is closed).**
-  - All 175,500 uniformly sampled level-one orbits close under the extended cascade (Lemma S at every $d \mid l$), at the 41 primes $83 \le p \le 379$ with $\tau_{17}(p) \ge 12$. They close by level 18 (36 for 10 bases), and fibres stay under 5,000 orbits.
+  - All 203,500 uniformly sampled level-one orbits close under the extended cascade (Lemma S at every $d \mid l$), at all 42 near-gcd primes $83 \le p \le 379$ with $\tau_{17}(p) \ge 12$. They close by level 18 (36 for 79 bases at 97, 127 and 131), and fibres stay small: below 5,000 orbits, except for three bases at 97, 127 and 131 (at most 46,080).
   - The samples do not close at 113 ($\tau_{17} = 11$, as Lemma TN predicts) or at 73.
   - Admitting these primes cuts the gate-set estimate at target 647.53 from $6.8\cdot 10^{7}$ to about $1\cdot 10^{7}$ CPU-h, still far beyond one machine.
 

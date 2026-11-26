@@ -1,0 +1,19 @@
+# k 17 p 101 h 50 seed 4 NSAMP 2000 THIN 2000 STEP 3
+# times 0->3 ratio 0.47900 acc 0.7470
+# times 3->6 ratio 0.51250 acc 0.7154
+# times 6->9 ratio 0.43750 acc 0.6885
+# times 9->12 ratio 0.47000 acc 0.6586
+# times 12->15 ratio 0.55200 acc 0.6305
+# times 15->18 ratio 0.43900 acc 0.6057
+# times 18->21 ratio 0.55700 acc 0.5811
+# times 21->24 ratio 0.49950 acc 0.5589
+# times 24->27 ratio 0.44750 acc 0.5378
+# times 27->30 ratio 0.51600 acc 0.5167
+# times 30->33 ratio 0.49900 acc 0.4969
+# times 33->36 ratio 0.49750 acc 0.4781
+# times 36->39 ratio 0.43000 acc 0.4600
+# times 39->42 ratio 0.46750 acc 0.4423
+# times 42->45 ratio 0.46100 acc 0.4253
+# times 45->48 ratio 0.42350 acc 0.4090
+# times 48->50 ratio 0.56800 acc 0.3932
+# est_multisets 1.094182e+10 rel_err_binomial 0.0956 orbits_approx 2.188364e+08

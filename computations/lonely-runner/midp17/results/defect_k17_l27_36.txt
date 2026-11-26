@@ -1,0 +1,9 @@
+k 17 l 27 f 2 multisets 351 RN 0 RNB 0
+k 17 l 27 f 3 multisets 3276 RN 0 RNB 0
+k 17 l 27 f 4 multisets 23751 RN 0 RNB 0
+k 17 l 27 f 5 multisets 142506 RN 0 RNB 0
+k 17 l 27 f 6 multisets 736281 RN 0 RNB 0
+k 17 l 36 f 2 multisets 630 RN 0 RNB 0
+k 17 l 36 f 3 multisets 7770 RN 0 RNB 0
+k 17 l 36 f 4 multisets 73815 RN 0 RNB 0
+k 17 l 36 f 5 multisets 575757 RN 0 RNB 0

@@ -16,9 +16,9 @@ level-one orbits.
 
 | # | Statement | Label |
 | --- | --- | --- |
-| 1 | An exact uniform sampler and counter for the level-one set $I(17,p,1)$, at any $p$: a Metropolis chain on multisets with a ladder of nested covering constraints. It agrees with exact counts at $k=7$ and with an independent rejection sampler at $p=151,173,193$ | computed (validated); the counts are estimates with error bars |
+| 1 | A uniform sampler and counter for the level-one set $I(17,p,1)$ at any $p$: a Metropolis chain on multisets with a ladder of nested covering constraints. It agrees with exact counts at $k=7$, and at $p=151,173,193$ with an exactly uniform rejection sampler, which works only up to about 193 | computed (validated); the chain is approximate, and the counts are estimates with error bars |
 | 2 | $I(17,p,1)$ is large: $10^{7}$–$10^{11}$ unit orbits, e.g. $1.3\cdot10^{7}$ at 89, $2.3\cdot10^{10}$ at 151, $6.2\cdot10^{8}$ at 251. Most of it has support of size 16 or 17, not "small cover plus free classes" | heuristic (relative error about 5%) |
-| 3 | **All 175,500 sampled level-one orbits close** under the extended cascade (grid witness, gcd clause, Lemma S at every $d\mid l$) at the 41 primes $83\le p\le379$ with $\tau_{17}(p)\ge12$. They close by level 18, or 36 for 10 bases at 127 and 131; for $\tau_{17}\ge13$ almost always by level 9. Fibres stay small: at most 4,348 retained orbits per base at any level. The samples do not close at $p=113$ ($\tau_{17}=11$, as Lemma TN predicts) or at $p=73$ (coarse grid) | heuristic for the gates (sampling; **no gate is closed**); the closure of each sampled orbit is an exact computation |
+| 3 | **All 203,500 sampled level-one orbits close** under the extended cascade (grid witness, gcd clause, Lemma S at every $d\mid l$) at all 42 near-gcd primes $83\le p\le379$ with $\tau_{17}(p)\ge12$. They close by level 18, or by 36 for 79 bases at 97, 127 and 131; for $\tau_{17}\ge13$ almost always by level 9. Fibres stay small: one base at 97 reaches 46,080 retained orbits (at level 18), one at 127 reaches 7,510 and one at 131 reaches 5,220; every other base stays below 5,000. The samples do not close at $p=113$ ($\tau_{17}=11$, as Lemma TN predicts) or at $p=73$ (coarse grid) | heuristic for the gates (sampling; **no gate is closed**); the closure of each sampled orbit is an exact computation |
 | 4 | Lemma TF: a Lemma T family (coordinates $\equiv0$ mod the level whose classes cover, plus $f$ free coordinates) is retained iff its free residues form a Lemma TN pattern. So such families die at the first level with no pattern, e.g. level 18 for $f\le5$ | **proved** |
 | 5 | Corollary TN′: every retained tuple at level $l$ has at least $f_{\min}(l)$ coordinates not divisible by $l$; $f_{\min}(18)=6$. Lemma TD: if the zero set does not cover, the free coordinates must block all shifts at each uncovered time. `defect.c` cross-checks the Lemma TN table and counts the blockable patterns | **proved** (given the exact Lemma TN search); the counts are computed |
 | 6 | The last survivors in the samples are Lemma T families (89–99% at the $\tau=12$ primes, level 9) and *defect* families whose zero set misses 1–3 times (all of them at 127 and 131, level 18) | computed on samples |
@@ -85,9 +85,9 @@ along $3,3,2,2$ from level one.
 
 ### 2.1 Level-one sampling (computed, validated)
 
-The full level-one set is too large to enumerate here: $10^{9}$–$10^{11}$ orbits per prime
-(§3), and `covergen.c` trees of $10^{10}$–$10^{12}$ nodes (`k17/knuth_k17.txt`).
-So the bases are sampled.
+The full level-one set is too large to enumerate here. It has $10^{7}$–$10^{11}$
+orbits per prime (§3), and the `covergen.c` trees have up to $10^{12}$ nodes
+(`k17/knuth_k17.txt`). So the bases are sampled.
 
 - **Rejection** (`sample1.c`). A $17$-multiset with support $S$, $\lvert S\rvert=j$,
   corresponds to a composition of 17 into $j$ parts. So
@@ -121,7 +121,7 @@ So the bases are sampled.
     $8.4\cdot10^{11}\pm13\%$.
   - The support-size distribution of the final ladder samples at $p=151$
     is $j=14,15,16,17$: $0.7, 7.8, 35.5, 55.9\%$ (seed 1) and
-    $0.6, 6.6, 37.0, 55.7\%$ (seed 2). The exact rejection weights give
+    $0.6, 6.6, 37.0, 55.7\%$ (seed 2). The rejection estimates give
     $0.5, 7.0, 36.8, 55.6\%$.
 - **Not exact.** The ladder's error bars ignore autocorrelation. Thinning is
   20,000 steps (acceptance about 0.35), and independent seeds agree within
@@ -179,6 +179,11 @@ non-decreasing digits.
 - At $k=17$, $p=97,101,103$, the tight tuple $(1..17)$ gives the level-2
   counts 143, 52, 56 and closure at level 18, as in
   `smallp/results/tight17.jsonl`.
+- At $k=17$, $p=151$, two sampled bases at levels 2 and 3 agree with the
+  same reference. 10 further bases at 151 and 157, along $3,3,2$, agree with
+  `k17struct/cascade_verify.c` (§3.4).
+- A regression test pins the level-6 retained set of the example base of
+  §4 (2,144 orbits, of which 2,120 are of Lemma T type).
 - **Negative controls.**
   - A build with floor in place of the ceiling in Lemma S (unsound) is
     detected by the comparison.
@@ -189,9 +194,9 @@ non-decreasing digits.
 
 ### 3.1 Six primes, 4,000 sampled orbits each, chain $2,3,3,2$
 
-The primes 151, 173, 193, 211, 229 and 251 cover $\tau_{17}=12,14,13,14,14$
-and the undetermined 251. They have the cheapest level one in their
-$\tau$-classes in the band (Knuth table), and they are spread across 150–250.
+The primes 151, 173, 193, 211, 229 and 251 were chosen to span
+$\tau_{17}=12$ (151), 13 (193) and 14 (173, 211, 229), plus the
+undetermined 251, spread across 150–250.
 Two independent ladder runs give 2,000 samples each. Results:
 `results/casc_p<p>.jsonl` and `results/summary_2332.txt`.
 
@@ -267,15 +272,16 @@ generated by `summarize.py`.
 - **What this does not show.** Zero failures in 600 samples bounds the
   failing fraction of a prime's orbits by about $5\cdot10^{-3}$ at 95%
   ("rule of three"). With 4,000 samples the bound is $7.5\cdot10^{-4}$. A
-  gate needs every one of $10^{9}$–$10^{11}$ orbits. Rare structured
+  gate needs every one of its $10^{8}$–$10^{11}$ orbits. Rare structured
   families are invisible to sampling; §4 treats the ones known.
 - **Chain choice** (heavy bases at $p=151$, `results/chain151_*.jsonl`).
   - On the 120 bases that needed level 18 under $2,3,3,2$, the chains
     $2,3,3$, $3,2,3$ and $3,3,2$ took 0.83, 0.79 and 0.19 s per base. The
-    retained sets at level 6 are identical, as they must be.
+    retained sets at level 6 under $2,3,3$ and $3,2,3$ are identical, as
+    they must be.
   - On 573 random bases at $p=151$, $3,3,2,2$ took 0.051 s per base,
     against 0.174 s for $2,3,3,2$ on the same bases.
-  - At $p\ge197$, lifting by 2 first is 5 to 100 times cheaper, because
+  - At $p\ge197$, lifting by 2 first is 5 to 130 times cheaper, because
     most bases already close at level 2. Hence the two-stage strategy.
 
 ### 3.3 Below 139, the near-gcd primes 331 and 379, the J-empty primes 313 and 401, and two structured families
@@ -388,17 +394,45 @@ anything is retained, along $3,3,2,2$ from level one (`run_big.sh`,
 - **All 130,000 close.**
 - With 5,000 samples and no failure, the failing fraction at each prime is
   below $6\cdot10^{-4}$ at 95% (rule of three).
-- The level-9 closures at 257 ($\tau_{17}=14$) and at 271 (2 of 5,000)
-  qualify the prediction of §4. At 251, 263, 269 and 277–379 every sample
-  closes by level 3, consistent with $\tau_{17}=15$ there. At 271 the two
-  level-9 bases suggest $\tau_{17}(271)\le14$, or a defect family (not
-  checked).
+- At 257 ($\tau_{17}=14$) the level-9 closures are expected (§4).
+- At 251, 263, 269 and 277–379 every sample closes by level 3, consistent
+  with $\tau_{17}=15$ there.
+- At 271, 2 of 5,000 bases need level 9. That suggests $\tau_{17}(271)\le14$,
+  or a defect family (not checked).
 - At 157 ($\tau_{17}=13$), one base needed level 18. Lemma T families with
   $f=4$ are gone at level 9, so this was a defect family.
 
-**Totals.** At the 41 primes $83\le p\le379$ with $\tau_{17}\ge12$:
+**2,000 fresh orbits at each of 14 primes with $\tau_{17}\in\{12,13\}$**
+(same strategy; `results/big_table_tau12_13.md`):
 
-- 175,500 sampled level-one orbits (§3.1–3.4), every one closed;
+| $p$ | samples | closed at 2 | rest closed at 3 / 9 / 18 / 36 | not closed |
+| --- | --- | --- | --- | --- |
+| 97 | 2000 | 2 | 74 / 1768 / 153 / 3 | 0 |
+| 101 | 2000 | 6 | 484 / 1417 / 93 / 0 | 0 |
+| 103 | 2000 | 12 | 383 / 1573 / 32 / 0 | 0 |
+| 107 | 2000 | 66 | 889 / 788 / 257 / 0 | 0 |
+| 127 | 2000 | 11 | 378 / 1355 / 213 / 43 | 0 |
+| 131 | 2000 | 53 | 601 / 1157 / 166 / 23 | 0 |
+| 137 | 2000 | 113 | 1194 / 692 / 1 / 0 | 0 |
+| 139 | 2000 | 269 | 1328 / 394 / 9 / 0 | 0 |
+| 149 | 2000 | 157 | 1041 / 785 / 17 / 0 | 0 |
+| 151 | 2000 | 196 | 914 / 836 / 54 / 0 | 0 |
+| 163 | 2000 | 408 | 1312 / 280 / 0 / 0 | 0 |
+| 167 | 2000 | 641 | 1160 / 199 / 0 / 0 | 0 |
+| 181 | 2000 | 713 | 1104 / 183 / 0 / 0 | 0 |
+| 199 | 2000 | 1199 | 736 / 65 / 0 / 0 | 0 |
+
+All 28,000 close. 69 bases need level 36: 3 at 97, 43 at 127 and 23 at 131.
+
+**Independent re-check.** `crosscheck_cv.sh` reruns the chain $3,3,2$ with
+`k17struct/cascade_verify.c` (different code; see §2.2) on 10 bases at
+$p=151$ and 157 that close at levels 3, 9 and 18, including two with
+1,440-orbit Lemma T families at level 9. The orbit counts agree at every
+level (`results/crosscheck_cv_p151.txt`, `crosscheck_cv_p157.txt`).
+
+**Totals.** At the 42 near-gcd primes $83\le p\le379$ with $\tau_{17}\ge12$ (all of them were sampled):
+
+- 203,500 sampled level-one orbits (§3.1–3.4), every one closed;
 - plus the tight orbit at 39 primes, and the 168 constructed Lemma T bases.
 
 At 73 ($\tau_{17}=12$, small $p$) and at 113 ($\tau_{17}=11$), samples do
@@ -677,15 +711,21 @@ residues mod $l$:
 | 18 | 5 | 20,349 | 0 | 0 |
 | 18 | 6 | 74,613 | 8,827 | 7,099 |
 | 18 | 7 | 245,157 | 98,420 | 65,568 |
+| 24 | 5 | 80,730 | 544 | **0** |
+| 24 | 6 | 376,740 | 79,092 | 18,988 |
 
 - **Cross-check of Lemma TN.** At every level of the $f_{\min}$ table, the
   first $f$ with a nonzero (R)+(N) count equals $f_{\min}(l)$ from Lemma TN.
   The two searches are independent: `ng_obstruction.py` searches gcd
   patterns, while `defect.c` enumerates all residue multisets.
-- **What blockability adds.** It removes up to half of the patterns at some
-  levels, but never all of them where (R)+(N) has any.
-- **Consequence.** So Lemma TD does not by itself raise $f_{\min}$, and the
-  defect families of §4.1 ($f=6$ at level 18) are consistent with it. A
+- **What blockability adds.** At levels 9 and 18 it removes few or none of
+  the patterns with the smallest $f$. At level 24 it removes all 544
+  (R)+(N) patterns with $f=5$. So a retained tuple at level 24 with exactly
+  5 non-multiples of 24 is a Lemma T family, for every base and every prime
+  (proved, given the enumeration).
+- **Consequence.** At the levels of the chain $3,3,2,2$, Lemma TD does not
+  raise $f_{\min}$, and the defect families of §4.1 ($f=6$ at level 18) are
+  consistent with it. A
   b-independent closure proof would need the phases to be tied together
   across the several uncovered times $a$, through $\varphi_j=ab_j/p$. That
   is the next refinement, not attempted here.
@@ -707,9 +747,10 @@ plus the cascade on every orbit.
 **Gate set** (`gate_scenario.py`, `results/gate_scenario.txt`). The pool is:
 
 - the J-empty candidates $\ge313$, at level-one cost as in `k17/gate_set.py`;
-- the 41 near-gcd primes whose samples all closed (83, 89, 97–107, 131–311
-  except 113, 331 and 379; 127 was measured but is too expensive), at the
-  cost above. They are admitted *because every sampled orbit closed*, which
+- the 42 near-gcd primes whose samples all closed: 83, 89, 97, 101, 103,
+  107, every prime from 127 to 311, 331 and 379. They are costed as above. The greedy selection
+  takes 41 of them; 127 costs more per $\ln p$ than the J-empty gates it
+  would replace. They are admitted *because every sampled orbit closed*, which
   is not a proof.
 
 The greedy selection by cost / $\ln p$ gives:
@@ -751,7 +792,7 @@ The greedy selection by cost / $\ln p$ gives:
 - **A stronger shift lemma (open lead 4).** Three variants were examined.
   - *Averaging over the base time.* Lemma S bounds, for each exception, the
     number of bad shifts $q/d$ by the worst case $c(g)$. The average over
-    $t$ is $2d/18$, smaller for $d\le8$. An averaging argument would need
+    $t$ is $2d/18$, smaller than $c(1)=\lceil d/9\rceil$ unless $9\mid d$. An averaging argument would need
     the set $G_D$ of good base times for the block $D$ to be equidistributed
     with respect to the exceptions' bad sets.
     - $G_D$ is only known to be non-empty (LRC($\lvert D\rvert$)).
@@ -771,7 +812,8 @@ The greedy selection by cost / $\ln p$ gives:
     settles nothing new.
 
   **Lemma G (proved).** Let $w$ be a level-$l$ tuple and $d\mid l$. Put
-  $Z_d=\{i:d\mid w_i\}$ and $E_d$ for its complement. If
+  $Z_d=\{i:d\mid w_i\}$, $E_d$ for its complement, and
+  $c_d(g)=g\lceil2d/(18g)\rceil$. If
   $\sum_{i\in E_d}c_d(\gcd(w_i,d))<d$ and the classes of $Z_d$ do not cover
   every folded time, then $w$ has a grid witness.
 
