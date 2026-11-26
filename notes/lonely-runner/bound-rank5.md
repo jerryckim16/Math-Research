@@ -1,7 +1,5 @@
 # Lonely runner: rank-5 section census at $n=17$ and the cap on the bound track
 
-> **Draft, work in progress.** This page is written by a research agent and has not yet been reviewed by the coordinator. Treat its claims as unreviewed until this notice is removed.
-
 Scope: the relation-rank bound for LRC(17) (18 runners) after `bound-rank4.md` and `constrained-shape.md`. There, rank 5 binds with $J_5=15.317$. Here, the admissible rank-5 odd relation spaces of small support are classified completely, in the same way `bound-rank4.md` does rank 4. The note also records the cap that limits what the bound track alone can do.
 
 Code: `computations/lonely-runner/bound/rank5/`. Tests: `test_rank5.py`. Labels follow `README.md`.

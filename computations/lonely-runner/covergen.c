@@ -74,7 +74,7 @@ static long shard = 0, nshards = 1;   /* env LRC_SHARD / LRC_NSHARDS: split root
  * siblings.  Leaves at depth <= 1 are printed by shard 0 only.  The union over
  * shards is the unsharded output (tested); the finer jobs balance better. */
 static int sharddepth = 1;
-static unsigned long long d1count = 0;
+static unsigned long long d1count = 0;   /* LRC_SHARD_DEPTH=D >= 2: global count of the nodes at depth D-1 (D >= 3 added for gate251) */
 static unsigned long long nodecap = 0;
 static int quiet = 0;
 static unsigned long long rng = 88172645463325252ULL;
@@ -269,7 +269,7 @@ static int orderly_canonical(void) {
 /* Leaf processing for L[0..nL-1] covering every time (others = union of
  * cov over L[1..]): the normalisation filters, then minimality, then print. */
 static void leaf(void) {
-        if (nshards > 1 && sharddepth == 2 && nL <= 2 && shard != 0) return;
+        if (nshards > 1 && sharddepth >= 2 && nL <= sharddepth && shard != 0) return;
         leaves++;
         if (exactk && nL != kmax) return;
         if (orderly && !orderly_canonical()) return;
@@ -426,7 +426,7 @@ static void dfs(const bs *U, const bs *A, int depth) {
         branch++;
         clr(&A2, c);                  /* excluded for later siblings and below */
         if (nshards > 1 && sharddepth == 1 && depth == 0 && (branch - 1) % nshards != shard) continue;
-        if (nshards > 1 && sharddepth == 2 && depth == 1 && (long)(d1count++ % nshards) != shard) continue;
+        if (nshards > 1 && sharddepth >= 2 && depth == sharddepth - 1 && (long)(d1count++ % nshards) != shard) continue;
         bs saveO = others;
         for (int w = 0; w < W; w++) others.w[w] |= cov[c].w[w];
         if (prune && priv1(&others) < qk) { others = saveO; continue; }
