@@ -367,6 +367,18 @@ All 168 bases close:
 - at level 9 when $\tau_{17}=13$, except for 3 of the 40 bases at 157, which
   needed level 18.
 
+The same construction was run at 97, 127 and 131 ($\tau_{17}=12$; 20
+covers, or the 8 found at 97) and at 271 and 281 ($\tau_{17}=14$; the one
+14-cover found by `mincover`, with 1 + 19 extensions). There are 136 more
+bases, and all close:
+
+- at 97, 127 and 131: by level 18 (61) or 36 (35), with up to 46,080
+  retained orbits at 97;
+- at 271 and 281: at level 9, as Lemma TF predicts for $f=3$.
+
+These are exactly the Lemma T families that sampling missed at 271 and 281
+(§4).
+
 ### 3.4 A larger sample: 5,000 fresh orbits at each of 26 primes (two-stage strategy)
 
 These are new ladder samples (seed 4), lifted by 2 first and then, if
@@ -445,7 +457,7 @@ level (`results/crosscheck_cv_p151.txt`, `crosscheck_cv_p157.txt`).
 **Totals.** At the 42 near-gcd primes $83\le p\le379$ with $\tau_{17}\ge12$ (all of them were sampled):
 
 - 203,500 sampled level-one orbits (§3.1–3.4), every one closed;
-- plus the tight orbit at 39 primes, and the 168 constructed Lemma T bases.
+- plus the tight orbit at 39 primes, and the 304 constructed Lemma T bases (§3.3).
 
 At 73 ($\tau_{17}=12$, small $p$) and at 113 ($\tau_{17}=11$), samples do
 not close.
