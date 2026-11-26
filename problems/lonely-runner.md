@@ -920,6 +920,17 @@ Started 2026-11-25. This is the current focus. The results below were reviewed b
 - **The smallest primes do not work.** The four Lemma S gates $p = 19, 23, 29, 31$ for $k = 17$ blow up under the cascade with NG; for example, $p = 31$ goes from 8 orbits at level 1 to $1.8\cdot 10^{7}$ at level 4. This is recorded as a failed route.
 - **Lemma TN (proved)** gives lower bounds on the level at which a cascade with NG could close at small-$\tau$ primes.
 
+**Mid-range primes as divisibility gates** (draft page `notes/lonely-runner/midprimes17.md`, not yet reviewed):
+
+- **Proved.**
+  - *Lemma TF.* A "Lemma T family" (coordinates $\equiv 0$ mod the level whose classes cover, plus $f$ free coordinates) is extended-improper iff its free residues form a Lemma TN pattern. So such families die at level 18 when $f \le 5$.
+  - *Corollary TN′.* Every extended-improper tuple at level 18 has at least 6 coordinates not divisible by 18, for every base and every prime.
+  - Also proved: Lemma $\mathrm{R}_b$ (Lemma R′ for any base tuple), and per-base closing levels are allowed.
+- **Heuristic (sampling; no gate is closed).**
+  - All 175,500 uniformly sampled level-one orbits close under the extended cascade (Lemma S at every $d \mid l$), at the 41 primes $83 \le p \le 379$ with $\tau_{17}(p) \ge 12$. They close by level 18 (36 for 10 bases), and fibres stay under 5,000 orbits.
+  - The samples do not close at 113 ($\tau_{17} = 11$, as Lemma TN predicts) or at 73.
+  - Admitting these primes cuts the gate-set estimate at target 647.53 from $6.8\cdot 10^{7}$ to about $1\cdot 10^{7}$ CPU-h, still far beyond one machine.
+
 **Cost (heuristic; draft page `notes/lonely-runner/gates.md`).**
 
 - At target $659.67$, "J empty" gates alone need about 103 primes $313$–$1021$, with level one costing about $7.6\cdot 10^{7}$ CPU-h. Port Toner's orderly-root rule and this falls by a further factor of about 5–6.

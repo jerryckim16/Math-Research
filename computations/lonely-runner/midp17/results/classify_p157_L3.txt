@@ -1,0 +1,130 @@
+base 0: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 1: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 2: retained 8, Lemma T type 0, f-distribution {3: 2, 4: 2, 5: 2, 6: 2}
+base 3: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 4: retained 10, Lemma T type 4, f-distribution {3: 6, 4: 4}
+base 5: retained 22, Lemma T type 16, f-distribution {3: 11, 4: 8, 5: 3}
+base 6: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 7: retained 1, Lemma T type 0, f-distribution {4: 1}
+base 8: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 9: retained 1, Lemma T type 0, f-distribution {4: 1}
+base 10: retained 1, Lemma T type 0, f-distribution {4: 1}
+base 11: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 12: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 13: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 14: retained 6, Lemma T type 4, f-distribution {3: 4, 4: 2}
+base 15: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 16: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 17: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 18: retained 9, Lemma T type 3, f-distribution {3: 5, 4: 4}
+base 19: retained 4, Lemma T type 0, f-distribution {3: 2, 4: 2}
+base 20: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 21: retained 9, Lemma T type 0, f-distribution {3: 1, 4: 3, 5: 5}
+base 22: retained 12, Lemma T type 4, f-distribution {3: 8, 4: 4}
+base 23: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 24: retained 14, Lemma T type 8, f-distribution {3: 10, 4: 4}
+base 25: retained 1, Lemma T type 0, f-distribution {3: 1}
+base 26: retained 8, Lemma T type 8, f-distribution {3: 8}
+base 27: retained 6, Lemma T type 3, f-distribution {3: 4, 4: 2}
+base 28: retained 7, Lemma T type 4, f-distribution {3: 4, 5: 1, 6: 2}
+base 29: retained 2, Lemma T type 0, f-distribution {3: 1, 4: 1}
+base 30: retained 3, Lemma T type 3, f-distribution {3: 3}
+base 31: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 32: retained 1, Lemma T type 0, f-distribution {3: 1}
+base 33: retained 14, Lemma T type 8, f-distribution {3: 10, 4: 4}
+base 34: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 35: retained 4, Lemma T type 0, f-distribution {3: 2, 4: 2}
+base 36: retained 10, Lemma T type 8, f-distribution {3: 8, 4: 2}
+base 37: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 38: retained 4, Lemma T type 0, f-distribution {3: 2, 6: 2}
+base 39: retained 4, Lemma T type 0, f-distribution {3: 4}
+base 40: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 41: retained 31, Lemma T type 8, f-distribution {3: 14, 4: 13, 5: 4}
+base 42: retained 1, Lemma T type 0, f-distribution {3: 1}
+base 43: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 44: retained 1, Lemma T type 0, f-distribution {4: 1}
+base 45: retained 4, Lemma T type 3, f-distribution {3: 4}
+base 46: retained 12, Lemma T type 4, f-distribution {3: 6, 4: 6}
+base 47: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 48: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 49: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 50: retained 1, Lemma T type 0, f-distribution {3: 1}
+base 51: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 52: retained 6, Lemma T type 0, f-distribution {3: 1, 4: 2, 5: 3}
+base 53: retained 1, Lemma T type 0, f-distribution {4: 1}
+base 54: retained 3, Lemma T type 0, f-distribution {3: 1, 4: 2}
+base 55: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 56: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 57: retained 3, Lemma T type 0, f-distribution {3: 1, 4: 2}
+base 58: retained 8, Lemma T type 8, f-distribution {3: 8}
+base 59: retained 3, Lemma T type 0, f-distribution {4: 1, 5: 2}
+base 60: retained 10, Lemma T type 4, f-distribution {3: 6, 4: 4}
+base 61: retained 8, Lemma T type 8, f-distribution {3: 8}
+base 62: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 63: retained 10, Lemma T type 4, f-distribution {3: 6, 4: 4}
+base 64: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 65: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 66: retained 8, Lemma T type 8, f-distribution {3: 8}
+base 67: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 68: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 69: retained 4, Lemma T type 0, f-distribution {3: 2, 4: 2}
+base 70: retained 5, Lemma T type 3, f-distribution {3: 5}
+base 71: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 72: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 73: retained 3, Lemma T type 3, f-distribution {3: 3}
+base 74: retained 6, Lemma T type 3, f-distribution {3: 4, 4: 2}
+base 75: retained 4, Lemma T type 0, f-distribution {3: 2, 4: 2}
+base 76: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 77: retained 1, Lemma T type 0, f-distribution {3: 1}
+base 78: retained 1, Lemma T type 0, f-distribution {3: 1}
+base 79: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 80: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 81: retained 1, Lemma T type 0, f-distribution {7: 1}
+base 82: retained 3, Lemma T type 3, f-distribution {3: 3}
+base 83: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 84: retained 18, Lemma T type 12, f-distribution {3: 14, 4: 4}
+base 85: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 86: retained 4, Lemma T type 0, f-distribution {3: 2, 4: 2}
+base 87: retained 4, Lemma T type 0, f-distribution {3: 2, 4: 2}
+base 88: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 89: retained 10, Lemma T type 4, f-distribution {3: 6, 4: 4}
+base 90: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 91: retained 26, Lemma T type 24, f-distribution {3: 16, 4: 10}
+base 92: retained 12, Lemma T type 4, f-distribution {3: 8, 4: 4}
+base 93: retained 16, Lemma T type 16, f-distribution {3: 10, 4: 6}
+base 94: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 95: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 96: retained 24, Lemma T type 24, f-distribution {3: 16, 4: 8}
+base 97: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 98: retained 10, Lemma T type 8, f-distribution {3: 10}
+base 99: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 100: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 101: retained 3, Lemma T type 0, f-distribution {4: 1, 5: 2}
+base 102: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 103: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 104: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 105: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 106: retained 14, Lemma T type 8, f-distribution {3: 10, 4: 4}
+base 107: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 108: retained 24, Lemma T type 24, f-distribution {3: 16, 4: 8}
+base 109: retained 30, Lemma T type 24, f-distribution {3: 18, 4: 12}
+base 110: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 111: retained 1, Lemma T type 0, f-distribution {4: 1}
+base 112: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 113: retained 2, Lemma T type 0, f-distribution {3: 2}
+base 114: retained 6, Lemma T type 0, f-distribution {3: 3, 4: 3}
+base 115: retained 14, Lemma T type 8, f-distribution {3: 10, 4: 4}
+base 116: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 117: retained 10, Lemma T type 4, f-distribution {3: 4, 4: 2, 5: 4}
+base 118: retained 4, Lemma T type 0, f-distribution {3: 2, 4: 2}
+base 119: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 120: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 121: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 122: retained 8, Lemma T type 8, f-distribution {3: 8}
+base 123: retained 10, Lemma T type 7, f-distribution {3: 8, 4: 2}
+base 124: retained 8, Lemma T type 8, f-distribution {3: 8}
+base 125: retained 5, Lemma T type 0, f-distribution {3: 1, 4: 2, 5: 2}
+base 126: retained 4, Lemma T type 4, f-distribution {3: 4}
+base 127: retained 8, Lemma T type 8, f-distribution {3: 8}
+base 128: retained 2, Lemma T type 0, f-distribution {3: 2}
+TOTAL bases 129, retained 746, Lemma T type 451 (60.46%), f-distribution {3: 541, 4: 170, 5: 28, 6: 6, 7: 1}

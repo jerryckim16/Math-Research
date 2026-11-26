@@ -215,7 +215,8 @@ def test_xcasc_matches_reference_k17(xc, p, b, chain):
 
 
 def test_lemma_tf_family_at_level6(xc):
-    """every level-6 retained tuple of the first base is of Lemma T type (12 zero coordinates that cover)"""
+    """level-6 retained set of the first base: 2,144 orbits, 2,120 of Lemma T type (zero coordinates
+    cover), the other 24 with 11 zero coordinates (a defect family); regression values of section 4.1"""
     sys.path.insert(0, HERE)
     import classify
     p, b = K17_BASES[0]
@@ -223,6 +224,13 @@ def test_lemma_tf_family_at_level6(xc):
                        capture_output=True, text=True, check=True)
     rows = [list(map(int, l.split()[3:])) for l in r.stdout.splitlines() if l.startswith("S ")]
     assert len(rows) == 2144
+    tt = defect = 0
     for w in rows:
         z = [min(x % p, p - x % p) for x in w if x % 6 == 0]
-        assert len(z) >= 12 and classify.covers(17, p, z)
+        assert 11 <= len(z) <= 17 - 4      # Corollary TN': at least f_min(6) = 4 non-multiples of 6
+        if classify.covers(17, p, z):
+            tt += 1
+        else:
+            defect += 1
+            assert len(z) == 11
+    assert (tt, defect) == (2120, 24)
