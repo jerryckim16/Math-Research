@@ -1,6 +1,6 @@
 # Explicit ranges below $2n$: a matching criterion, an explicit Hall lemma, and $v_n \le 1.93n$ up to $10^{47}$
 
-> **Draft, work in progress.** This page is written by a research agent and has not yet been reviewed by the coordinator. Treat its claims as unreviewed until this notice is removed.
+> **Reviewed by the coordinator (2026-11-26).** The proofs of Lemma C, Lemma C′, Lemma H (both cases and the tail bound), Lemma G (U) and (T), and Theorem L were checked step by step; `test_explicit.py` and `test_generaln.py` were re-run (21 pass). The block table and the matching scans rest on our own exact code (labelled *computed*; the matchings are re-verified by an independent checker).
 
 Track notes (general-$n$ explicit agent, 2026-11-26). Continues
 [general-n.md](general-n.md) (Theorem 1, Corollary 1: $v_n \le 1.47n$ for every
@@ -19,7 +19,7 @@ with $M < s+t \le 2n+2$) are used as stated there.
 
 | result | label |
 | --- | --- |
-| **Novelty.** Bohman–Peng and Pomerance contain no explicit $n_0$ and no explicit constant for the lonely-runner application. No later paper we found states an explicit range beyond Tao's $1.2n$ valid for every $n$ (§1). One step in the proof of Bohman–Peng's Lemma 2.3 (arXiv v1) is not justified as written (§1.3); we do not use that lemma | literature check, bounded (§1) |
+| **Novelty.** Bohman–Peng and Pomerance contain no explicit $n_0$ and no explicit constant for the lonely-runner application. No later paper we found states an explicit range beyond Tao's $1.2n$ valid for every $n$ (§1). One step in the proof of Bohman–Peng's Lemma 2.3 (arXiv v1) appears not to be justified as written (§1.3; we did not see the published version); we do not use that lemma | literature check, bounded (§1) |
 | **Lemma C** (matching criterion). If a bipartite graph $G(n,M)$, defined from $n$ and $M$ only, has a matching saturating $[1, \lfloor M/2\rfloor]$, then every $n$-set with maximum $M$ is lonely. It is monotone in $M$ | proved (§2) |
 | $M^*(n)$, the largest $M$ for which Lemma C applies, for every $n \le 12000$: $2n - M^*(n) \le 12$ throughout, and $M^*(n) = 2n$ exactly when $2n+1$ is prime or $n = 4$ | computed (§3) |
 | Every $n$-set with $v_n \le 2n - 14$ is lonely, for every $n$ with $12001 \le n \le 28560$ | computed (§3) |
