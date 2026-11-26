@@ -1,0 +1,19 @@
+# k 17 p 151 h 75 T 300000000 : j hits A_j_est rel_se weight=C(k-1,j-1)*A_j
+1 skipped
+2 skipped
+3 skipped
+4 skipped
+5 skipped
+6 skipped
+7 skipped
+8 skipped
+9 skipped
+10 skipped
+11 skipped
+12 0 0.000000e+00 0.0000 0.000000e+00
+13 0 0.000000e+00 0.0000 0.000000e+00
+14 8 1.495090e+07 0.3536 8.372506e+09
+15 124 9.424052e+08 0.0898 1.130886e+11
+16 1301 3.707871e+10 0.0277 5.932593e+11
+17 9061 8.962445e+11 0.0105 8.962445e+11
+# total_multisets 1.610965e+12 rel_se 0.0135 orbits_approx(total/h) 2.147953e+10
