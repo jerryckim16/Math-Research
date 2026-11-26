@@ -926,7 +926,7 @@ Started 2026-11-25. This is the current focus. The results below were reviewed b
   - *Lemma TF.* A "Lemma T family" (coordinates $\equiv 0$ mod the level whose classes cover, plus $f$ free coordinates) is extended-improper iff its free residues form a Lemma TN pattern. So such families die at level 18 when $f \le 5$.
   - *Corollary TN′* (given the exact Lemma TN search, which an independent enumeration reproduces). Every extended-improper tuple at level 18 has at least 6 coordinates not divisible by 18, for every base and every prime.
   - Also proved: Lemma $\mathrm{R}_b$ (Lemma R′ for any base tuple), and per-base closing levels are allowed.
-- **Computed.** $\tau_{17}(251) = 15$ and $\tau_{17}(271) = 14$, both by exhaustive search. The tight orbit closes at level 18 along $3,3,2$ at every prime $97 \le p \le 311$.
+- **Computed.** $\tau_{17} = 15$ at 251, 263, 269 and 277, and $\tau_{17} = 14$ at 271 and 281, all by exhaustive search. The tight orbit closes at level 18 along $3,3,2$ at every prime $97 \le p \le 311$.
 - **Heuristic (sampling; no gate is closed).**
   - All 203,500 uniformly sampled level-one orbits close under the extended cascade (Lemma S at every $d \mid l$), at all 42 near-gcd primes $83 \le p \le 379$ with $\tau_{17}(p) \ge 12$. They close by level 18 (36 for 79 bases at 97, 127 and 131), and fibres stay small: below 5,000 orbits, except for three bases at 97, 127 and 131 (at most 46,080).
   - The samples do not close at 113 ($\tau_{17} = 11$, as Lemma TN predicts) or at 73.
