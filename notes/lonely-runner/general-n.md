@@ -28,6 +28,12 @@ not explicit (§4). Theorem 1 is explicit for every $n$, and gives
 $\tfrac32 n - O((\log n)^2)$ asymptotically (typically $\tfrac32 n - O(1)$, since only $j$ near $(n+1)/2$ matter in $E(n)$). That is weaker than Bohman–Peng
 for large $n$, so the novelty is explicitness, not the asymptotic range.
 
+*Follow-up (draft):* [general-n-explicit.md](general-n-explicit.md) extends this
+with a matching criterion (computed: $v_n \le 2n - 12$ suffices for every
+$n \le 12000$) and an explicit Hall lemma (proved: $v_n \le 2n - n^{0.6}$ for
+$2^{19} \le n < 2^{157}$, and $v_n \le 1.93n$ for every $n < 2^{157}$). A range
+beyond $1.47n$ valid for every $n$ is still open there.
+
 ## 1. Setting and two basic lemmas
 
 $V = \{v_1 < \dots < v_n\}$ are positive integers and $M = v_n$. A real $t$ is
