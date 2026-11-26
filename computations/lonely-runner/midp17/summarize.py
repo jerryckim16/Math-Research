@@ -20,11 +20,15 @@ R = os.path.join(HERE, "results")
 
 
 def tau():
+    """tau_17 from smallp/results/tau17.txt, plus this track's exhaustive runs results/tau17_p<P>.txt"""
     t = {}
-    for l in open(os.path.join(HERE, "..", "smallp", "results", "tau17.txt")):
-        a = l.split()
-        if len(a) >= 2:
-            t[int(a[0])] = int(a[1])
+    files = [os.path.join(HERE, "..", "smallp", "results", "tau17.txt")]
+    files += [os.path.join(R, f) for f in sorted(os.listdir(R)) if f.startswith("tau17_p") and f.endswith(".txt")]
+    for fn in files:
+        for l in open(fn):
+            a = l.split()
+            if len(a) >= 2:
+                t[int(a[0])] = int(a[1])
     return t
 
 
