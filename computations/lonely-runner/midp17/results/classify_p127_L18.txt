@@ -1,0 +1,9 @@
+base 0: retained 468, Lemma T type 0, f-distribution {6: 468}
+base 1: retained 32, Lemma T type 0, f-distribution {6: 32}
+base 2: retained 32, Lemma T type 0, f-distribution {6: 32}
+base 3: retained 96, Lemma T type 0, f-distribution {6: 96}
+base 4: retained 40, Lemma T type 0, f-distribution {6: 40}
+base 5: retained 56, Lemma T type 0, f-distribution {6: 24, 7: 32}
+base 6: retained 90, Lemma T type 0, f-distribution {6: 90}
+base 7: retained 33, Lemma T type 0, f-distribution {6: 33}
+TOTAL bases 8, retained 847, Lemma T type 0 (0.00%), f-distribution {6: 815, 7: 32}

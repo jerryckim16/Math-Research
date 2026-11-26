@@ -1,0 +1,42 @@
+orbits 21216160000
+closed at level: {2: 399, 6: 2941, 18: 660}  capped: 0  open at end: 0
+  level 2: reached by 4000 bases; retained orbits mean 8.21 median 5.0 max 65; nonempty 3601
+  level 6: reached by 3601 bases; retained orbits mean 39.08 median 0 max 2388; nonempty 660
+  level 18: reached by 660 bases; retained orbits mean 0.00 median 0.0 max 0; nonempty 0
+  sec per base: mean 0.145 (bootstrap 95% 0.1244-0.168), median 0.0167, max 15.27
+  extrapolated cascade CPU-h = orbits * mean = 8.55e+05 (95%: 6.74e+05-1.07e+06)
+orbits 5054906000
+closed at level: {2: 1935, 6: 2056, 18: 9}  capped: 0  open at end: 0
+  level 2: reached by 4000 bases; retained orbits mean 1.54 median 1.0 max 26; nonempty 2065
+  level 6: reached by 2065 bases; retained orbits mean 0.02 median 0 max 20; nonempty 9
+  level 18: reached by 9 bases; retained orbits mean 0.00 median 0 max 0; nonempty 0
+  sec per base: mean 0.003325 (bootstrap 95% 0.003111-0.003544), median 0.0004, max 0.1255
+  extrapolated cascade CPU-h = orbits * mean = 4.67e+03 (95%: 4.02e+03-5.38e+03)
+orbits 8114154500
+closed at level: {2: 2402, 6: 1587, 18: 11}  capped: 0  open at end: 0
+  level 2: reached by 4000 bases; retained orbits mean 0.93 median 0.0 max 15; nonempty 1598
+  level 6: reached by 1598 bases; retained orbits mean 0.22 median 0.0 max 160; nonempty 11
+  level 18: reached by 11 bases; retained orbits mean 0.00 median 0 max 0; nonempty 0
+  sec per base: mean 0.002394 (bootstrap 95% 0.002122-0.002723), median 0.0001, max 0.4404
+  extrapolated cascade CPU-h = orbits * mean = 5.4e+03 (95%: 4.4e+03-6.63e+03)
+orbits 1476217000
+p = 211, chain 2,3,3,2, bases 4000, level-one witnesses 0
+closed at level: {2: 3481, 6: 519}  capped: 0  open at end: 0
+  level 2: reached by 4000 bases; retained orbits mean 0.19 median 0.0 max 9; nonempty 519
+  level 6: reached by 519 bases; retained orbits mean 0.00 median 0 max 0; nonempty 0
+  sec per base: mean 0.0003897 (bootstrap 95% 0.0003426-0.0004374), median 0, max 0.0336
+  extrapolated cascade CPU-h = orbits * mean = 160 (95%: 129-194)
+orbits 10026728000
+p = 229, chain 2,3,3,2, bases 4000, level-one witnesses 0
+closed at level: {2: 3407, 6: 593}  capped: 0  open at end: 0
+  level 2: reached by 4000 bases; retained orbits mean 0.21 median 0.0 max 8; nonempty 593
+  level 6: reached by 593 bases; retained orbits mean 0.00 median 0 max 0; nonempty 0
+  sec per base: mean 0.0003182 (bootstrap 95% 0.0002814-0.0003571), median 0, max 0.0243
+  extrapolated cascade CPU-h = orbits * mean = 886 (95%: 721-1.07e+03)
+orbits 658554800
+p = 251, chain 2,3,3,2, bases 4000, level-one witnesses 0
+closed at level: {2: 3868, 6: 132}  capped: 0  open at end: 0
+  level 2: reached by 4000 bases; retained orbits mean 0.04 median 0.0 max 3; nonempty 132
+  level 6: reached by 132 bases; retained orbits mean 0.00 median 0.0 max 0; nonempty 0
+  sec per base: mean 3.29e-05 (bootstrap 95% 2.445e-05-4.36e-05), median 0, max 0.0143
+  extrapolated cascade CPU-h = orbits * mean = 6.02 (95%: 4.11-8.61)

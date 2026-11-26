@@ -1,0 +1,19 @@
+base 0: retained 4, Lemma T type 0, f-distribution {5: 4}
+base 1: retained 1440, Lemma T type 1440, f-distribution {5: 1440}
+base 2: retained 1440, Lemma T type 1440, f-distribution {5: 1440}
+base 3: retained 4, Lemma T type 0, f-distribution {5: 4}
+base 4: retained 1588, Lemma T type 1584, f-distribution {5: 1588}
+base 5: retained 4, Lemma T type 0, f-distribution {5: 4}
+base 6: retained 4, Lemma T type 0, f-distribution {5: 4}
+base 7: retained 792, Lemma T type 792, f-distribution {5: 792}
+base 8: retained 2884, Lemma T type 2880, f-distribution {5: 2884}
+base 9: retained 4, Lemma T type 0, f-distribution {5: 4}
+base 10: retained 8, Lemma T type 0, f-distribution {5: 8}
+base 11: retained 4, Lemma T type 0, f-distribution {5: 4}
+base 12: retained 4, Lemma T type 0, f-distribution {5: 4}
+base 13: retained 4, Lemma T type 0, f-distribution {5: 4}
+base 14: retained 4, Lemma T type 0, f-distribution {5: 4}
+base 15: retained 4, Lemma T type 0, f-distribution {5: 4}
+base 16: retained 4, Lemma T type 0, f-distribution {5: 4}
+base 17: retained 796, Lemma T type 792, f-distribution {5: 796}
+TOTAL bases 18, retained 8992, Lemma T type 8928 (99.29%), f-distribution {5: 8992}
