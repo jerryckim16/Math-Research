@@ -138,6 +138,21 @@ class KaTeX:
             if src.startswith(left) and src.endswith(right) and len(src) >= len(left) + len(right):
                 tex = src[len(left):len(src) - len(right)]
                 break
+        if not display and not getattr(self, "_whole", False):
+            parts = split_commas(tex)
+            if len(parts) > 1:   # render the pieces separately so a long list can wrap on narrow screens
+                self._whole = True
+                try:
+                    pieces = [self.render("$" + (piece + "\\," if piece.endswith(",") else piece) + "$") for piece in parts]
+                finally:
+                    self._whole = False
+                return '<span class="mathlist">' + "<wbr>".join(pieces) + "</span>"
+        if not display and (len(tex) > 70 or re.search(r"\d{20}", tex)):
+            # one long unbreakable formula: let it scroll inside the line instead of widening the page
+            return '<span class="mathwide">' + self._render(tex, display, src) + "</span>"
+        return self._render(tex, display, src)
+
+    def _render(self, tex, display, src):
         key = (tex, display)
         if key not in self.cache:
             self.proc.stdin.write(json.dumps({"tex": tex, "display": display}) + "\n")
@@ -150,6 +165,45 @@ class KaTeX:
 
 
 KATEX = None
+
+def split_commas(tex):
+    """Split inline math after commas so a long formula can wrap on a phone:
+    "p = 89, 131, 239" -> ["p = 89,", "131,", "239"]. KaTeX cannot break a line
+    at a comma. Commas inside TeX groups ({...}, \\left...\\right, subscripts)
+    stay put; formulas with environments or alignment are left whole. Each piece
+    keeps the thin space TeX puts after a comma, so the look is unchanged."""
+    if "\\begin" in tex or "&" in tex or "\\\\" in tex:
+        return [tex]
+    parts, depth, start, i = [], 0, 0, 0
+    while i < len(tex):
+        c = tex[i]
+        if c == "\\":
+            j = i + 1
+            while j < len(tex) and tex[j].isalpha():
+                j += 1
+            word = tex[i + 1:j]
+            if word == "left":
+                depth += 1
+            elif word == "right":
+                depth -= 1
+            i = max(j, i + 2)   # also skips escaped symbols such as \{ \} \,
+            continue
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+        elif c == "," and depth == 0 and tex[start:i].strip():
+            parts.append(tex[start:i + 1].strip())
+            start = i + 1
+        i += 1
+    tail = tex[start:].strip()
+    if depth != 0:
+        return [tex]
+    if tail:
+        parts.append(tail)
+    return parts or [tex]
+
+
 STRAY = []   # lines with a lone "$" (e.g. "$x$s": math touching a letter is not recognised); fix the source
 
 
@@ -258,6 +312,12 @@ table{border-collapse:collapse;width:100%;font-size:14.5px;display:block;overflo
 th,td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
 th{font-weight:600;white-space:nowrap}
 .katex{font-size:1.1em}
+.katex-display{overflow-x:auto;overflow-y:hidden;padding:2px 0}
+.mathwide{display:inline-block;max-width:100%;overflow-x:auto;overflow-y:hidden;vertical-align:middle}
+.cards>.card{min-width:0;overflow-wrap:anywhere}
+.doc{overflow-wrap:break-word}
+code{overflow-wrap:anywhere}
+.activity li span{min-width:0;overflow-wrap:anywhere}
 code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
 pre{background:var(--code);padding:12px;border-radius:8px;overflow-x:auto}
 pre code{padding:0}
@@ -345,7 +405,8 @@ def build():
     problems.sort(key=lambda m: m["updated"], reverse=True)
     cards = []
     for m in problems:
-        meta_bits = [f'<span class="badge {status_class(m["status"])}">{html.escape(m["status"].split("(")[0].strip() or "open")}</span>']
+        badge = re.split(r"[.(;:]", m["status"])[0].strip() or "open"   # "in progress. We are ..." -> "in progress"
+        meta_bits = [f'<span class="badge {status_class(m["status"])}">{html.escape(badge)}</span>']
         for label in ("area", "started", "proofatlas"):
             if m[label]:
                 meta_bits.append(f'<span>{label.capitalize() if label != "proofatlas" else "ProofAtlas"}: {inline(m[label])}</span>')
