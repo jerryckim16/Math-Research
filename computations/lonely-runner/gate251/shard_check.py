@@ -49,7 +49,8 @@ def main():
     sizes = {int(a): int(b) for a, b in (t.split(":") for t in kv(P(f"ex{i}.err"), "COVERSIZES").split()[1:])}
     from math import comb
     h = (int(os.environ["P"]) - 1) // 2   # P exported by run_gate251.sh
-    expected_bases = sum(n * comb(h + 16 - c, 17 - c) for c, n in sizes.items())
+    K = int(os.environ.get("K", "17"))
+    expected_bases = sum(n * comb(h + K - 1 - c, K - c) for c, n in sizes.items())
     x1, x2 = xcsum(P(f"x1_{i}.err")), xcsum(P(f"x2_{i}.err"))
     cv2 = int(open(P(f"cv2_{i}.n")).read().split()[0])
     vb = json.load(open(P(f"vb_{i}.json")))

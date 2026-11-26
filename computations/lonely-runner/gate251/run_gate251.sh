@@ -12,7 +12,7 @@
 set -u
 HERE=$(cd "$(dirname "$0")" && pwd)
 LR=$(dirname "$HERE")
-WORK=$1; P=${2:-251}; K=17
+WORK=$1; P=${2:-251}; K=${K:-17}
 NSH=${NSH:-1024}; DEPTH=${DEPTH:-6}; JOBS=${JOBS:-4}
 mkdir -p "$WORK/bin" "$WORK/p$P"
 H=$(( (P - 1) / 2 )); WF=$(( (H + 1 + 63) / 64 ))
