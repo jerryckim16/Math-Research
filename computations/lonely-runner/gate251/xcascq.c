@@ -112,6 +112,9 @@ static void build_level(int lnew, int mold) {
 
 static int discard_e(const int *e) {   /* e = w mod L; returns 1 if gcd clause or Lemma S at some d | L */
     for (int i = 0; i < k; i++) { int g = L; for (int j = 0; j < k && g > 1; j++) if (j != i) g = gcdi(g, e[j]); if (g > 1) { ngcd++; return 1; } }
+#ifdef NO_NG   /* negative control (weakened cascade): Lemma S switched off */
+    return 0;
+#endif
     for (int a = 0; a < nd; a++) {
         int d = divs[a], ne = 0; long cost = 0;
 #ifndef BROKEN_NG
