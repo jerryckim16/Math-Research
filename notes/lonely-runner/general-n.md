@@ -16,7 +16,7 @@ sampling).
 | **Theorem 1.** For every $n \ge 1$: if $v_n \le 2n + 2 - E(n)$, where $E(n) = \max_{1 \le j \le (n+1)/2} (j + g(j))$ and $g$ is Jacobsthal's function, then $\mathrm{ML}(V) \ge 1/(n+1)$. A simpler sufficient condition is $v_n \le \tfrac32(n+1) - G\bigl(\tfrac{n+1}2\bigr)$, with $G(x) = \max_{s \le x} g(s)$ | proved (§3) |
 | **Corollary 1.** For every $n \ge 1$: if $v_n \le 147n/100$, then $\mathrm{ML}(V) \ge 1/(n+1)$ | proved for $n \ge 85$ (Theorem 1 with an exact table of $g$); computed for $n \le 84$ |
 | Corollary 1 with $29n/20$, resp. $7n/5$, in place of $147n/100$ | proved for $n \ge 61$, resp. $n \ge 12$; computed below that |
-| Dense window $\mathrm{DW}(m)$: every set of at most $m$ positive integers in $[1,2m]$ has $\mathrm{ML} \ge 1/(m+1)$ | computed for $2 \le m \le 49$ (all $m$, prime or composite $2m+1$); a second, independent program agrees for $m \le 13$ |
+| Dense window $\mathrm{DW}(m)$: every set of at most $m$ positive integers in $[1,2m]$ has $\mathrm{ML} \ge 1/(m+1)$ | computed for $2 \le m \le 51$ (all $m$, prime or composite $2m+1$); a second, independent program agrees for $m \le 13$ |
 | Every set of $n$ positive integers in $[1, \lfloor 19n/10 \rfloor]$ is lonely | computed for $n \le 67$ |
 | Primality cannot be removed using only times with denominator $\le 2m+2$: for every composite $2m+1$ with $15 \le 2m+1 \le 75$ some $m$-set in $[1,2m]$ meets every bad set of those times | computed |
 | The full window $[1,2n]$ for all $n$ | **not achieved**; see §5 for the routes that failed |
@@ -109,7 +109,7 @@ consequence of known ingredients".
   So it is a wording slip, not an error in the mathematics.
 - The composite cases $m \le 126$ rest on Lean certificates that we did not
   rebuild or read. Our own exhaustive computation (§3.3) independently confirms
-  the dense-window statement for all $m \le 49$, composite or prime.
+  the dense-window statement for all $m \le 51$, composite or prime.
 
 **Is Theorem D new?** We found no earlier statement of the dense window for an
 infinite family of $m$ (§4), and the manuscript says the same. It answers Tao's
@@ -266,11 +266,11 @@ iff it meets every bad set.
 
 Results (all computed, exact):
 
-- **Full dense window**, $2 \le m \le 49$, $Q = 4m$: no counterexample
-  (`results/dw_full_m2_47.txt` and `results/dw_full_m48_49.txt`). The time grows
-  by about $1.5$–$2\times$ per step; $m = 47, 48, 49$ took 510 s, 217 s and 956 s.
-  This independently confirms Bonfioli's statement for $m \le 49$, including the
-  25 composite values of $2m+1$ in that range.
+- **Full dense window**, $2 \le m \le 51$, $Q = 4m$: no counterexample
+  (`results/dw_full_m2_47.txt` and `results/dw_full_m48_plus.txt`). The time
+  roughly doubles every two steps; $m = 47, \dots, 51$ took 510, 217, 956, 484 and
+  609 s; $m = 52$ did not finish within 2400 s. This independently confirms Bonfioli's statement for $m \le 51$,
+  including the 25 composite values of $2m+1$ in that range.
 - **Restricted windows:** $[1, \lfloor 147n/100\rfloor]$ for $n \le 84$, $[1, \lfloor 29n/20\rfloor]$ for $n \le 80$, and
   $[1, \lfloor 19n/10 \rfloor]$ for $n \le 67$: no counterexample (`results/window_*.txt`).
 - **Negative controls** (`test_generaln.py`): at the threshold $1/m$ the solver
@@ -359,7 +359,7 @@ python3 jacobsthal.py 29 20 5000               # n0 = 61 (E form)
 python3 jacobsthal.py 7 5 2000                 # n0 = 12 (E form)
 sh run_windows.sh /tmp/dwbuild                 # restricted windows (about 3 min)
 gcc -O2 -o /tmp/dwbuild/dwsolve dwsolve.c
-for m in $(seq 2 49); do /tmp/dwbuild/dwsolve $m $((4*m)) | tail -1; done   # full window, about 50 min
+for m in $(seq 2 51); do /tmp/dwbuild/dwsolve $m $((4*m)) | tail -1; done   # full window, about 70 min
 python3 bonfioli_counts.py 7 10                # the 32 / 544 counts of §2
 python3 dw_bruteforce.py 13                    # second implementation, m <= 13
 ```

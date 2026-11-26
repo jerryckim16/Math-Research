@@ -1,4 +1,0 @@
-m=48 H=96 K=49 Q=192 mode=complete initial_sets=5615 minimal=943 nodes=136373282 transversals=0 added=0 maxden_added=0 result=DW_HOLDS
-  time 217s
-m=49 H=98 K=50 Q=196 mode=complete initial_sets=5849 minimal=1008 nodes=578904898 transversals=0 added=0 maxden_added=0 result=DW_HOLDS
-  time 956s
