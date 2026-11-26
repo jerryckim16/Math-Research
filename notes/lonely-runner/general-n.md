@@ -1,6 +1,6 @@
 # General-$n$ results: dense windows, a referee check of Bonfioli, and the range $v_n \le 1.47\,n$
 
-> **Draft, work in progress.** This page is written by a research agent and has not yet been reviewed by the coordinator. Treat its claims as unreviewed until this notice is removed.
+> **Reviewed by the coordinator (2026-11-26).** The proofs of Lemma A, Lemma B, Lemma J, Theorem 1, the $n \ge 85$ part of Corollary 1 and Corollary 2 were checked step by step by reading, and the test suite was re-run (12 tests pass). Computed results remain labelled *computed*: they rest on our own tested code, which is not formally verified.
 
 Track notes from the general-$n$ agent ("route 2", 2026-11-26). Companion code:
 `computations/lonely-runner/generaln/`. Labels follow the repository README:
