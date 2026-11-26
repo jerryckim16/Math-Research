@@ -1,4 +1,9 @@
-# matchcrit fixed 14, partial runs (killed): failures found in n=57736..62314 (range 57736..81650 started) and n=81651..82264 (range 81651..100000 started)
+# matchcrit fixed 14, partial runs (killed, time box). Range 12001..57735 was killed after reaching at least n=43952; range 57736..81650 after n=62314; range 81651..100000 after n=82264. Lines are the failures seen.
+FAIL n=38704 M=77394 deficit=1
+FAIL n=40489 M=80964 deficit=1
+FAIL n=42169 M=84324 deficit=1
+FAIL n=42797 M=85580 deficit=1
+FAIL n=43952 M=87890 deficit=1
 FAIL n=58967 M=117920 deficit=3
 FAIL n=59477 M=118940 deficit=1
 FAIL n=60527 M=121040 deficit=1

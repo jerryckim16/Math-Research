@@ -1,0 +1,1 @@
+SUMMARY F=14 n=12001..28560 tested=16560 fails=0

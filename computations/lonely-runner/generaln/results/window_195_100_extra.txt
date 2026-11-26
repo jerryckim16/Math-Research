@@ -1,0 +1,6 @@
+# dwsolve n 3n+2 top=floor(195n/100) for n = 58 59 60 94 124 (94 and 124: H exceeds dwsolve's compiled limit)
+m=58 H=113 K=59 Q=176 mode=complete initial_sets=4725 minimal=1080 nodes=113358885 transversals=0 added=0 maxden_added=0 result=DW_HOLDS
+m=59 H=115 K=60 Q=179 mode=complete initial_sets=4916 minimal=1141 nodes=129976844 transversals=0 added=0 maxden_added=0 result=DW_HOLDS
+m=60 H=117 K=61 Q=182 mode=complete initial_sets=5066 minimal=1170 nodes=109015387 transversals=0 added=0 maxden_added=0 result=DW_HOLDS
+H out of range
+H out of range

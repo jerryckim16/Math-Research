@@ -25,7 +25,7 @@ with $M < s+t \le 2n+2$) are used as stated there.
 | Every $n$-set with $v_n \le 2n - 14$ is lonely, for every $n$ with $12001 \le n \le 28560$ | computed (§3) |
 | **Lemma H** (explicit Hall condition for two progressions) and **Lemma G** (block geometry) | proved (§4, §5) |
 | **Theorem L.** For every $n$ with $2^{19} \le n < 2^{157}$: $v_n \le 2n - n^{0.6}$ implies lonely; for $2^{26} \le n < 2^{157}$ even $v_n \le 2n - \sqrt n$ | proved, with an exact finite check of Lemma H's numeric hypothesis per block (§6) |
-| **Corollary L.** For every $n < 2^{157}$ (about $1.8 \cdot 10^{47}$): $v_n \le 1.93n$ implies lonely. With $1.95n$ the same holds except that $n \in \{58, 59, 60, 94, 124\}$ are not covered | computed for $n \le 28560$, proved for $28560 \le n < 2^{157}$ |
+| **Corollary L.** For every $n < 2^{157}$ (about $1.8 \cdot 10^{47}$): $v_n \le 1.93n$ implies lonely. With $1.95n$ the same holds except that $n = 94$ and $n = 124$ are not covered | computed for $n \le 28560$, proved for $28560 \le n < 2^{157}$ |
 | A range $\alpha n$ with $\alpha > 1.47$ valid for **every** $n$ | **not achieved**: the explicit argument here stops somewhere near $n \approx e^{300}$ (§7); the block table was computed only to $2^{157}$ |
 
 So the answer to "can Theorem 1 be made significantly stronger?" is: yes in a
@@ -169,9 +169,10 @@ pair an edge of type (a) or (b)). Tests (`test_explicit.py`, 9 tests):
   reproduces Bonfioli's prime case and nothing more: it does not settle any
   composite $2n+1$ beyond $9$.
 - *Fixed deficiency 14*, $M = 2n - 14$, for every $12001 \le n \le 28560$: no failure
-  (`results/matchcrit_fixed14_12001_28560.txt`). Partial runs beyond that found
-  the first failures of $F = 14$ near $n \approx 5.9 \cdot 10^4$ (e.g. $n = 58967$,
-  deficit 3), so $f^*(n) > 14$ occurs there (`results/matchcrit_fixed14_partial.txt`).
+  (`results/matchcrit_fixed14_12001_28560.txt`). A longer run over $12001 \le n \le 57735$,
+  stopped at the time box after passing $n = 43952$, reported its first failure of $F = 14$ at
+  $n = 38704$ (deficit 1); other partial runs found failures such as $n = 58967$ (deficit 3)
+  (`results/matchcrit_fixed14_partial.txt`). So $f^*(n) > 14$ occurs from $n = 38704$ on, and
   $f^*$ grows, slowly.
 
 All runs used at most 3 cores; the exact scan to $12000$ took a few minutes on one core.
@@ -322,11 +323,13 @@ $4m_i + 4$ is constant and $n \ge 2^i$):
   $n = 7, 10, 12, 13, 17, 25, 28, 32, 38$, and $M^*(n) \ge \lfloor 1.95n \rfloor$ except at 19 values of $n$, the largest
   $58, 59, 60, 94, 124$. Every $n \le 51$ is covered by the full dense-window computation of
   general-n.md ($\mathrm{DW}(m)$ for $m \le 51$, computed), which contains $[1, \lfloor\alpha n\rfloor]$ for any $\alpha \le 2$.
-  That leaves $n = 58, 59, 60, 94, 124$ for $1.95n$ (see the end of §3 for the attempt to close them).
+  For $n = 58, 59, 60$ we ran `dwsolve` on the window $[1, \lfloor 1.95n\rfloor]$: every $n$-subset is
+  lonely (computed, `results/window_195_100_extra.txt`, about 100 s each). For $n = 94$ and $n = 124$
+  the window exceeds `dwsolve`'s compiled limit $H \le 128$, so these two stay open for $1.95n$.
 
 **Corollary L.** For every $n < 2^{157}$, every set of $n$ positive integers with
 $v_n \le 1.93n$ is lonely. (Computed for $n \le 28560$; proved for $28560 \le n < 2^{157}$.)
-The same with $1.95n$ holds for every $n < 2^{157}$ other than $58, 59, 60, 94, 124$.
+The same with $1.95n$ holds for every $n < 2^{157}$ other than $n = 94$ and $n = 124$.
 
 The upper limit $2^{157}$ is where we stopped the table (time box), not where the
 argument stops; see §7.
