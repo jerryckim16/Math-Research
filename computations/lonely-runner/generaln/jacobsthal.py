@@ -11,10 +11,15 @@ Bound used beyond X (Lemma J of general-n.md, proved there by
 inclusion-exclusion):  g(s) <= ceil((2^w - 1) * s/phi(s)),  w = omega(s),
 and s/phi(s) <= prod_{i<=w} p_i/(p_i - 1) (first w primes).
 
-Theorem 1 (general-n.md): if v_n <= (3/2)(n+1) - G((n+1)/2) then the
-n speeds are lonely.  `n0_for_alpha(a, b)` returns the least n0 such that
-floor(a n / b) <= (3/2)(n+1) - G((n+1)/2) holds for every n >= n0
-(exact integer arithmetic; the tail is handled by the bound).
+Theorem 1 (general-n.md): if v_n <= 2n + 2 - E(n), where
+E(n) = max_{1 <= j <= (n+1)/2} (j + g(j)), then the n speeds are lonely.
+Since E(n) <= floor((n+1)/2) + G((n+1)/2), the simpler sufficient condition
+v_n <= (3/2)(n+1) - G((n+1)/2) follows.
+`n0_for_alpha(a, b, X, sharp)` returns the least n0 such that
+floor(a n / b) <= 2n + 2 - E(n)  (sharp=True)  or
+floor(a n / b) <= (3/2)(n+1) - G((n+1)/2)  (sharp=False)
+holds for every n >= n0: exact integer arithmetic for n <= 2X, and for
+n > 2X the G-form (which implies the E-form) with the Lemma J bound.
 """
 from fractions import Fraction
 import sys
@@ -83,7 +88,21 @@ def tail_bound(k, ps):
     return -((-v.numerator) // v.denominator)
 
 
-def n0_for_alpha(a, b, X=5000):
+def E_values(nmax, g):
+    """E(n) = max_{1<=j<=(n+1)/2} (j + g(j)) for 1 <= n <= nmax."""
+    E = [0] * (nmax + 1)
+    best = 0
+    x_done = 0
+    for n in range(1, nmax + 1):
+        x = (n + 1) // 2
+        while x_done < x:
+            x_done += 1
+            best = max(best, x_done + g[x_done])
+        E[n] = best
+    return E
+
+
+def n0_for_alpha(a, b, X=5000, sharp=False):
     """Least n0 with floor(a n/b) <= 3(n+1)/2 - G((n+1)/2) for all n >= n0.
 
     For x = (n+1)/2 <= X the exact table is used; for x > X we use
@@ -93,8 +112,9 @@ def n0_for_alpha(a, b, X=5000):
     right side minus the left side is nondecreasing in n once G is fixed
     (it grows like (3/2 - a/b) n with a/b < 3/2)."""
     assert Fraction(a, b) < Fraction(3, 2)
-    G, _ = G_table(X)
+    G, gt = G_table(X)
     ps = primes_upto(1000)
+    E = E_values(2 * X, gt)
 
     def ok(n, Gval):
         return 2 * ((a * n) // b) <= 3 * (n + 1) - 2 * Gval
@@ -102,7 +122,8 @@ def n0_for_alpha(a, b, X=5000):
     bad_last = None
     for n in range(1, 2 * X + 1):
         x = (n + 1) // 2  # G((n+1)/2) = G(floor((n+1)/2))
-        if not ok(n, G[x]):
+        good = ((a * n) // b <= 2 * n + 2 - E[n]) if sharp else ok(n, G[x])
+        if not good:
             bad_last = n
     # tail: x > X, i.e. n >= 2X
     k = 0
@@ -135,4 +156,5 @@ if __name__ == "__main__":
     X = int(sys.argv[3]) if len(sys.argv) > 3 else 5000
     G, g = G_table(min(X, 200))
     print("G(x) jumps for x<=200:", [(x, G[x]) for x in range(1, 201) if G[x] != G[x - 1]])
-    print("alpha = %d/%d: n0 =" % (a, b), n0_for_alpha(a, b, X))
+    print("alpha = %d/%d: n0 =" % (a, b), n0_for_alpha(a, b, X), "(G form);",
+          n0_for_alpha(a, b, X, sharp=True), "(E form)")

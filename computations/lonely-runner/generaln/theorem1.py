@@ -1,8 +1,9 @@
 """Constructive form of Theorem 1 of notes/lonely-runner/general-n.md.
 
 Theorem 1.  Let V be a set of n positive integers with max M and
-    M <= (3/2)(n+1) - G((n+1)/2),
-G(x) = max_{s<=x} g(s) the Jacobsthal maximum.  Then some t has
+    M <= 2n + 2 - E(n),   E(n) = max_{1<=j<=(n+1)/2} (j + g(j)),
+g Jacobsthal's function.  (This implies the form with
+M <= (3/2)(n+1) - G((n+1)/2), G(x) = max_{s<=x} g(s).)  Then some t has
 ||v t|| >= 1/(n+1) for all v in V.
 
 `proof_witness(V)` follows the proof: it returns the witness the proof
@@ -26,7 +27,7 @@ from itertools import combinations
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from lonely import check_witness  # noqa: E402
-from jacobsthal import G_table  # noqa: E402
+from jacobsthal import G_table, E_values  # noqa: E402
 
 
 def proof_witness(V):
@@ -51,18 +52,25 @@ def proof_witness(V):
     return None, "no-case"
 
 
-def bound(n, G):
-    """Largest integer M allowed by Theorem 1: floor(3(n+1)/2 - G((n+1)/2))."""
+def bound_simple(n, G):
+    """floor(3(n+1)/2 - G((n+1)/2)), the simple form of Theorem 1."""
     return (3 * (n + 1) - 2 * G[(n + 1) // 2]) // 2
+
+
+def bound(n, E):
+    """Largest M allowed by Theorem 1 (sharp form): 2n + 2 - E(n)."""
+    return 2 * n + 2 - E[n]
 
 
 def check_range(nmax):
     """All n-subsets V with max V <= bound(n), for 1 <= n <= nmax."""
-    G, _ = G_table(max(10, nmax))
+    G, g = G_table(max(10, nmax))
+    E = E_values(nmax, g)
     total = 0
     stats = {}
     for n in range(1, nmax + 1):
-        B = bound(n, G)
+        assert bound(n, E) >= bound_simple(n, G)
+        B = bound(n, E)
         for V in combinations(range(1, B + 1), n):
             t, how = proof_witness(V)
             if t is None or not check_witness(V, t):
@@ -74,7 +82,8 @@ def check_range(nmax):
 
 if __name__ == "__main__":
     nmax = int(sys.argv[1]) if len(sys.argv) > 1 else 14
-    G, _ = G_table(200)
+    G, g = G_table(200)
+    E = E_values(nmax, g)
     for n in range(1, nmax + 1):
-        print(n, "bound M <=", bound(n, G))
+        print(n, "bound M <=", bound(n, E), "(simple form:", bound_simple(n, G), ")")
     print(check_range(nmax))

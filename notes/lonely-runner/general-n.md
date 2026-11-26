@@ -1,4 +1,4 @@
-# General-$n$ results: dense windows, a referee check of Bonfioli, and the range $v_n \le 1.45\,n$
+# General-$n$ results: dense windows, a referee check of Bonfioli, and the range $v_n \le 1.47\,n$
 
 > **Draft, work in progress.** This page is written by a research agent and has not yet been reviewed by the coordinator. Treat its claims as unreviewed until this notice is removed.
 
@@ -13,10 +13,10 @@ sampling).
 | result | label |
 | --- | --- |
 | Bonfioli's Theorem D (dense window when $2m+1$ is prime) is correct as written; it is Lemma B below plus a pigeonhole count | proved (refereed here, §2) |
-| **Theorem 1.** For every $n \ge 1$: if $v_n \le \tfrac32(n+1) - G\bigl(\tfrac{n+1}2\bigr)$, then $\mathrm{ML}(V) \ge 1/(n+1)$. Here $G(x) = \max_{s \le x} g(s)$ and $g$ is Jacobsthal's function | proved (§3) |
-| **Corollary 1.** For every $n \ge 1$: if $v_n \le 29n/20$, then $\mathrm{ML}(V) \ge 1/(n+1)$ | proved for $n \ge 81$ (Theorem 1 with an exact table of $g$); computed for $n \le 80$ |
-| Corollary 1 with $7n/5$ in place of $29n/20$ | proved for $n \ge 21$; computed for $n \le 20$ |
-| Dense window $\mathrm{DW}(m)$: every set of at most $m$ positive integers in $[1,2m]$ has $\mathrm{ML} \ge 1/(m+1)$ | computed for $2 \le m \le 47$ (all $m$, prime or composite $2m+1$) |
+| **Theorem 1.** For every $n \ge 1$: if $v_n \le 2n + 2 - E(n)$, where $E(n) = \max_{1 \le j \le (n+1)/2} (j + g(j))$ and $g$ is Jacobsthal's function, then $\mathrm{ML}(V) \ge 1/(n+1)$. A simpler sufficient condition is $v_n \le \tfrac32(n+1) - G\bigl(\tfrac{n+1}2\bigr)$, with $G(x) = \max_{s \le x} g(s)$ | proved (§3) |
+| **Corollary 1.** For every $n \ge 1$: if $v_n \le 147n/100$, then $\mathrm{ML}(V) \ge 1/(n+1)$ | proved for $n \ge 85$ (Theorem 1 with an exact table of $g$); computed for $n \le 84$ |
+| Corollary 1 with $29n/20$, resp. $7n/5$, in place of $147n/100$ | proved for $n \ge 61$, resp. $n \ge 12$; computed below that |
+| Dense window $\mathrm{DW}(m)$: every set of at most $m$ positive integers in $[1,2m]$ has $\mathrm{ML} \ge 1/(m+1)$ | computed for $2 \le m \le 47$ (all $m$, prime or composite $2m+1$); a second, independent program agrees for $m \le 13$ |
 | Every set of $n$ positive integers in $[1, \lfloor 19n/10 \rfloor]$ is lonely | computed for $n \le 67$ |
 | Primality cannot be removed using only times with denominator $\le 2m+2$: for every composite $2m+1$ with $15 \le 2m+1 \le 75$ some $m$-set in $[1,2m]$ meets every bad set of those times | computed |
 | The full window $[1,2n]$ for all $n$ | **not achieved**; see §5 for the routes that failed |
@@ -25,7 +25,7 @@ Theorem 1 is the main new result. The best range valid for every $n$ that we
 found in the literature is Tao's $v_n < 1.2n$. Bohman–Peng and Pomerance reach
 $2n - c(\log n)^2$, but only for $n$ sufficiently large, with constants that are
 not explicit (§4). Theorem 1 is explicit for every $n$, and gives
-$\tfrac32 n - O((\log n)^2)$ asymptotically. That is weaker than Bohman–Peng
+$\tfrac32 n - O((\log n)^2)$ asymptotically (typically $\tfrac32 n - O(1)$, since only $j$ near $(n+1)/2$ matter in $E(n)$). That is weaker than Bohman–Peng
 for large $n$, so the novelty is explicitness, not the asymptotic range.
 
 ## 1. Setting and two basic lemmas
@@ -52,8 +52,9 @@ and $\lVert vc/N\rVert \ge 2/N \ge 2/(2n+2) = 1/(n+1)$. $\blacksquare$
 
 The device is that of Bohman and Peng (arXiv:2109.09860v1, §3, the time
 $q/(s+t)$). They use only $s + t \le 2n$, to get a strict inequality. For
-the non-strict statement, $N = 2n+1$ and $N = 2n+2$ are also allowed, and these
-are exactly the moduli that Bonfioli's prime case and Theorem 1 need.
+the non-strict statement, $N = 2n+1$ and $N = 2n+2$ are also allowed. Bonfioli's
+prime case uses exactly these two moduli, and they enlarge the range of Theorem 1
+by allowing $N$ up to $2n+2$.
 
 ## 2. Referee check of Bonfioli's dense-window Theorem D
 
@@ -115,7 +116,7 @@ infinite family of $m$ (§4), and the manuscript says the same. It answers Tao's
 "speeds at most $2n$" question for $n$ with $2n+1$ prime, given the trivial checks
 above.
 
-## 3. Theorem 1: the range $v_n \le \tfrac32 (n+1) - G\bigl(\tfrac{n+1}2\bigr)$
+## 3. Theorem 1: the range $v_n \le 2n + 2 - E(n) \approx \tfrac32 n$
 
 **Jacobsthal's function.** $g(s)$ is the least $g$ such that every $g$
 consecutive integers contain one coprime to $s$; $g(1) = 1$. It depends only on
@@ -141,23 +142,29 @@ $s/\varphi(s) = \prod_{p \mid s} p/(p-1)$ holds because $p/(p-1)$ decreases in $
 are not needed.)
 
 **Theorem 1.** Let $n \ge 1$ and let $V$ be $n$ distinct positive integers with
-maximum $M$. If
+maximum $M$. Put
 
-$$M \le \tfrac32 (n+1) - G\Bigl(\frac{n+1}{2}\Bigr),$$
+$$E(n) = \max_{1 \le j \le (n+1)/2} \bigl(j + g(j)\bigr).$$
 
-then $V$ is lonely: $\mathrm{ML}(V) \ge 1/(n+1)$.
+If $M \le 2n + 2 - E(n)$, then $V$ is lonely: $\mathrm{ML}(V) \ge 1/(n+1)$.
 
-*Proof.* Suppose $V$ has no witness.
+Since $j + g(j) \le \lfloor (n+1)/2 \rfloor + G((n+1)/2)$ for $j \le (n+1)/2$,
+the hypothesis holds whenever
+
+$$M \le \tfrac32 (n+1) - G\Bigl(\frac{n+1}{2}\Bigr).$$
+
+*Proof.* Suppose $V$ has no witness. Write $x = \lfloor (n+1)/2 \rfloor$, so
+$x \ge n/2$, and note $E(n) \ge x + g(x) \ge x + 1$, so $M \le 2n + 1 - x$.
 
 1. If $M \le n$, then $V = [1,n]$ and $t = 1/(n+1)$ is a witness. So $M \ge n+1$.
 2. **Large $j$.** Let $M/2 < j \le n+1$. Then $j \ge 2$, and the only multiple of
    $j$ in $[1,M]$ is $j$. By Lemma A, $j \in V$.
-3. **Middle $j$.** Let $(n+1)/2 < j \le M/2$. Then
-   $3j > \tfrac32(n+1) \ge M + G \ge M + 1$, so the multiples of $j$ in $[1,M]$
-   are $j$ and $2j$. By Lemma A, $j \in V$ or $2j \in V$. Note that $2j > n+1$.
+3. **Middle $j$.** Let $(n+1)/2 < j \le M/2$, so $j \ge x + 1$. Then
+   $3j \ge 3x + 3 > 2n + 1 - x \ge M$, because $4x \ge 2n > 2n - 2$. So the
+   multiples of $j$ in $[1,M]$ are $j$ and $2j$, and by Lemma A, $j \in V$ or
+   $2j \in V$. Note that $2j > n+1$.
 4. **Small $j$.** Let $1 \le j \le (n+1)/2$, and suppose $j \notin V$. The interval
-   $(M + j,\, 2n+2]$ contains
-   $2n + 2 - M - j \ge \tfrac32(n+1) - M \ge G\bigl(\tfrac{n+1}2\bigr) \ge g(j)$
+   $(M + j,\, 2n+2]$ contains $2n + 2 - M - j \ge E(n) - j \ge g(j)$
    consecutive integers. So it contains an $N$ with $\gcd(N, j) = 1$. Then
    $t = N - j > M$ is a non-speed, $\gcd(j, t) = \gcd(j, N) = 1$, and
    $M < N \le 2n+2$. By Lemma B, $V$ has a witness, a contradiction. So $j \in V$.
@@ -168,52 +175,71 @@ then $V$ is lonely: $\mathrm{ML}(V) \ge 1/(n+1)$.
    injective, and $\lvert V\rvert \ge n+1$, a contradiction. $\blacksquare$
 
 The steps cover $[1, n+1]$: step 4 covers $[1, (n+1)/2]$, step 3 covers
-$((n+1)/2, M/2]$ (empty if $M < n+1$), and step 2 covers $(M/2, n+1]$.
+$((n+1)/2, M/2]$, and step 2 covers $(M/2, n+1]$.
+
+$E(n)$ is usually $x + 2$ to $x + 6$: only $j$ close to $x$ matter, because
+$g(j) \le G(x)$ is small. For example the largest admissible $M$ is
+$15, 28, 74, 148, 298, 1498$ for $n = 10, 20, 50, 100, 200, 1000$, against
+$14, 27, 72, 145, 295, 1491$ from the simple form.
 
 **Machine check of the case split** (computed). `theorem1.py` follows steps 1–4
-constructively. For every $n \le 15$ and every $n$-set with maximum at most the
-bound, it produces the witness its case gives. Each witness is re-verified with the
-independent exact routine `lonely.check_witness`: 23,827 sets, with no failure and no set
-reaching the impossible step 5. As a negative control, beyond the range ($n = 12$,
-$M \ge 2n-2$) the case split does fail on some lonely set
-(`test_theorem1_fails_beyond_range`).
+constructively. For every $n \le 15$ and every $n$-set with maximum at most
+$2n + 2 - E(n)$, it produces the witness its case gives. Each witness is
+re-verified with the independent exact routine `lonely.check_witness`: 224,521
+sets, with no failure and no set reaching the impossible step 5. As a negative
+control, beyond the range ($n = 12$, $M \ge 2n-2$) the case split does fail on
+some lonely set (`test_theorem1_fails_beyond_range`).
 
-### 3.1 Corollary 1: $v_n \le 29n/20$ for every $n$
+### 3.1 Corollary 1: $v_n \le 147n/100$ for every $n$
 
 **Corollary 1.** For every $n \ge 1$, every set of $n$ positive integers with
-$v_n \le 29n/20$ is lonely.
+$v_n \le 147n/100$ is lonely.
 
-*Proof for $n \ge 81$ (proved).* We need
-$2\lfloor 29n/20 \rfloor \le 3(n+1) - 2G(\lfloor (n+1)/2\rfloor)$.
-(Note that $G((n+1)/2) = G(\lfloor (n+1)/2 \rfloor)$.)
+*Proof for $n \ge 85$ (proved).* We need $\lfloor 147n/100 \rfloor \le 2n + 2 - E(n)$.
 
-- For $\lfloor (n+1)/2\rfloor \le 5000$ this is checked number by number with
-  the exact table of $g(s)$, $s \le 5000$. The last failure is at $n = 80$.
-- For larger $n$ we use $G(x) \le \max\bigl(G(5000),\, B(k)\bigr)$ for $x < p_{k+1}\#$, where $p_k\#$ is the $k$-th primorial and
-  $B(k) = \lceil (2^k - 1) \prod_{i \le k} p_i/(p_i-1) \rceil$ (Lemma J; $\omega(s) \le k$ when $s < p_{k+1}\#$).
-  On each block $p_k\# \le x < p_{k+1}\#$ the inequality is linear in $n$ with
-  slope $3 - 29/10 > 0$, so it suffices to check it at the block's smallest $n$.
-  This is done exactly for $k \le 40$.
-- For $k > 40$ we have $B(k) \le 4^k$ and $p_k\# \ge 10^{9} \cdot 4^k$,
-  so the slack $(3 - 2.9)\, n \ge 0.1\, p_k\#$ exceeds $2B(k) + 3$.
+- For $n \le 20000$ this is checked number by number with the exact table of
+  $g(s)$, $s \le 10000$. The last failure is at $n = 84$.
+- For $n > 20000$ we check the simple form instead,
+  $2 \cdot 147 n \le 100\,\bigl(3(n+1) - 2G\bigr)$, which implies the condition.
+  We use $G(x) \le \max\bigl(G(10^4),\, B(k)\bigr)$ for $x < p_{k+1}\#$, where
+  $p_k\#$ is the $k$-th primorial and
+  $B(k) = \lceil (2^k - 1) \prod_{i \le k} p_i/(p_i-1) \rceil$
+  (Lemma J; $\omega(s) \le k$ when $s < p_{k+1}\#$). On each block
+  $p_k\# \le x < p_{k+1}\#$ the inequality is linear in $n$ with slope
+  $3 - 2.94 > 0$, so it suffices to check it at the block's smallest $n$. This
+  is done exactly for every block up to $k = 40$.
+- For $k > 40$ we have $B(k) \le 4^k$ and $p_k\# \ge 10^{9} \cdot 4^k$. The
+  simple form reads $0.06\, n + 3 \ge 2G$, and for $n \ge 2p_k\# - 1$ we get
+  $0.06\, n + 3 \ge 0.12\, p_k\# \ge 2 \cdot 4^k \ge 2B(k)$.
 
-`jacobsthal.py 29 20 5000` returns $n_0 = 81$. $\blacksquare$
+`jacobsthal.py 147 100 10000` returns $n_0 = 85$ for this form. $\blacksquare$
 
-*Small $n$ (computed).* For $n \le 80$, `dwsolve` decides exhaustively that every
-$n$-subset of $[1, \lfloor 29n/20\rfloor]$ has a witness at $1/(n+1)$:
-`results/window_29_20.txt`, 80 of 80 values of $n$. The same holds with
-$7n/5$, where Theorem 1 already covers $n \ge 21$.
+*Small $n$ (computed).* For $n \le 84$, `dwsolve` decides exhaustively that every
+$n$-subset of $[1, \lfloor 147n/100\rfloor]$ has a witness at $1/(n+1)$:
+`results/window_147_100.txt`, 84 of 84 values of $n$. The same was run for
+$\lfloor 29n/20 \rfloor$ with $n \le 80$ (`results/window_29_20.txt`), where the
+proved part starts at $n = 61$. With $7n/5$ it starts at $n = 12$.
 
-So "$v_n \le 1.45\,n$ implies lonely" holds for every $n$: proved for $n \ge 81$
-and computed for $n \le 80$. With $7/5$ the proved part starts at $n = 21$; for
-$n \le 12$ the full LRC is classical or refereed in any case.
+So "$v_n \le 1.47\,n$ implies lonely" holds for every $n$: proved for $n \ge 85$
+and computed for $n \le 84$. For $n \le 12$ the full LRC is classical or
+refereed in any case.
+
+**Corollary 2** (shape of a dense-window counterexample; proved). Suppose
+$V \subseteq [1, 2n]$, $\lvert V\rvert = n$, has no witness, and let $M = \max V$. Then:
+
+- $2n+1$ is composite (Theorem D), and $M > 2n + 2 - E(n)$ (Theorem 1);
+- every $j \in (M/2, n+1]$ lies in $V$ (step 2, which does not use the bound on $M$);
+- every $j \le n+1$ with $j + g(j) \le 2n + 2 - M$ lies in $V$ (step 4); in particular $1 \in V$;
+- the non-speeds in $[1, n+1]$ number $1 + \lvert V \cap (n+1, M]\rvert$, and they all lie in $(2n + 2 - M - G(M/2),\, M/2]$.
+
+For large $n$ the Bohman–Peng and Pomerance theorem adds $M > 2n - c(\log n)^2$.
 
 ### 3.2 Why the argument stops at $3/2$
 
 The injection breaks if a small $j \le (n+1)/2$ is a non-speed. Its only certain
 replacement is a multiple $2j \le n+1$, which is already the image of $2j$. Step 4
 excludes such $j$ only while $(M+j, 2n+2]$ is long enough to contain an integer coprime
-to $j$. For $j$ near $(n+1)/2$ that interval has length $\tfrac32(n+1) - M$. Going
+to $j$. For $j$ near $(n+1)/2$ that interval has length about $\tfrac32(n+1) - M$. Going
 past $3/2$ needs a Hall-type matching between low non-speeds and high speeds; that
 is the coprime-mapping theorem of Bohman–Peng and Pomerance, which is not explicit (§4).
 
@@ -239,12 +265,20 @@ Results (all computed, exact):
   and $m = 47$ took 510 s; $m = 48$ was stopped. This independently confirms
   Bonfioli's statement for $m \le 47$, including the 24 composite values of
   $2m+1$ in that range.
-- **Restricted windows:** $[1, \lfloor 29n/20\rfloor]$ for $n \le 80$, and
+- **Restricted windows:** $[1, \lfloor 147n/100\rfloor]$ for $n \le 84$, $[1, \lfloor 29n/20\rfloor]$ for $n \le 80$, and
   $[1, \lfloor 19n/10 \rfloor]$ for $n \le 67$: no counterexample (`results/window_*.txt`).
 - **Negative controls** (`test_generaln.py`): at the threshold $1/m$ the solver
   finds a counterexample for every $m \le 8$, and `lonely.find_witness`
   independently confirms it. In a window wider than $[1,2m]$ at threshold $1/m$ it also
-  fails, as it must. A pure-Python brute force (no C) agrees for $m \le 7$.
+  fails, as it must.
+- **Completeness of the search** (`test_fixed_mode_complete_vs_bruteforce`). For
+  $(m, Q) = (7, 16), (10, 22), (12, 26)$ the $m$-supersets of the reported hitting
+  sets are exactly the $m$-sets that a brute force over all $m$-subsets finds to
+  hit every bad set.
+- **Second implementation** (`dw_bruteforce.py`, pure Python, no shared code with
+  `dwsolve.c`). It checks every $m$-subset of $[1,2m]$ separately, and every
+  witness it uses is re-verified by `lonely.check_witness`. It agrees for
+  $m \le 13$ (`results/dw_bruteforce_m1_13.txt`; columns: $m$, number of $m$-sets, number that needed the complete search, counterexample). For $m = 13$ that is 10,400,600 sets.
 
 ## 4. Literature searched (2026-11-26)
 
@@ -252,7 +286,7 @@ Results (all computed, exact):
   (46 records, 2007–2026), `all:lonely AND all:Jacobsthal` (none) and
   `abs:"lonely runner" AND abs:coprime` (two: Bohman–Peng, Pomerance). All titles were scanned.
 - **Read in source:**
-  - Tao, arXiv:1701.02048v4, §6: Prop. 1.5, $v_i \le 1.2n$, for every $n$, by an injection $j \mapsto j$ or $2j$, and Lemma 5.1.
+  - Tao, arXiv:1701.02048v4, §5: Prop. 1.5, $v_i \le 1.2n$, for every $n$, by an injection $j \mapsto j$ or $2j$, and Lemma 5.1.
   - Bohman–Peng, arXiv:2109.09860v1, Thm 1.2 and §3: loose instances for $n < v_n \le 2n - \exp(C(\log\log n)^2)$, "for sufficiently large $n$".
   - Pomerance, arXiv:2111.07157v1: $2n - c'(\log n)^2$, again for sufficiently large $n$ and an unspecified constant.
   - The Perarnau–Serra survey, arXiv:2409.20160v3, §4 and the "Linearly bounded speeds" subsection, and Problem 6.
@@ -268,8 +302,9 @@ Results (all computed, exact):
 ## 5. Failed routes (kept)
 
 1. **A different single modulus.** For a fixed $N \in (M, 2n+2]$, Lemma B with the class count gives
-   only $\lvert V \cap (\mathbb Z/N)^*\rvert \ge \varphi(N)/2$. For composite $N$
-   this is $< m$, and non-units of $N$ in $V$ are free, so no contradiction arises.
+   only $\lvert V \cap (\mathbb Z/N)^*\rvert \ge \varphi(N)/2$. For $N = 2m+1$
+   composite, $\varphi(N)/2 < m$, and the speeds that are non-units mod $N$ are
+   unconstrained, so no contradiction arises.
    A prime $p = 2m+1-2j < 2m+1$ has $p \le 2m$, so $p$ itself may be a speed and
    then blocks every time $c/p$. Otherwise the speeds must meet $m-j$ classes with $m$
    elements, and nothing forces $j+1$ collisions.
@@ -293,10 +328,13 @@ Results (all computed, exact):
    Script `explore/lp.py`; all data for routes 2–4 are in `results/failed_routes_data.txt`.
 5. **Pairs plus divisibility for the whole range below $2n$** (computed). Using only
    Lemma A and Lemma B, every $n$-set with $\max \le 2n-3$ is handled for $n \le 26$.
-   This fails at $n = 28$ ($M = 53$) and $n = 32$ ($M = 61$), both $2n-3$. So the
-   slack needed by this family grows, as the Jacobsthal obstruction in
-   Bohman–Peng predicts, and Lemmas A and B alone cannot reach the window $[1, 2n-3]$ for
-   every $n$, however the counting is done. Data: `results/pairs_div_family.txt`
+   This fails at $n = 28$ ($M = 53$) and $n = 32$ ($M = 61$), both $2n-3$.
+   For every $n \le 34$ with $2n+1$ prime the family closes all $M \le 2n$,
+   as Theorem D predicts; among composite $2n+1$ only $n = 4$ closes. So
+   Lemmas A and B alone cannot give the window $[1, 2n-3]$ for every $n$,
+   however the counting is done. The slack this family needs seems to grow
+   slowly with $n$, which fits the Jacobsthal-type obstruction discussed by
+   Bohman–Peng and Pomerance; that is an observation on $n \le 34$, not a proof. Data: `results/pairs_div_family.txt`
    (`explore/bpfam.py`).
 6. **Induction on the number of speeds above $n+1$.** If $h$ speeds lie above
    $n+1$, then $h+1$ non-speeds lie in $[1,n+1]$, all in $(2n+2-M-G, M/2]$ by steps 2 and 4 of Theorem 1. Each low
@@ -308,14 +346,16 @@ Results (all computed, exact):
 
 ```
 cd computations/lonely-runner/generaln
-python3 -m pytest -q test_generaln.py          # 11 tests, about 2 s
+python3 -m pytest -q test_generaln.py          # 12 tests, about 20 s
 python3 theorem1.py 15                         # case split of Theorem 1, n <= 15
-python3 jacobsthal.py 29 20 5000               # n0 = 81 for Corollary 1
-python3 jacobsthal.py 7 5 2000                 # n0 = 21
-sh run_windows.sh /tmp/dwbuild                 # restricted windows (about 2 min)
+python3 jacobsthal.py 147 100 10000             # n0 = 85 (E form) for Corollary 1
+python3 jacobsthal.py 29 20 5000               # n0 = 61 (E form)
+python3 jacobsthal.py 7 5 2000                 # n0 = 12 (E form)
+sh run_windows.sh /tmp/dwbuild                 # restricted windows (about 3 min)
 gcc -O2 -o /tmp/dwbuild/dwsolve dwsolve.c
 for m in $(seq 2 47); do /tmp/dwbuild/dwsolve $m $((4*m)) | tail -1; done   # full window, about 20 min
 python3 bonfioli_counts.py 7 10                # the 32 / 544 counts of §2
+python3 dw_bruteforce.py 13                    # second implementation, m <= 13
 ```
 
 All runs above used one core.

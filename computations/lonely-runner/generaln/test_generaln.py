@@ -129,6 +129,8 @@ def test_jacobsthal_exact_and_bound():
 def test_corollary_thresholds():
     assert jacobsthal.n0_for_alpha(29, 20, 5000) == 81
     assert jacobsthal.n0_for_alpha(7, 5, 2000) == 21
+    assert jacobsthal.n0_for_alpha(29, 20, 5000, sharp=True) == 61
+    assert jacobsthal.n0_for_alpha(147, 100, 10000, sharp=True) == 85
     with pytest.raises(AssertionError):
         jacobsthal.n0_for_alpha(3, 2)
 
@@ -151,3 +153,25 @@ def test_theorem1_fails_beyond_range():
             assert find_witness(V)[0]  # still lonely, by another time
             break
     assert found
+
+
+def test_fixed_mode_complete_vs_bruteforce(solver):
+    # every m-set hitting all bad sets (q <= Q) must contain a reported leaf,
+    # and every m-superset of a leaf must hit all bad sets
+    for m, Q in [(7, 16), (10, 22), (12, 26)]:
+        K = m + 1
+        bads = []
+        for q in range(2, Q + 1):
+            for a in range(1, q // 2 + 1):
+                if gcd(a, q) == 1:
+                    bads.append({x for x in range(1, 2 * m + 1) if K * min(x * a % q, q - x * a % q) < q})
+        brute = {V for V in combinations(range(1, 2 * m + 1), m) if all(set(V) & B for B in bads)}
+        leaves = [set(map(int, l.split(":")[1].split()))
+                  for l in run(solver, m, Q, "fixed", "cap=100000") if l.startswith("TRANSVERSAL")]
+        ext = set()
+        for L in leaves:
+            assert all(L & B for B in bads)
+            rest = [x for x in range(1, 2 * m + 1) if x not in L]
+            for add in combinations(rest, m - len(L)):
+                ext.add(tuple(sorted(L | set(add))))
+        assert ext == brute and brute, m
