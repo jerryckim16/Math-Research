@@ -420,6 +420,7 @@ static void dfs(const bs *U, const bs *A, int depth) {
         }
     }
     if (orderly && depth == 0) orderly_root(ch, nch);
+    if (depth == 0 && getenv("LRC_PRINTROOT")) { fprintf(stderr, "ROOT"); for (int i = 0; i < nch; i++) fprintf(stderr, " %d", ch[i]); fprintf(stderr, "\n"); }   /* gate251 orderly check */
     for (int ci = 0; ci < nch; ci++) {
         int c = ch[ci];
         if (order && chg[ci] + bsum < need) break;
