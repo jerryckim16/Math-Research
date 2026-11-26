@@ -4,8 +4,8 @@
 #   writes results/window_147_100.txt (every n-set in [1, floor(147n/100)], n <= 84)
 #   and    results/window_29_20.txt  (every n-set in [1, floor(29n/20)], n <= 80)
 #   and    results/window_19_10.txt  (every n-set in [1, floor(19n/10)], n <= 67)
-# The full dense window [1,2m] (m <= 47) is reproduced by
-#   for m in $(seq 2 47); do $B/dwsolve $m $((4*m)); done
+# The full dense window [1,2m] (m <= 49) is reproduced by
+#   for m in $(seq 2 49); do $B/dwsolve $m $((4*m)); done
 set -e
 B=${1:-/tmp/dwbuild}
 mkdir -p "$B"

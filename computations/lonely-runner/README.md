@@ -34,7 +34,7 @@ Recommended for large gates: `LRC_PRUNE=0 LRC_ORDERLY=1 LRC_IRR=2 LRC_ORDER=1 LR
 | `exhaustive.py` | Direct bounded check over all primitive tuples with max speed ≤ N. It also lists the tight tuples, i.e. those with ML = 1/(n+1). |
 | `test_lonely.py` | Tests (21). See the list below. |
 | `results/` | Raw logs of the runs reported in the problem file. Every gate is listed, including the failed ones. |
-| `generaln/` | General-n work (draft note `notes/lonely-runner/general-n.md`). `dwsolve.c` is an exact hitting-set solver for "every set of at most m speeds in [1,H] is lonely", with lazy completion by the complete witness test; it decides the dense window [1,2m] for m ≤ 47 and the restricted windows used by Corollary 1. `jacobsthal.py` holds the exact Jacobsthal table and the n0 computation for Theorem 1; `theorem1.py` is the constructive case split; `dw_bruteforce.py` is a second, pure-Python check. Tests: `generaln/test_generaln.py`, with negative controls. |
+| `generaln/` | General-n work (draft note `notes/lonely-runner/general-n.md`). `dwsolve.c` is an exact hitting-set solver for "every set of at most m speeds in [1,H] is lonely", with lazy completion by the complete witness test; it decides the dense window [1,2m] for m ≤ 49 and the restricted windows used by Corollary 1. `jacobsthal.py` holds the exact Jacobsthal table and the n0 computation for Theorem 1; `theorem1.py` is the constructive case split; `dw_bruteforce.py` is a second, pure-Python check. Tests: `generaln/test_generaln.py`, with negative controls. |
 
 ## Reproduce
 
