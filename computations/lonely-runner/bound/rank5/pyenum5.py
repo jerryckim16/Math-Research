@@ -1,7 +1,9 @@
 """Independent pure-Python complete enumeration for one rank-5 profile with
 support cap AMAX (no pruning, no symmetry), for cross-checking sectj.c run
 with NOSYM=1 and the same AMAX.  Shares no code with the C enumerators: the
-domain is rank_exclusion.multiplicity_vectors (cap = AMAX columns), the
+domain is a streaming generator of all multiplicity vectors with row
+supports exactly s and at most AMAX columns (rank_exclusion's list version
+needs about 3 GB at R = 5), the
 section is solved with exact Fractions from the first invertible set of
 present types, and every test is re-implemented.
 
@@ -19,10 +21,40 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 BOUND = os.path.dirname(HERE)
 sys.path.insert(0, BOUND)
 sys.path.insert(0, os.path.join(BOUND, "rank4"))
-from rank_exclusion import multiplicity_vectors, det  # noqa: E402
+from rank_exclusion import det  # noqa: E402
 from relrank_n import delta_bounds  # noqa: E402
 from crosscheck import rank  # noqa: E402
 from classes import parse  # noqa: E402
+
+
+def multiplicity_vectors(T, s, ncols):
+    """Yield every m over the types T with row supports exactly s and
+    sum m <= ncols (recursion over the next nonzero type; a branch is cut
+    only when a row support would exceed s or cannot be completed with the
+    remaining columns, each of which adds at most 1 to every row)."""
+    r = len(s)
+    m = [0] * len(T)
+    pats = [tuple(1 if x else 0 for x in t) for t in T]
+
+    def rec(start, rem, need):
+        if not any(need):
+            yield tuple(m)
+            return
+        if max(need) > rem:
+            return
+        for j in range(start, len(T)):
+            p = pats[j]
+            if any(p[i] > need[i] for i in range(r)):
+                continue
+            for cnt in range(1, rem + 1):
+                nn = [need[i] - cnt * p[i] for i in range(r)]
+                if min(nn) < 0:
+                    break
+                m[j] = cnt
+                yield from rec(j + 1, rem - cnt, nn)
+            m[j] = 0
+
+    yield from rec(0, ncols, list(s))
 
 
 def inverse(A):
