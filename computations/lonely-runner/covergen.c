@@ -75,6 +75,7 @@ static long shard = 0, nshards = 1;   /* env LRC_SHARD / LRC_NSHARDS: split root
  * shards is the unsharded output (tested); the finer jobs balance better. */
 static int sharddepth = 1;
 static unsigned long long d1count = 0;   /* LRC_SHARD_DEPTH=D >= 2: global count of the nodes at depth D-1 (D >= 3 added for gate251) */
+static int shard_passed = 0;            /* the current path went through the depth-(D-1) shard filter */
 static unsigned long long nodecap = 0;
 static int quiet = 0;
 static unsigned long long rng = 88172645463325252ULL;
@@ -269,7 +270,7 @@ static int orderly_canonical(void) {
 /* Leaf processing for L[0..nL-1] covering every time (others = union of
  * cov over L[1..]): the normalisation filters, then minimality, then print. */
 static void leaf(void) {
-        if (nshards > 1 && sharddepth >= 2 && nL <= sharddepth && shard != 0) return;
+        if (nshards > 1 && sharddepth >= 2 && !shard_passed && shard != 0) return;   /* leaves above the cut (incl. LRC_FINISH leaves) only in shard 0 */
         leaves++;
         if (exactk && nL != kmax) return;
         if (orderly && !orderly_canonical()) return;
@@ -434,8 +435,11 @@ static void dfs(const bs *U, const bs *A, int depth) {
         if (orderly) { if (depth == 0) rho = ci; if (!orderly_ok(c)) { others = saveO; continue; } }
         bs U2; for (int w = 0; w < W; w++) U2.w[w] = U->w[w] & ~cov[c].w[w];
         L[nL++] = c;
+        int sp_save = shard_passed;
+        if (nshards > 1 && sharddepth >= 2 && depth == sharddepth - 1) shard_passed = 1;
         if (finish && left == 2 && !isempty(&U2)) finish2(&U2, &A2);
         else dfs(&U2, &A2, depth + 1);
+        shard_passed = sp_save;
         nL--;
         others = saveO;
     }

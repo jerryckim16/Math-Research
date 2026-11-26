@@ -15,7 +15,8 @@
  * Env:   EX_SAMPLE=path, EX_EVERY=n (default 100): also write every n-th base
  *        (bases n, 2n, ...) to path, for the independent re-check.
  * stderr: "EXPAND covers N bases M sampled S bad 0" (bad = malformed, too-long
- *        or truncated lines; any bad line makes the exit status 1).
+ *        or truncated lines; any bad line makes the exit status 1), then
+ *        "COVERSIZES c:n ..." (covers by number of classes).
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,7 +24,7 @@
 
 #define MAXK 32
 static int k, p, h, C[MAXK], nC, ext[MAXK];
-static unsigned long long nbase = 0, nsamp = 0, every = 100;
+static unsigned long long nbase = 0, nsamp = 0, every = 100, bysize[MAXK + 1];
 static FILE *samp = NULL;
 
 static void emit(void) {
@@ -64,10 +65,13 @@ int main(int argc, char **argv) {
         for (int i = 0; i < nC; i++) if (C[i] < 1 || C[i] > h) okr = 0;
         if (!okr) { bad++; continue; }
         qsort(C, nC, sizeof(int), cmpi);
-        ncov++;
+        ncov++; bysize[nC]++;
         rec(0, 1);
     }
     if (samp) fclose(samp);
     fprintf(stderr, "EXPAND covers %llu bases %llu sampled %llu bad %llu\n", ncov, nbase, nsamp, bad);
+    fprintf(stderr, "COVERSIZES");
+    for (int c = 1; c <= k; c++) if (bysize[c]) fprintf(stderr, " %d:%llu", c, bysize[c]);
+    fprintf(stderr, "\n");
     return bad ? 1 : 0;
 }

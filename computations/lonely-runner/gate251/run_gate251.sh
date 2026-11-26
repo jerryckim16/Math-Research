@@ -26,7 +26,7 @@ if [ -f nshards.txt ] && [ "$(cat nshards.txt)" != "$NSH $DEPTH" ]; then echo "N
 echo "$NSH $DEPTH" > nshards.txt
 touch times.txt
 [ -f start ] || date -u +%s > start
-export B K P NSH DEPTH HERE WF
+export B K P NSH DEPTH HERE WF D
 run_shard() {
   i=$1
   grep -q "^$i " times.txt && return 0

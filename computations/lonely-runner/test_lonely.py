@@ -327,6 +327,27 @@ class TestCoverGenAndLiftFree(unittest.TestCase):
                 parts += subprocess.run([b, str(k), str(p)], capture_output=True, text=True, env=env).stdout.splitlines()
             self.assertEqual(sorted(parts), full)
 
+    def test_covergen_sharddepth_general(self):
+        """gate251: LRC_SHARD_DEPTH=D for D >= 2 (shards by the global count of
+        the nodes at depth D-1; leaves with nL <= D only in shard 0).  The union
+        of the shards equals the unsharded output for D = 2, 4, 6, with and
+        without the orderly-root rule, including one k = 17 case."""
+        import os, subprocess
+        b = sieve._covergen_bin()
+        run = lambda k, p, **e: sorted(l for l in subprocess.run([b, str(k), str(p)], capture_output=True, text=True,
+                                                                 env=dict(os.environ, **e)).stdout.splitlines() if l.strip())
+        fast = dict(LRC_PRUNE="0", LRC_IRR="2", LRC_ORDER="1", LRC_FINISH="1")
+        for k, p in ((7, 61), (8, 101), (10, 127), (14, 89), (17, 73)):
+            for orderly in ("0", "1"):
+                e = dict(fast, LRC_ORDERLY=orderly)
+                full = run(k, p, **e)
+                self.assertTrue(full)
+                for D in ("2", "4", "6"):
+                    parts = []
+                    for r in range(7):
+                        parts += run(k, p, **dict(e, LRC_SHARD_DEPTH=D, LRC_NSHARDS="7", LRC_SHARD=str(r)))
+                    self.assertEqual(sorted(parts), full, (k, p, orderly, D))
+
     def test_liftfree_matches_python_lift(self):
         import check_allikvere as ca
         for k, p, c in ((4, 13, 5), (5, 23, 2), (5, 23, 3), (6, 19, 2)):
