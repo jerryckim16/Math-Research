@@ -1,0 +1,15 @@
+# matchcrit fixed 14, partial runs (killed): failures found in n=57736..62314 (range 57736..81650 started) and n=81651..82264 (range 81651..100000 started)
+FAIL n=58967 M=117920 deficit=3
+FAIL n=59477 M=118940 deficit=1
+FAIL n=60527 M=121040 deficit=1
+FAIL n=61159 M=122304 deficit=1
+FAIL n=61277 M=122540 deficit=1
+FAIL n=62162 M=124310 deficit=1
+FAIL n=62314 M=124614 deficit=1
+FAIL n=62642 M=125270 deficit=3
+FAIL n=81752 M=163490 deficit=1
+FAIL n=81902 M=163790 deficit=2
+FAIL n=81903 M=163792 deficit=1
+FAIL n=81904 M=163794 deficit=2
+FAIL n=81949 M=163884 deficit=4
+FAIL n=82264 M=164514 deficit=1
