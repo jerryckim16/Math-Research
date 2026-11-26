@@ -74,8 +74,8 @@ an exhaustive DFS for a cover that contains class 1 and has at most $s$ classes.
 - **Validation** (`k15/test_gate15.py::test_tau`). It equals a brute force over
   all subsets at $(k,p) = (5,29), (5,31), (6,37), (7,41), (7,43)$, with and
   without the cuts.
-- **Reproduction of Allikvere's $k = 14$ split.** We get $\tau_{14} = 12, 11, 13,
-  12, 13, 13$ at $p = 89, 131, 239, 241, 251, 257$.
+- **Reproduction of Allikvere's $k = 14$ split.** We get $\tau_{14} = 12, 11, 13, 12, 13, 13$
+  at $p = 89, 131, 239, 241, 251, 257$.
 
 ### $k = 15$ screen (computed)
 
@@ -218,7 +218,7 @@ scratch `lr-gates/dl/`, kept for the certificate agent. Every SHA-256 equals
 His recorded CPU totals 49,255 CPU-h (generation plus precondition).
 
 **Re-check cost (heuristic).** Our $k = 15$ Knuth tree (`k15/knuth_k15.txt`) is
-1.13–1.34$\times$ his recorded irredundant node counts at the 59 gates (median
+$1.13$–$1.34\times$ his recorded irredundant node counts at the 59 gates (median
 1.20). Level-one completeness at all 59 gates with our generator would take about
 $8.1\cdot 10^4$ CPU-h, at $1.8\cdot 10^6$ nodes/s. The cheapest of his gates:
 
@@ -290,7 +290,7 @@ The exponent is $6.90$ over 313–797, $6.11$ over 797–1597, and $7.41$ over
 
 **Rate.** Cost is $N_{17}/(1.8\cdot10^{6}\ \text{nodes/s})$, level one only. The
 rate is from the exact $k = 14$, $p = 251$ run; the cloud session measures
-2–3$\cdot10^6$ per core. The tau precondition, cascade and kill are not
+$2$–$3\cdot10^6$ per core. The tau precondition, cascade and kill are not
 included; at $k = 15$ they were a small fraction of Allikvere's total.
 
 | band | primes | $\sum \ln p$ | CPU-h per gate (median) | band total, CPU-h |

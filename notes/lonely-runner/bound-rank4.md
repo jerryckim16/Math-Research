@@ -185,7 +185,7 @@ The census covers all 45 profiles, in about 3 min. Every admitted record passes 
 **Implementation notes (kept so they are not retried).**
 
 - *Python is too slow for the full census.* The exact-`Fraction` enumerator `pyenum.py` takes 257 s for the 34,702 vectors of $(3,3,3,3)$ alone. It is used only as a cross-check.
-- *A naive C version was also slow.* The first C version took about $20\,\mu$s per leaf: it had no symmetry quotient and kept a per-node candidate list. The cost was in filtering the large candidate lists near the root. Three changes did not help: avoiding `malloc`, lazily stored supports, and precomputed feasibility tables.
+- *A naive C version was also slow.* The first C version took about $20\,\mu\mathrm{s}$ per leaf: it had no symmetry quotient and kept a per-node candidate list. The cost was in filtering the large candidate lists near the root. Three changes did not help: avoiding `malloc`, lazily stored supports, and precomputed feasibility tables.
 - *What did help.* The row-sign quotient gave a factor of about $5$ in time.
 - *The Riesz upper-bound prune is weak near the root.* Most of the $68260$ global candidates are still alive there. It cuts subtrees only once fewer than about $50$ candidates remain. It is still the main pruning for the large profiles, for example $5.4\cdot10^7$ cuts on $(5,7,7,7)$ at $n=15$.
 - *Rank 5 needs a different candidate generator.* Building the global candidate set from all $5$-subsets of the $121$ types means $2\cdot10^8$ subsets times $3^5$, which is too many. A per-leaf Cramer section, as in `pyenum.py`, together with the 16-element sign quotient is the obvious next design.

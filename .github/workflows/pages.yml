@@ -25,6 +25,10 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install markdown==3.7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci --prefix site   # KaTeX, pinned in site/package-lock.json: math is rendered at build time
       - run: python3 site/build.py _site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
