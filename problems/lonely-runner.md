@@ -2,6 +2,7 @@
 
 **Area:** Diophantine approximation / combinatorics
 **Status:** in progress. Done so far:
+- **New general-$n$ result (2026-11-26).** Every set of $n$ distinct positive speeds with largest speed $v_n \le 2n+2-E(n)$ is lonely, where $E(n) = \max_{j \le (n+1)/2}(j + g(j))$ and $g$ is Jacobsthal's function; this is about $\tfrac32 n$. Hence every set with $v_n \le 1.47\,n$ is lonely, for every $n$ (proved for $n \ge 85$, computed below). The best range valid for every $n$ that we found in the literature is Tao's $1.2\,n$. Proved, reviewed by the coordinator; see `notes/lonely-runner/general-n.md`.
 - The prime-gate framework is reproduced end to end for $\mathrm{LRC}(3)$–$\mathrm{LRC}(10)$ (4–11 runners), conditional on one cited bound ($B_k$). $\mathrm{LRC}(10)$ uses an explicit $\times 11$ lift, independent of Sungkawichai–Trakulthongchai's Prop. corlarge (step 7).
 - All 71 of Allikvere's 15-runner ($\mathrm{LRC}(14)$) gate certificates are independently re-checked, with no discrepancy found. Stored rows were checked in full at every gate; the cascade and kill in full at 54 gates and sampled at 17, with the cascade alone also in full at near-gcd gate 223; level-one completeness at 7 gates ($p = 89, 239, 251, 263, 269, 281, 283$). See "Independent re-check summary". His 14-runner terminal kills are re-checked at all 111 of his gate primes.
 - **Allikvere's 16-runner ($\mathrm{LRC}(15)$) gate certificates: all 59 re-checked (2026-11-25), with no discrepancy.** Every stored row, the binary cascade to level 16, every SUMMARY total and the archive hashes were checked with our own code (`notes/lonely-runner/cert15.md`). **Level-one completeness is checked at 9 of the 59 gates ($p = 269, 281, 311, 313, 317, 331, 347, 349, 367$, each equal to the certificate; Approach 15)**; at the other gates, and especially at the large gates where the stored families are tiny, the claim rests mainly on his search. The completeness campaign was paused on 2026-11-26 by the owner's decision, to focus on original work (Approach 15).
@@ -102,6 +103,7 @@ Details from the primary texts:
 - Bedert (arXiv:2511.16636, 2025) proved $1/(2n) + 1/n^{5/3+o(1)}$. Cited in the [read] intro of arXiv:2604.23906.
 - Hu–Jing, "Near optimal gap in the lonely runner conjecture", arXiv:2610.23790 (Oct 2026), reportedly proves $(1+c)/(2n)$. [abstract]: seen via MathWorld only, not read.
 - None of these settles any finite case.
+- **Bounded speeds.** Tao (2018, Prop. 1.5): lonely if $v_n \le 1.2\,n$, for every $n$. Bohman–Peng and Pomerance: lonely if $n < v_n \le 2n - c(\log n)^2$, for sufficiently large $n$ (constants not explicit). Bonfioli (Zenodo 24189338, unrefereed): every $n$-set in $[1,2n]$ is lonely when $2n+1$ is prime (refereed here, correct). **Ours** (2026-11-26, proved): lonely if $v_n \le 2n+2-E(n) \approx \tfrac32 n$, hence if $v_n \le 1.47\,n$, for every $n$. Computed: every $n$-set in $[1,2n]$ is lonely for $n \le 51$. Details in `notes/lonely-runner/general-n.md`.
 
 ### The finite reduction (exact hypotheses, from the read texts)
 

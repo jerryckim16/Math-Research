@@ -1,0 +1,86 @@
+# Data for the failed routes of notes/lonely-runner/general-n.md, section 5.
+# Produced 2026-11-26 with the programs named in each block (one core).
+
+## (2) dwsolve m 2m+2 fixed cap=0 : transversals of the bad sets of all times
+##     a/q with q <= 2m+2, composite 2m+1 only (count of DFS leaves; 0 = family closes)
+m=4 N=9  : 0 NO_TRANSVERSAL
+m=7 N=15 : 2 TRANSVERSALS_EXIST
+m=10 N=21 : 21 TRANSVERSALS_EXIST
+m=12 N=25 : 17 TRANSVERSALS_EXIST
+m=13 N=27 : 28 TRANSVERSALS_EXIST
+m=16 N=33 : 174 TRANSVERSALS_EXIST
+m=17 N=35 : 118 TRANSVERSALS_EXIST
+m=19 N=39 : 510 TRANSVERSALS_EXIST
+m=22 N=45 : 3678 TRANSVERSALS_EXIST
+m=24 N=49 : 429 TRANSVERSALS_EXIST
+m=25 N=51 : 4136 TRANSVERSALS_EXIST
+m=27 N=55 : 2481 TRANSVERSALS_EXIST
+m=28 N=57 : 10656 TRANSVERSALS_EXIST
+m=31 N=63 : 31296 TRANSVERSALS_EXIST
+m=32 N=65 : 16891 TRANSVERSALS_EXIST
+m=34 N=69 : 105632 TRANSVERSALS_EXIST
+m=37 N=75 : 375681 TRANSVERSALS_EXIST
+# (for prime 2m+1 the same family has no transversal, as Theorem D says; tested m <= 23)
+
+## (2) least Q such that the times a/q, q <= Q, close the window (dwsolve m Q fixed)
+m=4 2m+1=9 Qmin=10 (2m+2)
+m=7 2m+1=15 Qmin=19 (2m+5)
+m=10 2m+1=21 Qmin=28 (2m+8)
+m=12 2m+1=25 Qmin=29 (2m+5)
+m=13 2m+1=27 Qmin=32 (2m+6)
+m=16 2m+1=33 Qmin=40 (2m+8)
+m=17 2m+1=35 Qmin=41 (2m+7)
+m=19 2m+1=39 Qmin=47 (2m+9)
+m=22 2m+1=45 Qmin=56 (2m+12)
+m=24 2m+1=49 Qmin=56 (2m+8)
+m=25 2m+1=51 Qmin=60 (2m+10)
+m=27 2m+1=55 Qmin=66 (2m+12)
+m=28 2m+1=57 Qmin=71 (2m+15)
+m=31 2m+1=63 Qmin=74 (2m+12)
+
+## (3) explore/taofam.py 4 28 : denominators <= 2m+2 plus Tao's times d/j + 1/(2j(m+1))
+4 9 NONE (family suffices)
+7 15 transversal: [1, 5, 6, 7, 8, 11, 13]
+10 21 transversal: [1, 5, 6, 7, 8, 9, 10, 11, 17, 19]
+12 25 transversal: [1, 10, 11, 12, 13, 16, 17, 18, 19, 21, 22, 23]
+13 27 transversal: [1, 5, 7, 8, 9, 10, 11, 12, 13, 14, 19, 23, 25]
+16 33 transversal: [1, 7, 10, 11, 12, 13, 14, 15, 16, 17, 23, 25, 27, 28, 29, 31]
+17 35 transversal: [1, 9, 13, 14, 15, 16, 17, 18, 23, 24, 25, 27, 29, 30, 31, 32, 33]
+19 39 transversal: [1, 4, 5, 7, 11, 13, 14, 15, 16, 17, 19, 20, 23, 25, 29, 31, 35, 36, 37]
+22 45 transversal: [1, 4, 5, 7, 9, 11, 13, 14, 15, 17, 19, 20, 21, 22, 23, 29, 31, 32, 36, 37, 41, 43]
+24 49 transversal: [1, 3, 8, 11, 17, 19, 22, 23, 25, 29, 31, 33, 34, 36, 37, 39, 40, 41, 42, 43, 44, 45, 47, 48]
+25 51 transversal: [1, 5, 7, 9, 11, 13, 15, 17, 18, 19, 20, 22, 23, 25, 26, 29, 31, 35, 37, 41, 42, 43, 47, 48, 49]
+27 55 transversal: [1, 3, 9, 11, 13, 17, 18, 19, 20, 21, 23, 25, 26, 27, 28, 31, 37, 39, 41, 43, 44, 45, 47, 48, 49, 51, 53]
+28 57 transversal: [1, 3, 5, 7, 11, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 35, 41, 43, 47, 48, 49, 53, 55]
+
+## (4) explore/lp.py 2 30 "4*m" : fractional transversal number tau* (HiGHS, floating point: HEURISTIC)
+## columns: m, 2m+1, prime/comp, #minimal bad sets, tau*, tau* - m
+2 5 prime 3 3.0 1.0
+3 7 prime 5 4.0 1.0
+4 9 comp 7 5.0 1.0
+5 11 prime 11 6.0 1.0
+6 13 prime 14 7.0 1.0
+7 15 comp 19 7.5 0.5
+8 17 prime 25 9.0 1.0
+9 19 prime 34 10.0 1.0
+10 21 comp 38 10.0 0.0
+11 23 prime 52 12.0 1.0
+12 25 comp 55 12.5 0.5
+13 27 comp 68 13.1818 0.1818
+14 29 prime 79 15.0 1.0
+15 31 prime 91 16.0 1.0
+16 33 comp 100 16.0 0.0
+17 35 comp 124 16.8889 -0.1111
+18 37 prime 124 19.0 1.0
+19 39 comp 150 18.5714 -0.4286
+20 41 prime 163 21.0 1.0
+21 43 prime 182 22.0 1.0
+22 45 comp 193 21.4 -0.6
+23 47 prime 222 24.0 1.0
+24 49 comp 229 24.0 0.0
+25 51 comp 253 24.4 -0.6
+26 53 prime 275 27.0 1.0
+27 55 comp 305 27.0 -0.0
+28 57 comp 314 27.0 -1.0
+29 59 prime 359 30.0 1.0
+30 61 prime 363 31.0 1.0
