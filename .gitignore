@@ -22,3 +22,6 @@ __pycache__/
 .DS_Store
 _site/
 site/node_modules/
+
+# agent worktrees (local only)
+.claude/worktrees/
