@@ -1,5 +1,7 @@
 # Lonely runner: rank-4 complete-section classification at $n=17$ (bound track)
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/notes/lonely-runner/bound-rank4.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 
 Scope: the relation-rank bound of `bound.md` §5 for LRC(17) (18 runners), with the coarse rank-4 determinant bound replaced by a complete classification of the admissible rank-4 odd relation spaces. The method follows Allikvere, "Sixteen lonely runners" (Zenodo 10.5281/zenodo.23304361), §"rank-four classification" and App. B. Everything here is our own code. None of his code was run; his `proof_sources.zip` was read as data only.
 

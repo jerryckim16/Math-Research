@@ -1,5 +1,7 @@
 # Erdős–Szekeres convex polygon conjecture
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/problems/erdos-szekeres.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 **Area:** combinatorial geometry
 **Status:** in progress ($\mathrm{ES}(6) = 17$ reproduced and certified three times; $\mathrm{ES}(7)$ open, cost-probed at about $10^{3}$ CPU-years, which is out of reach here)
 **Started:** 2026-11-23

@@ -1,5 +1,7 @@
 # Gate selection for LRC(15) and LRC(17): admissibility ($\tau$), cost per prime, pilot
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/notes/lonely-runner/gates.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 > **Draft, work in progress.** This page is written by a research agent and has not yet been reviewed by the coordinator. Treat its claims as unreviewed until this notice is removed.
 
 Track notes (gates agent, 2026-11-25). Companion to `problems/lonely-runner.md`

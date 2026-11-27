@@ -1,5 +1,7 @@
 # General-$n$ results: dense windows, a referee check of Bonfioli, and the range $v_n \le 1.47\,n$
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/notes/lonely-runner/general-n.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 > **Reviewed by the coordinator (2026-11-26).** The proofs of Lemma A, Lemma B, Lemma J, Theorem 1, the $n \ge 85$ part of Corollary 1 and Corollary 2 were checked step by step by reading, and the test suite was re-run (12 tests pass). Computed results remain labelled *computed*: they rest on our own tested code, which is not formally verified.
 
 Track notes from the general-$n$ agent ("route 2", 2026-11-26). Companion code:
@@ -27,6 +29,12 @@ $2n - c(\log n)^2$, but only for $n$ sufficiently large, with constants that are
 not explicit (§4). Theorem 1 is explicit for every $n$, and gives
 $\tfrac32 n - O((\log n)^2)$ asymptotically (typically $\tfrac32 n - O(1)$, since only $j$ near $(n+1)/2$ matter in $E(n)$). That is weaker than Bohman–Peng
 for large $n$, so the novelty is explicitness, not the asymptotic range.
+
+*Follow-up (draft):* [general-n-explicit.md](general-n-explicit.md) extends this
+with a matching criterion (computed: $v_n \le 2n - 12$ suffices for every
+$n \le 12000$) and an explicit Hall lemma (proved: $v_n \le 2n - n^{0.6}$ for
+$2^{19} \le n < 2^{157}$, and $v_n \le 1.93n$ for every $n < 2^{157}$). A range
+beyond $1.47n$ valid for every $n$ is still open there.
 
 ## 1. Setting and two basic lemmas
 

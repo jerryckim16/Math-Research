@@ -1,5 +1,7 @@
 # Frankl's union-closed sets conjecture
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/problems/frankl-union-closed.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 **Area:** extremal combinatorics / information theory
 **Status:** in progress. Literature pinned down from primary sources. The
 one-variable inequality behind the $(3-\sqrt{5})/2$ bound is **certificate-checked**

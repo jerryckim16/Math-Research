@@ -1,5 +1,7 @@
 # Lonely Runner: structural lemmas and small gates (structure track)
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/notes/lonely-runner/structure.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 > **Correction (2026-11-25, k17-structure track).** In Lemma R, $\Lambda(k,c)$ must be defined as $\min_y \max_{r\ne 0}$ of the longest arc of $G(y,r)$. It is not the longest arc of the union over $r$, because the coset that must be hit depends on $r$. The code always computed the max over $r$, and for $c = 2$ the two definitions coincide, so no result on this page changes. The corrected statement and proof are Lemma R′ in `k17-structure.md`.
 
 Working notes of the "structure" track (2026-11-25). Notation follows

@@ -1,5 +1,7 @@
 # Lonely runner: shape bounds restricted to counterexample shapes (bound track, $n=17$)
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/notes/lonely-runner/constrained-shape.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 Scope: the shape constants of the $n=17$ gate target (18 runners, LRC(17)). Both the flag shape factor $R_{17}$ (`bound.md` §3) and the Schur shape constants $C_r$ of the relation-rank bound (`bound.md` §5, `bound-rank4.md`) are suprema over *all* sorted shapes. A counterexample's shape must also violate every elementary "lonely" condition. Here those conditions are proved in a sharp form, and the suprema are re-proved over the restricted region.
 
 Background: `literature.md` §2.5 item 7 (a float search at $n=15$).
