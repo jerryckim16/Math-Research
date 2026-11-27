@@ -1,0 +1,28 @@
+{
+ "nshards": 1024,
+ "depth": 6,
+ "shards_ok": 1024,
+ "missing_or_failed": [],
+ "totals": {
+  "bases": 647472221,
+  "minimal_covers": 482629287,
+  "nodes": 104877165945,
+  "seconds": 228100,
+  "sampled_1pct": 6474223,
+  "recheck_level2_batch_survivors": 0,
+  "recheck_per_base": 279284
+ },
+ "closed_hist": {
+  "2": 625667896,
+  "3": 21742149,
+  "9": 62175,
+  "18": 1
+ },
+ "covers_by_size": {
+  "15": 897,
+  "16": 1272419,
+  "17": 481355971
+ },
+ "bases_closing_at_level_ge9": 62176,
+ "max_level": 18
+}
