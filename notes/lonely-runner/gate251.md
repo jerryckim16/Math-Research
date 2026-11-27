@@ -8,19 +8,19 @@ Labels follow `README.md`. The result is a **certificate-checked computation**, 
 
 ## 0. Result
 
-STATUS: RUNNING
+Run 2026-11-26 22:24 to 2026-11-27 15:09 UTC (16.8 h wall, 4 cores). **Every base closes.**
 
 | item | value |
 | --- | --- |
-| shards (depth-6 `covergen` shards) | FINISHED of 1024 |
-| minimal-cover orbits (orderly representatives) | COVERS |
-| covers by size | SIZES |
-| level-one bases processed (with repeats, see §2) | BASES |
-| closing level: 2 / 3 / 9 / 18 / 36 | HIST |
-| bases not closed by 36 | OPEN |
-| CPU | CPU |
+| shards (depth-6 `covergen` shards) | 1024 of 1024, every per-shard check passed |
+| minimal-cover orbits (orderly representatives) | $482{,}629{,}287$ |
+| covers by size: 15 / 16 / 17 classes | $897$ / $1{,}272{,}419$ / $481{,}355{,}971$ (none smaller: $\tau_{17}(251)=15$) |
+| level-one bases processed (with repeats, see §2) | $647{,}472{,}221$ |
+| closing level: 2 / 3 / 9 / 18 / 36 | $625{,}667{,}896$ / $21{,}742{,}149$ / $62{,}175$ / $1$ / $0$ |
+| bases not closed by 36 | **0** |
+| CPU | $228{,}100$ s $=63.4$ CPU-h; $1.049\cdot10^{11}$ `covergen` nodes (Knuth estimate $8.7\cdot10^{10}\pm8\%$) |
 
-**Claim (when complete).** Every base $b\in I(17,251,1)$ closes under the extended cascade at some level $L_b\in\{2,3,9,18,36\}$. None of these levels is divisible by $251$. By Remark L (`midprimes17.md` §1), $251$ divides $v_1\cdots v_{17}$ for every counterexample to LRC(17).
+**Result.** Every base $b\in I(17,251,1)$ closes under the extended cascade at some level $L_b\in\{2,3,9,18\}$ (the cap was 36; no base needed it). None of these levels is divisible by $251$. By Remark L (`midprimes17.md` §1), $251$ divides $v_1\cdots v_{17}$ for every counterexample to LRC(17).
 
 ## 1. What the claim rests on
 
@@ -39,6 +39,7 @@ STATUS: RUNNING
      - every base closing at level $\ge9$.
    - For the sampled bases closed at level 2, the batch check finds no level-2 survivor. For the others, the per-base chain $3,3,2,2$ closes at the same level as `xcascq`.
    - **The remaining level-2 and level-3 closures (99% of the bases) rest on `xcascq` alone.**
+   - Totals: $6{,}474{,}223$ sampled bases (1%), with no level-2 survivor in the batch check. $279{,}284$ per-base re-runs (the sampled bases open after $\times2$, plus all $62{,}176$ bases closing at level $\ge9$) all agree with `xcascq` on the closing level.
 
 ## 2. Pipeline and checks
 
@@ -70,7 +71,13 @@ Per shard (`run_gate251.sh`):
 - **Lemma S off** (`xcascq -DNO_NG`). None of 40 production bases that close at level 9 closes by 36; with Lemma S, all 40 close at 9 (`test_gate251.py`).
 - **$p=113$** ($\tau_{17}=11$). On the 300-base sample of `midp17`, 5 do not close by 36 (2 open, 3 capped), so the gate fails there, as expected. At $(7,43)$ the pipeline reports the gate as failed (test).
 - **Small closing gate.** $(8,67)$ closes completely, with totals independent of the sharding (test).
-- **Ladder comparison (heuristic):** LADDER.
+- **Ladder comparison (heuristic).** Every base orbit is processed at least once, so the $647{,}472{,}221$ bases processed (with repeats) must be at least the number of base orbits. The ladder estimate of that number (`midprimes17.md` §3.2) is $6.19\cdot10^{8}$, about $\pm5\%$. The run is consistent with it. This is a necessary condition only, not a count.
+
+**The level-18 base** is the tight orbit $(1,2,\dots,17)$: it retains 1 orbit at levels 3 and 9 and closes at 18, as at every prime $97\le p\le311$ (`midprimes17.md` §3.2). The results are in `gate251/results/`:
+- `summary.json` (totals);
+- `shards.jsonl` (one record per shard);
+- `level_ge9_bases.jsonl.gz` (every base closing at level $\ge9$, with its trace);
+- `binaries.txt`.
 
 ## 5. Reproduction
 
