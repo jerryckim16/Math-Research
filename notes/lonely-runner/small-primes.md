@@ -1,5 +1,7 @@
 # Small primes as gates: the shift lemma, covering numbers, an audit of Allikvere's preliminary primes, and $k = 17$
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/notes/lonely-runner/small-primes.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 > **Draft, work in progress.** This page is written by a research agent and has not yet been reviewed by the coordinator. Treat its claims as unreviewed until this notice is removed.
 
 Track notes from the small-primes agent (2026-11-25). Companion code: `computations/lonely-runner/smallp/`.

@@ -1,5 +1,7 @@
 # Lonely Runner Conjecture
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/problems/lonely-runner.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 **Area:** Diophantine approximation / combinatorics
 **Status:** in progress. Done so far:
 - **New general-$n$ result (2026-11-26).** Every set of $n$ distinct positive speeds with largest speed $v_n \le 2n+2-E(n)$ is lonely, where $E(n) = \max_{j \le (n+1)/2}(j + g(j))$ and $g$ is Jacobsthal's function; this is about $\tfrac32 n$. Hence every set with $v_n \le 1.47\,n$ is lonely, for every $n$ (proved for $n \ge 85$, computed below). The best range valid for every $n$ that we found in the literature is Tao's $1.2\,n$. Proved, reviewed by the coordinator; see `notes/lonely-runner/general-n.md`. **Follow-up (2026-11-26):** a matching criterion (Lemma C) and an explicit Hall lemma give $v_n \le 1.93\,n \Rightarrow$ lonely for every $n < 2^{157} \approx 1.8\cdot 10^{47}$ (proved for $n \ge 28560$, computed below), and $v_n \le 2n - n^{0.6}$ for $2^{19} \le n < 2^{157}$. A range above $1.47\,n$ valid for *every* $n$ is not reached. See `notes/lonely-runner/general-n-explicit.md`.

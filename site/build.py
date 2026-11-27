@@ -269,6 +269,8 @@ def slug(value, separator):
 
 
 def render_md(text, depth):
+    # drop the GitHub-only pointer to the site (it is the site)
+    text = re.sub(r"^\*Best read on the \[progress site\]\(.*\n?", "", text, flags=re.M)
     # keep the "**Field:** value" header lines on separate lines
     text = re.sub(r"^(\*\*(?:Area|Status|Started|ProofAtlas):\*\*.*)$", r"\1  ", text, flags=re.M)
     text, stash = protect_math(text)

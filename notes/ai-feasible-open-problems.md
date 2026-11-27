@@ -1,5 +1,7 @@
 # Open problems from ProofAtlas most feasible for AI
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/notes/ai-feasible-open-problems.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 Source: ProofAtlas "Top 500 open problems", edition of 2026-11-12
 (https://www.proofatlas.ai/open-problems/, data file `top500-v35.json`).
 Ranks below are ProofAtlas importance ranks, not feasibility. Status notes are

@@ -1,5 +1,7 @@
 # General-$n$ results: dense windows, a referee check of Bonfioli, and the range $v_n \le 1.47\,n$
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/notes/lonely-runner/general-n.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 > **Reviewed by the coordinator (2026-11-26).** The proofs of Lemma A, Lemma B, Lemma J, Theorem 1, the $n \ge 85$ part of Corollary 1 and Corollary 2 were checked step by step by reading, and the test suite was re-run (12 tests pass). Computed results remain labelled *computed*: they rest on our own tested code, which is not formally verified.
 
 Track notes from the general-$n$ agent ("route 2", 2026-11-26). Companion code:

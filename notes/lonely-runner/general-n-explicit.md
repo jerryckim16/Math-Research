@@ -1,5 +1,7 @@
 # Explicit ranges below $2n$: a matching criterion, an explicit Hall lemma, and $v_n \le 1.93n$ up to $10^{47}$
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/notes/lonely-runner/general-n-explicit.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 > **Reviewed by the coordinator (2026-11-26).** The proofs of Lemma C, Lemma C′, Lemma H (both cases and the tail bound), Lemma G (U) and (T), and Theorem L were checked step by step; `test_explicit.py` and `test_generaln.py` were re-run (21 pass). The block table and the matching scans rest on our own exact code (labelled *computed*; the matchings are re-verified by an independent checker).
 
 Track notes (general-$n$ explicit agent, 2026-11-26). Continues

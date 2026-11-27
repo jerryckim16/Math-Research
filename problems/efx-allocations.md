@@ -1,5 +1,7 @@
 # Existence of EFX allocations (additive goods)
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/problems/efx-allocations.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 **Area:** discrete fair division / combinatorics
 **Status:** in progress. Literature pinned down; exact checker, adversarial
 search and a Z3 CEGAR certifier built in `computations/efx/`; no

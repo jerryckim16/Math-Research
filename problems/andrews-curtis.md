@@ -1,5 +1,7 @@
 # Andrews–Curtis conjecture (rank-2, length-14 frontier)
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/problems/andrews-curtis.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 **Area:** combinatorial group theory / low-dimensional topology
 **Status:** in progress. We are checking an unrefereed, computer-assisted claim independently: J. Carreras, arXiv:2607.23611v1 (July 2026). Done so far:
 - Theorems 1–4 (four AC-equivalences among the six hard length-14 Miller–Schupp presentations and $\mathrm{AK}(3)$) are **Lean-verified**: a checker written in plain Lean 4 replays the author's certificates, and the Lean kernel checks the run (`decide +kernel`) against our own definition of AC moves (§4 below). Before that they were certificate-checked by our Python checker.

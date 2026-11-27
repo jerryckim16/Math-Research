@@ -1,5 +1,7 @@
 # Lonely runner: sharper product bounds for the gate target (bound track)
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/notes/lonely-runner/bound.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 Scope: the analytic bound that turns "a counterexample to LRC($n$) is divisible by every gate prime" into a finite gate target. This file covers:
 
 - $n=15$, 16 runners, the original track;
