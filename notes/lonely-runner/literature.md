@@ -1,5 +1,7 @@
 # Lonely Runner Conjecture: literature and idea survey (25 Nov 2026)
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/notes/lonely-runner/literature.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 Scope: every result reachable on 2026-11-25 that bears on $\mathrm{LRC}(15)$ (16 runners),
 the next cases, and the general conjecture. Conventions follow
 `problems/lonely-runner.md`: $\mathrm{LRC}(k)$ means $k$ positive integer speeds, threshold

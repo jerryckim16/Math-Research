@@ -1,5 +1,7 @@
 # Chromatic number of the plane (Hadwiger–Nelson problem)
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/problems/chromatic-number-plane.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 **Area:** combinatorial geometry
 **Status:** in progress. Done so far:
 - $\chi \ge 5$ is reproduced end to end with our own pipeline: exact unit edges, our own CNF, and an LRAT proof checked by our own checker.

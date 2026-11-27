@@ -1,5 +1,7 @@
 # Re-check of Allikvere's LRC(15) gate certificates (16 runners)
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/notes/lonely-runner/cert15.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 
 **Source.** J. Allikvere, *Sixteen lonely runners*, Zenodo doi:10.5281/zenodo.23304361 (created 2026-10-11, one version, unrefereed). We read the README, `SHA256SUMS.txt` and the manuscript source (`paper.tex`, §§2, 4–7) as data.
 

@@ -1,5 +1,7 @@
 # Kissing numbers: 2026 lower bounds in dimensions 11, 12, 19 and 25–43
 
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/problems/kissing-numbers.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
 **Area:** discrete geometry / spherical codes
 **Status:** in progress. We are checking recent, unrefereed, computer-assisted lower-bound claims independently, by an exact pairwise check of every point pair:
 - S. Yang et al. ("Qiushi Engine", an autonomous multi-agent AI system), arXiv:2609.35051v1 (28 Sep 2026): new bounds in 19 dimensions. Scope here: dims 32–39 and 43 (all done), from the authors' complete integer exports. Their own release notes say the exports were **not** checked pair by pair. Also dims 25 and 27 (done), which have no complete export: we rebuilt them from the repository data with our own code.
