@@ -916,7 +916,7 @@ Started 2026-11-25. This is the current focus. The results below were reviewed b
 **First closed 18-runner gate: $p = 251$** (2026-11-27). Every one of the $482{,}629{,}287$ minimal-cover orbits of $I(17,251,1)$ was expanded ($647{,}472{,}221$ level-one bases, with repeats), and every base closes under the extended cascade, at level 2, 3, 9 or 18. By Remark L, $251$ divides $v_1\cdots v_{17}$ for every counterexample to $\mathrm{LRC}(17)$.
 - **Label:** certificate-checked computation.
 - **Dependencies:** Lemma S, which needs $\mathrm{LRC}(m)$ for $m \le 15$ (Allikvere's unrefereed claim); `covergen`'s search completeness (tested); Toner's Lemma B.1, checked on data at $k = 17$ but with no full independent orbit count at 251; and the cascade code, with an independent 1% re-check plus every base at level $\ge 9$.
-- **Details:** `notes/lonely-runner/gate251.md` (**draft, not yet reviewed**), `gate251/`.
+- **Details:** `notes/lonely-runner/gate251.md` (reviewed by the coordinator, 2026-11-27), `gate251/`.
 
 **Structural lemmas** (`notes/lonely-runner/structure.md`):
 

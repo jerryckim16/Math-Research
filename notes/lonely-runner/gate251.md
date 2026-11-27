@@ -1,6 +1,8 @@
 # Lonely runner: the LRC(17) gate $p=251$ (18 runners), full run
 
-> **Draft, work in progress.** This page is written by a research agent and has not yet been reviewed by the coordinator. Treat its claims as unreviewed until this notice is removed.
+*Best read on the [progress site](https://jerryckim16.github.io/Math-Research/notes/lonely-runner/gate251.html), where all the math is typeset. GitHub's own preview does not render the math in long files.*
+
+> **Reviewed by the coordinator (2026-11-27).** Independent checks on the merged results: all 1024 shard records present with every check passing; totals re-summed (bases $=\sum_C\binom{h+16-|C|}{17-|C|}$ and the closing-level histogram both equal $647{,}472{,}221$); shard 517 regenerated from scratch with identical nodes, covers, bases and histogram; 151 bases closing at level $\ge 9$ (150 random plus the tight orbit) re-run with `cascade_verify.c`, all agreeing; `test_gate251.py` (5) and `test_lonely.py` (26) pass. The dependencies in §1 stand as stated.
 
 Scope: the first full closure of an 18-runner gate. Every level-one base of $I(17,251,1)$ is enumerated, and the extended cascade is run on each one. Code: `computations/lonely-runner/gate251/`. Definitions follow `midprimes17.md` §1–2.
 
