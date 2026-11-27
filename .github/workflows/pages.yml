@@ -42,11 +42,5 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      # Stopgap: while the repository's Pages source is still "Deploy from a branch",
-      # GitHub's own Jekyll build ("pages build and deployment") also deploys on every
-      # push, about 10 s after this job, and overwrites the typeset site with raw
-      # markdown. Waiting lets this deployment land last. Remove once Settings -> Pages
-      # -> Source is "GitHub Actions".
-      - run: sleep 150
       - id: deployment
         uses: actions/deploy-pages@v4
