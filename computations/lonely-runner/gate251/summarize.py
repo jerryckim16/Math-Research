@@ -33,7 +33,10 @@ def main():
         tot["recheck_level2_batch_survivors"] += r["recheck"]["level2_batch_survivors"]
         tot["recheck_per_base"] += r["recheck"]["per_base"]
     high = []
-    for f in sorted(glob.glob(os.path.join(D, "log*.json"))):
+    for i in sorted(recs):                      # logs of finished shards only
+        f = os.path.join(D, f"log{i}.json")
+        if not os.path.exists(f):
+            continue
         for l in open(f):
             j = json.loads(l)
             high.append({"base": j["base"], "empty_at": j["empty_at"], "trace": j["trace"]})
